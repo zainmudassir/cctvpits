@@ -3,180 +3,281 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CCTV PITS – Control from Anywhere</title>
-<meta name="description" content="CCTV PITS – security cameras, DVR/NVR kits and accessories. Control from Anywhere.">
+<title>CCTV PITS – Online Security Camera Store in Pakistan | Control from Anywhere</title>
+<meta name="description" content="CCTV PITS – Wi-Fi cameras, battery cameras, smart home sensors and accessories. Control from Anywhere.">
 <style>
   :root{
-    --blue:#0b6fd6;
-    --red:#e3000f;
-    --yellow:#ffc800;
-    --green:#00a550;
-    --ink:#111111;
-    --muted:#5b6470;
-    --line:#e8ebef;
-    --bg:#ffffff;
-    --soft:#f6f8fb;
-    --radius:16px;
+    --blue:#0b6fd6; --red:#e3000f; --yellow:#ffc800; --green:#00a550;
+    --ink:#111; --muted:#667085; --line:#e6e9ee; --soft:#f5f7fa; --bg:#fff;
+    --radius:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.5}
   a{color:inherit;text-decoration:none}
-  img,svg{max-width:100%}
-  .container{width:min(1180px,92%);margin-inline:auto}
+  button{font-family:inherit}
+  svg{max-width:100%}
+  .container{width:min(1280px,94%);margin-inline:auto}
 
-  /* Top bar */
-  .topbar{background:var(--ink);color:#fff;font-size:.85rem}
-  .topbar .container{display:flex;justify-content:space-between;gap:12px;padding:8px 0;flex-wrap:wrap}
-  .topbar span b{color:var(--yellow)}
+  /* ===== Announcement bar ===== */
+  .announce{background:var(--ink);color:#fff;font-size:.82rem;text-align:center;padding:8px 10px}
+  .announce b{color:var(--yellow)}
+  .announce .sep{margin:0 10px;opacity:.4}
 
-  /* Header */
-  header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line)}
-  .nav{display:flex;align-items:center;gap:20px;padding:12px 0}
-  .brand{display:flex;align-items:center;gap:10px}
-  .brand svg{width:64px;height:auto;flex:none}
-  .brand-text{line-height:1.1}
-  .brand-text strong{font-size:1.25rem;font-weight:900;letter-spacing:.5px}
-  .brand-text small{display:block;font-size:.72rem;color:var(--muted)}
-  nav ul{display:flex;gap:22px;list-style:none;margin-left:auto}
-  nav a{font-weight:600;font-size:.95rem;padding:6px 0;border-bottom:3px solid transparent}
-  nav li:nth-child(1) a:hover{border-color:var(--blue)}
-  nav li:nth-child(2) a:hover{border-color:var(--red)}
-  nav li:nth-child(3) a:hover{border-color:var(--yellow)}
-  nav li:nth-child(4) a:hover{border-color:var(--green)}
-  nav li:nth-child(5) a:hover{border-color:var(--blue)}
-  .cart-btn{display:flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border:0;padding:10px 16px;border-radius:999px;font-weight:700;cursor:pointer;font-size:.9rem}
-  .cart-btn .count{background:var(--yellow);color:var(--ink);border-radius:999px;min-width:22px;height:22px;display:grid;place-items:center;font-size:.78rem}
-  .menu-toggle{display:none;background:none;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:1.1rem;cursor:pointer}
+  /* ===== Header ===== */
+  header{position:sticky;top:0;z-index:60;background:#fff;border-bottom:1px solid var(--line)}
+  .hbar{display:flex;align-items:center;gap:22px;padding:10px 0}
+  .logo svg{width:92px;height:auto;display:block}
+  .menu-btn{display:none;background:none;border:0;font-size:1.6rem;cursor:pointer}
+  nav.main{display:flex;gap:6px;margin-left:10px}
+  nav.main a{font-weight:700;font-size:.93rem;padding:10px 14px;border-radius:10px;position:relative}
+  nav.main a::after{content:"";position:absolute;left:14px;right:14px;bottom:4px;height:3px;border-radius:3px;background:var(--c);transform:scaleX(0);transition:.25s}
+  nav.main a:hover::after{transform:scaleX(1)}
+  .icons{margin-left:auto;display:flex;align-items:center;gap:6px}
+  .ico{position:relative;width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:none;border:0;cursor:pointer;font-size:1.2rem}
+  .ico:hover{background:var(--soft)}
+  .ico .n{position:absolute;top:2px;right:0;min-width:18px;height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:.68rem;font-weight:700;display:grid;place-items:center;padding:0 4px}
+  .cart-total{font-weight:800;font-size:.85rem;margin-left:2px}
+  .searchrow{display:none;border-top:1px solid var(--line);padding:10px 0}
+  .searchrow.open{display:block}
+  .searchrow input{width:100%;padding:12px 16px;border:2px solid var(--line);border-radius:12px;font-size:1rem;outline:none}
+  .searchrow input:focus{border-color:var(--blue)}
+  .colorline{height:4px;background:linear-gradient(90deg,var(--blue) 25%,var(--red) 25% 50%,var(--yellow) 50% 75%,var(--green) 75%)}
 
-  /* Hero */
-  .hero{position:relative;overflow:hidden;padding:64px 0 72px;background:#fff}
-  .hero::before,.hero::after{content:"";position:absolute;width:420px;height:14px;border-radius:10px;transform:rotate(-45deg)}
-  .hero::before{left:-170px;top:90px;background:linear-gradient(90deg,var(--blue),var(--blue) 50%,var(--red) 50%)}
-  .hero::after{right:-170px;bottom:100px;background:linear-gradient(90deg,var(--yellow) 50%,var(--green) 50%)}
-  .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;position:relative;z-index:1}
-  .tag{display:inline-block;background:var(--soft);border:1px solid var(--line);padding:6px 14px;border-radius:999px;font-weight:600;font-size:.82rem;margin-bottom:18px}
-  .tag i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:8px}
-  h1{font-size:clamp(2.2rem,5vw,3.7rem);line-height:1.08;font-weight:900;letter-spacing:-1px}
-  h1 .b{color:var(--blue)} h1 .r{color:var(--red)}
-  .hero p.lead{margin:18px 0 28px;color:var(--muted);font-size:1.1rem;max-width:520px}
-  .btns{display:flex;gap:12px;flex-wrap:wrap}
-  .btn{display:inline-block;padding:14px 26px;border-radius:12px;font-weight:700;border:2px solid var(--ink);cursor:pointer;font-size:.98rem;transition:.2s}
-  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
-  .btn.primary:hover{background:#085bb3;border-color:#085bb3}
-  .btn.ghost{background:#fff}
-  .btn.ghost:hover{background:var(--ink);color:#fff}
-  .stats{display:flex;gap:30px;margin-top:34px;flex-wrap:wrap}
-  .stats div b{font-size:1.5rem;font-weight:900;display:block}
-  .stats div:nth-child(1) b{color:var(--blue)}
-  .stats div:nth-child(2) b{color:var(--red)}
-  .stats div:nth-child(3) b{color:var(--green)}
-  .stats span{font-size:.85rem;color:var(--muted)}
-  .hero-art{display:grid;place-items:center}
-  .hero-card{position:relative;width:min(420px,100%);aspect-ratio:1;border-radius:32px;background:var(--soft);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 30px 60px -30px rgba(0,0,0,.25)}
-  .hero-card svg{width:68%}
-  .float{position:absolute;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:.82rem;font-weight:700;box-shadow:0 10px 24px -12px rgba(0,0,0,.25)}
-  .float::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px}
-  .f1{top:8%;left:-6%} .f1::before{background:var(--red)}
-  .f2{bottom:10%;right:-6%} .f2::before{background:var(--green)}
-  .f3{bottom:-4%;left:8%} .f3::before{background:var(--yellow)}
+  /* ===== Hero ===== */
+  .hero{display:grid;grid-template-columns:2fr 1fr;gap:16px;padding:20px 0}
+  .slider{position:relative;border-radius:20px;overflow:hidden;min-height:400px;background:var(--soft)}
+  .slide{position:absolute;inset:0;display:grid;grid-template-columns:1.1fr .9fr;align-items:center;padding:40px 48px;opacity:0;visibility:hidden;transition:opacity .6s}
+  .slide.active{opacity:1;visibility:visible}
+  .slide .kicker{display:inline-block;font-size:.75rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:5px 12px;border-radius:999px;color:#fff;background:var(--c);margin-bottom:14px}
+  .slide h2{font-size:clamp(1.8rem,3.4vw,3rem);line-height:1.08;font-weight:900;letter-spacing:-1px}
+  .slide p{color:var(--muted);margin:14px 0 24px;max-width:420px}
+  .slide .art{display:grid;place-items:center}
+  .slide .art svg{width:min(260px,80%);color:var(--ink)}
+  .slide .art .blob{width:min(300px,90%);aspect-ratio:1;border-radius:50%;background:color-mix(in srgb,var(--c) 18%,#fff);display:grid;place-items:center}
+  .btn{display:inline-block;padding:13px 26px;border-radius:12px;font-weight:800;font-size:.93rem;border:2px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;transition:.2s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 20px -10px rgba(0,0,0,.5)}
+  .btn.outline{background:#fff;color:var(--ink)}
+  .arrow{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:0;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.18);cursor:pointer;font-size:1.1rem;z-index:3}
+  .arrow.prev{left:12px}.arrow.next{right:12px}
+  .dots{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:3}
+  .dots button{width:10px;height:10px;border-radius:50%;border:0;background:#cdd3dc;cursor:pointer;padding:0}
+  .dots button.on{background:var(--ink);width:26px;border-radius:6px}
+  .side-banners{display:grid;grid-template-rows:1fr 1fr;gap:16px}
+  .sb{border-radius:20px;padding:24px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;color:#fff;background:var(--c)}
+  .sb.dark-text{color:var(--ink)}
+  .sb small{font-weight:800;letter-spacing:1px;text-transform:uppercase;font-size:.72rem;opacity:.9}
+  .sb h3{font-size:1.4rem;line-height:1.15;margin:6px 0 10px;max-width:60%}
+  .sb a{font-weight:800;font-size:.88rem;text-decoration:underline}
+  .sb svg{position:absolute;right:-8px;bottom:-6px;width:130px;opacity:.9;color:rgba(255,255,255,.95)}
+  .sb.dark-text svg{color:rgba(0,0,0,.85)}
 
-  /* Sections */
-  section{padding:68px 0}
-  .head{text-align:center;max-width:620px;margin:0 auto 40px}
-  .head h2{font-size:clamp(1.7rem,3.5vw,2.4rem);font-weight:900;letter-spacing:-.5px}
-  .head p{color:var(--muted);margin-top:8px}
-  .bar{display:flex;justify-content:center;gap:6px;margin-top:14px}
-  .bar i{width:34px;height:5px;border-radius:5px}
-  .bar i:nth-child(1){background:var(--blue)}.bar i:nth-child(2){background:var(--red)}
-  .bar i:nth-child(3){background:var(--yellow)}.bar i:nth-child(4){background:var(--green)}
+  /* ===== Trust strip ===== */
+  .trust{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:var(--radius);margin:6px 0 10px}
+  .trust div{display:flex;align-items:center;gap:12px;padding:16px 20px;border-right:1px solid var(--line)}
+  .trust div:last-child{border:0}
+  .trust .t-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;font-size:1.2rem;background:var(--c);flex:none}
+  .trust b{display:block;font-size:.92rem}
+  .trust span{font-size:.8rem;color:var(--muted)}
 
-  /* Categories */
-  .cats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-  .cat{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px 20px;text-align:center;transition:.25s;border-top:5px solid var(--c)}
-  .cat:hover{transform:translateY(-6px);box-shadow:0 18px 36px -18px rgba(0,0,0,.3)}
-  .cat .ic{width:62px;height:62px;border-radius:18px;background:var(--c);color:#fff;display:grid;place-items:center;margin:0 auto 14px;font-size:1.7rem}
-  .cat:nth-child(2) .ic,.cat:nth-child(3) .ic{color:var(--ink)}
-  .cat:nth-child(2) .ic{color:#fff}
-  .cat h3{font-size:1.05rem}
-  .cat p{font-size:.85rem;color:var(--muted);margin-top:4px}
+  /* ===== Section head ===== */
+  .sec{padding:34px 0 8px}
+  .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px}
+  .sec-head h2{font-size:1.5rem;font-weight:900;letter-spacing:-.3px;display:flex;align-items:center;gap:10px}
+  .sec-head h2::before{content:"";width:6px;height:26px;border-radius:4px;background:var(--c,var(--blue))}
+  .sec-head .tools{display:flex;align-items:center;gap:10px}
+  .sec-head .all{font-weight:800;font-size:.88rem;color:var(--c,var(--blue))}
+  .sec-head .all:hover{text-decoration:underline}
+  .nav-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:1rem}
+  .nav-btn:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
 
-  /* Products */
-  .products-bg{background:var(--soft)}
-  .products{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-  .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:.25s}
-  .card:hover{box-shadow:0 18px 36px -18px rgba(0,0,0,.3);transform:translateY(-4px)}
-  .thumb{position:relative;height:170px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 12%,#fff)}
-  .thumb svg{width:96px;color:var(--ink)}
-  .badge{position:absolute;top:12px;left:12px;background:var(--c);color:#fff;font-size:.72rem;font-weight:800;padding:4px 10px;border-radius:999px}
-  .badge.dark{color:var(--ink)}
-  .info{padding:16px;display:flex;flex-direction:column;gap:6px;flex:1}
-  .info h3{font-size:1rem}
-  .info .spec{font-size:.82rem;color:var(--muted)}
-  .stars{color:var(--yellow);font-size:.9rem;letter-spacing:2px}
-  .buy{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:10px}
-  .price{font-weight:900;font-size:1.1rem}
-  .price s{font-weight:500;color:var(--muted);font-size:.82rem;margin-left:6px}
-  .add{background:var(--ink);color:#fff;border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;font-size:.85rem;transition:.2s}
-  .add:hover{background:var(--c)}
-  .add.done{background:var(--green)}
+  /* ===== Product carousel ===== */
+  .track{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px 2px 14px}
+  .track::-webkit-scrollbar{display:none}
+  .pcard{flex:0 0 calc((100% - 64px)/5);min-width:210px;scroll-snap-align:start;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:.25s;position:relative}
+  .pcard:hover{box-shadow:0 18px 34px -18px rgba(0,0,0,.35);transform:translateY(-4px)}
+  .pimg{position:relative;aspect-ratio:1/.9;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 10%,#fff)}
+  .pimg svg{width:58%;color:var(--ink);transition:.3s}
+  .pcard:hover .pimg svg{transform:scale(1.07)}
+  .tags{position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+  .tag{font-size:.66rem;font-weight:800;padding:3px 9px;border-radius:5px;letter-spacing:.4px;color:#fff}
+  .tag.sale{background:var(--red)}.tag.new{background:var(--green)}.tag.oos{background:#6b7280}
+  .wish{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer;font-size:1rem;color:#9aa3af}
+  .wish.on{color:var(--red)}
+  .pbody{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .pbody h3{font-size:.92rem;line-height:1.3;font-weight:700;min-height:2.4em}
+  .rate{font-size:.78rem;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .rate .st{color:var(--yellow);letter-spacing:1px}
+  .price{font-weight:900;font-size:1.02rem;margin-top:auto}
+  .price s{font-weight:500;color:var(--muted);font-size:.8rem;margin-left:6px}
+  .price .now{color:var(--c)}
+  .addbtn{margin-top:8px;width:100%;padding:10px;border-radius:10px;border:2px solid var(--ink);background:#fff;font-weight:800;font-size:.85rem;cursor:pointer;transition:.2s}
+  .addbtn:hover{background:var(--c);border-color:var(--c);color:#fff}
+  .addbtn:disabled{border-color:var(--line);color:#9aa3af;background:var(--soft);cursor:not-allowed}
+  .addbtn.done{background:var(--green);border-color:var(--green);color:#fff}
 
-  /* Features */
-  .features{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-  .feat{padding:24px;border-radius:var(--radius);border:1px solid var(--line);background:#fff}
-  .feat .dot{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.3rem;color:#fff;margin-bottom:12px}
-  .feat:nth-child(1) .dot{background:var(--blue)}
-  .feat:nth-child(2) .dot{background:var(--red)}
-  .feat:nth-child(3) .dot{background:var(--yellow);color:var(--ink)}
-  .feat:nth-child(4) .dot{background:var(--green)}
-  .feat h3{font-size:1.02rem;margin-bottom:4px}
-  .feat p{font-size:.88rem;color:var(--muted)}
+  /* ===== Promo wide banner ===== */
+  .promo{margin:30px 0 6px;border-radius:22px;background:var(--ink);color:#fff;display:grid;grid-template-columns:1.2fr 1fr;align-items:center;overflow:hidden;position:relative}
+  .promo .txt{padding:44px 48px}
+  .promo small{color:var(--yellow);font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:.75rem}
+  .promo h2{font-size:clamp(1.6rem,3vw,2.5rem);font-weight:900;line-height:1.1;margin:8px 0 12px}
+  .promo p{color:#c5ccd6;max-width:460px;margin-bottom:22px}
+  .promo .btn{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+  .promo .art{display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,var(--blue),var(--green))}
+  .promo .art svg{width:200px;color:#fff}
+  .promo::after{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:linear-gradient(var(--blue),var(--red),var(--yellow),var(--green))}
 
-  /* CTA */
-  .cta{background:var(--ink);color:#fff;border-radius:28px;padding:48px;display:grid;grid-template-columns:1.3fr 1fr;gap:30px;align-items:center;position:relative;overflow:hidden}
-  .cta::before{content:"";position:absolute;right:0;top:0;bottom:0;width:8px;background:linear-gradient(var(--blue),var(--red),var(--yellow),var(--green))}
-  .cta h2{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900}
-  .cta p{color:#c5ccd6;margin-top:8px}
-  .cta form{display:flex;gap:10px;flex-wrap:wrap}
-  .cta input{flex:1;min-width:180px;padding:14px 16px;border-radius:12px;border:0;font-size:.95rem}
-  .cta button{background:var(--yellow);color:var(--ink);border:0;border-radius:12px;padding:14px 22px;font-weight:800;cursor:pointer}
-  .cta .ok{display:none;color:var(--green);font-weight:700;margin-top:10px;width:100%}
+  /* ===== Shop by room ===== */
+  .rooms{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .room{position:relative;border-radius:var(--radius);overflow:hidden;aspect-ratio:4/4.4;display:flex;align-items:flex-end;background:var(--c);color:#fff;cursor:pointer;transition:.3s}
+  .room:hover{transform:translateY(-5px)}
+  .room.dk{color:var(--ink)}
+  .room svg{position:absolute;top:18%;left:50%;transform:translateX(-50%);width:46%;opacity:.95;color:rgba(255,255,255,.95)}
+  .room.dk svg{color:rgba(0,0,0,.85)}
+  .room div{position:relative;padding:18px;width:100%;background:linear-gradient(transparent,rgba(0,0,0,.28))}
+  .room.dk div{background:linear-gradient(transparent,rgba(255,255,255,.35))}
+  .room h3{font-size:1.15rem}
+  .room span{font-size:.82rem;opacity:.9}
 
-  /* Footer */
-  footer{border-top:1px solid var(--line);padding:50px 0 24px;background:#fff}
-  .fgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:30px}
-  footer h4{margin-bottom:12px}
-  footer ul{list-style:none;display:grid;gap:8px;font-size:.92rem;color:var(--muted)}
+  /* ===== About ===== */
+  .about{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;background:var(--soft);border-radius:22px;padding:44px;margin:40px 0 10px}
+  .about h2{font-size:1.8rem;font-weight:900;margin-bottom:12px}
+  .about p{color:var(--muted);margin-bottom:18px}
+  .counts{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .counts div{background:#fff;border-radius:14px;padding:20px;border-left:5px solid var(--c)}
+  .counts b{font-size:1.8rem;font-weight:900;display:block;color:var(--c)}
+  .counts span{font-size:.85rem;color:var(--muted)}
+  .awards{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:20px}
+  .award{border:1px solid var(--line);border-radius:12px;padding:14px 20px;font-weight:800;font-size:.85rem;display:flex;align-items:center;gap:8px;background:#fff}
+
+  /* ===== Blogs ===== */
+  .blogs{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .blog{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#fff;transition:.25s}
+  .blog:hover{box-shadow:0 18px 34px -18px rgba(0,0,0,.35);transform:translateY(-4px)}
+  .blog .bimg{height:150px;background:var(--c);display:grid;place-items:center}
+  .blog .bimg svg{width:80px;color:rgba(255,255,255,.95)}
+  .blog .bimg.dk svg{color:rgba(0,0,0,.85)}
+  .blog .bb{padding:16px}
+  .blog time{font-size:.75rem;color:var(--muted)}
+  .blog h3{font-size:.98rem;line-height:1.3;margin:6px 0}
+  .blog p{font-size:.84rem;color:var(--muted)}
+  .center{text-align:center;margin-top:20px}
+
+  /* ===== Footer ===== */
+  footer{margin-top:56px;background:#fff;border-top:1px solid var(--line)}
+  .fgrid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1.3fr;gap:28px;padding:46px 0 30px}
+  footer h4{font-size:.95rem;margin-bottom:14px;position:relative;padding-bottom:8px}
+  footer h4::after{content:"";position:absolute;left:0;bottom:0;width:28px;height:3px;border-radius:3px;background:var(--c,var(--blue))}
+  footer ul{list-style:none;display:grid;gap:9px;font-size:.9rem;color:var(--muted)}
   footer ul a:hover{color:var(--blue)}
-  footer .about p{color:var(--muted);font-size:.9rem;margin-top:10px;max-width:300px}
-  .copy{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.85rem;color:var(--muted)}
+  footer .about-f p{color:var(--muted);font-size:.88rem;margin:12px 0}
+  .social{display:flex;gap:8px;margin-top:12px}
+  .social a{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#fff;font-weight:800;font-size:.85rem}
+  .social a.y{color:var(--ink)}
+  .care li{display:flex;gap:8px}
+  .copy{border-top:1px solid var(--line);padding:16px 0;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:.82rem;color:var(--muted)}
 
-  /* Responsive */
-  @media (max-width:980px){
-    .hero-grid,.cta{grid-template-columns:1fr}
-    .cats,.products,.features{grid-template-columns:repeat(2,1fr)}
+  /* ===== Floating ===== */
+  .float-wa{position:fixed;right:18px;bottom:18px;z-index:70;width:56px;height:56px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-size:1.6rem;box-shadow:0 10px 24px -6px rgba(0,165,80,.6)}
+  .totop{position:fixed;right:24px;bottom:86px;z-index:70;width:44px;height:44px;border-radius:50%;border:0;background:var(--ink);color:#fff;cursor:pointer;font-size:1.1rem;display:none}
+  .totop.show{display:block}
+
+  /* ===== Cart drawer ===== */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:80;opacity:0;visibility:hidden;transition:.25s}
+  .overlay.open{opacity:1;visibility:visible}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);background:#fff;z-index:90;transform:translateX(100%);transition:.3s;display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .drawer .dh{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
+  .drawer .dh h3{font-size:1.1rem}
+  .drawer .dh button{background:none;border:0;font-size:1.4rem;cursor:pointer}
+  .items{flex:1;overflow:auto;padding:10px 20px}
+  .item{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+  .item .ti{width:54px;height:54px;border-radius:10px;background:var(--soft);display:grid;place-items:center;flex:none}
+  .item .ti svg{width:32px}
+  .item .nm{flex:1;font-size:.85rem;font-weight:700}
+  .item .nm small{display:block;color:var(--muted);font-weight:500}
+  .item .rm{background:none;border:0;color:var(--red);cursor:pointer;font-size:1.1rem}
+  .empty{text-align:center;color:var(--muted);padding:50px 10px}
+  .dfoot{padding:18px 20px;border-top:1px solid var(--line)}
+  .dfoot .sum{display:flex;justify-content:space-between;font-weight:900;font-size:1.1rem;margin-bottom:12px}
+  .dfoot .btn{width:100%;text-align:center}
+
+  /* ===== Mobile menu ===== */
+  .mmenu{position:fixed;top:0;left:0;bottom:0;width:min(300px,86%);background:#fff;z-index:90;transform:translateX(-100%);transition:.3s;padding:20px}
+  .mmenu.open{transform:none}
+  .mmenu a{display:block;padding:14px 4px;font-weight:700;border-bottom:1px solid var(--line)}
+  .mmenu .x{background:none;border:0;font-size:1.5rem;margin-bottom:10px;cursor:pointer}
+
+  /* ===== Auth modal ===== */
+  .icons{position:relative}
+  .avatar{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.9rem}
+  .accmenu{display:none;position:absolute;top:50px;right:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 36px -12px rgba(0,0,0,.3);padding:14px;min-width:210px;z-index:70;flex-direction:column;gap:4px}
+  .accmenu.open{display:flex}
+  .accmenu small{color:var(--muted);word-break:break-all}
+  .accmenu button{margin-top:8px;padding:10px;border-radius:10px;border:2px solid var(--ink);background:#fff;font-weight:800;cursor:pointer}
+  .accmenu button:hover{background:var(--ink);color:#fff}
+  .modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%);width:min(430px,94%);max-height:92vh;overflow:auto;background:#fff;border-radius:22px;z-index:95;padding:26px 26px 22px;opacity:0;visibility:hidden;transition:.25s;border-top:6px solid transparent;border-image:linear-gradient(90deg,var(--blue) 25%,var(--red) 25% 50%,var(--yellow) 50% 75%,var(--green) 75%) 1}
+  .modal.open{opacity:1;visibility:visible;transform:translate(-50%,-50%)}
+  .modal .mx{position:absolute;top:10px;right:14px;background:none;border:0;font-size:1.6rem;cursor:pointer}
+  .modal .mlogo{display:block;width:96px;margin:0 auto 6px}
+  .tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:12px;padding:4px;margin:10px 0 16px}
+  .tabs button{border:0;background:none;padding:10px;border-radius:9px;font-weight:800;cursor:pointer;font-size:.92rem;color:var(--muted)}
+  .tabs button.on{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+  .modal form{display:none;flex-direction:column;gap:12px}
+  .modal form.on{display:flex}
+  .field label{display:block;font-size:.8rem;font-weight:700;margin-bottom:4px}
+  .field input{width:100%;padding:12px 14px;border:2px solid var(--line);border-radius:12px;font-size:.95rem;outline:none;font-family:inherit}
+  .field input:focus{border-color:var(--blue)}
+  .modal .btn{width:100%;text-align:center}
+  .modal .btn:disabled{opacity:.6;cursor:wait}
+  .linkbtn{background:none;border:0;color:var(--blue);font-weight:700;font-size:.85rem;cursor:pointer;text-align:right;padding:0}
+  .or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.8rem;margin:14px 0}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+  .gbtn{width:100%;padding:12px;border-radius:12px;border:2px solid var(--line);background:#fff;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-size:.92rem}
+  .gbtn:hover{border-color:var(--ink)}
+  .amsg{margin-top:12px;font-size:.85rem;font-weight:600;border-radius:10px;padding:0;display:none}
+  .amsg.err{display:block;background:#fdecee;color:#b00014;padding:10px 12px}
+  .amsg.ok{display:block;background:#e7f7ee;color:#007a3d;padding:10px 12px}
+
+  /* ===== Responsive ===== */
+  @media (max-width:1100px){
+    .pcard{flex-basis:calc((100% - 48px)/4)}
+    .fgrid{grid-template-columns:1fr 1fr 1fr}
+    .blogs{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:900px){
+    nav.main{display:none}
+    .menu-btn{display:block}
+    .hero{grid-template-columns:1fr}
+    .side-banners{grid-template-columns:1fr 1fr;grid-template-rows:auto}
+    .sb{min-height:170px}
+    .slider{min-height:440px}
+    .slide{grid-template-columns:1fr;padding:30px 26px;text-align:left;align-content:center;gap:6px}
+    .slide .art{display:none}
+    .pcard{flex-basis:calc((100% - 32px)/3)}
+    .rooms{grid-template-columns:repeat(2,1fr)}
+    .trust{grid-template-columns:repeat(2,1fr)}
+    .trust div:nth-child(2){border-right:0}
+    .trust div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+    .promo,.about{grid-template-columns:1fr}
+    .promo .txt{padding:30px 26px}
+    .about{padding:28px}
+  }
+  @media (max-width:600px){
+    .pcard{flex-basis:calc((100% - 16px)/2);min-width:160px}
+    .side-banners{grid-template-columns:1fr}
     .fgrid{grid-template-columns:1fr 1fr}
-    .f1{left:0}.f2{right:0}
-  }
-  @media (max-width:760px){
-    .menu-toggle{display:block;margin-left:auto}
-    nav{position:absolute;left:0;right:0;top:100%;background:#fff;border-bottom:1px solid var(--line);display:none}
-    nav.open{display:block}
-    nav ul{flex-direction:column;gap:0;margin:0;padding:8px 4%}
-    nav a{display:block;padding:12px 0;border-bottom:1px solid var(--line)}
-    .hero{padding:40px 0 56px}
-  }
-  @media (max-width:520px){
-    .products,.cats,.features{grid-template-columns:1fr}
-    .cta{padding:30px 22px}
-    .fgrid{grid-template-columns:1fr}
-    .brand svg{width:52px}
+    .blogs{grid-template-columns:1fr}
+    .logo svg{width:76px}
+    .cart-total{display:none}
+    .announce .hide-m{display:none}
+    .counts{grid-template-columns:1fr 1fr}
   }
 </style>
 </head>
 <body>
 
-<!-- Reusable SVG symbols -->
+<!-- ===== SVG symbols ===== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="cam" viewBox="0 0 200 170">
     <g fill="#fff" stroke="currentColor" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
@@ -187,13 +288,66 @@
     </g>
     <circle cx="150" cy="78" r="7" fill="#e3000f"/>
   </symbol>
+  <symbol id="ptz" viewBox="0 0 200 200">
+    <g fill="#fff" stroke="currentColor" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="40" y="150" width="120" height="30" rx="10"/>
+      <path d="M70 150 V120 H130 V150"/>
+      <circle cx="100" cy="76" r="52"/>
+      <circle cx="100" cy="76" r="26"/>
+    </g>
+    <circle cx="100" cy="76" r="9" fill="#0b6fd6"/>
+  </symbol>
+  <symbol id="dome" viewBox="0 0 200 170">
+    <g fill="#fff" stroke="currentColor" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="20" y="20" width="160" height="26" rx="8"/>
+      <path d="M36 46 A64 64 0 0 0 164 46 Z"/>
+      <circle cx="100" cy="82" r="22"/>
+    </g>
+    <circle cx="100" cy="82" r="8" fill="#e3000f"/>
+  </symbol>
+  <symbol id="sd" viewBox="0 0 160 200">
+    <g fill="#fff" stroke="currentColor" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M30 20 H100 L134 54 V176 a10 10 0 0 1 -10 10 H30 a10 10 0 0 1 -10 -10 V30 a10 10 0 0 1 10 -10Z"/>
+      <path d="M50 20 V54 M70 20 V54 M90 20 V54"/>
+    </g>
+    <rect x="42" y="100" width="70" height="44" rx="6" fill="#ffc800" stroke="currentColor" stroke-width="6"/>
+  </symbol>
+  <symbol id="sensor" viewBox="0 0 200 200">
+    <g fill="#fff" stroke="currentColor" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="55" y="25" width="90" height="150" rx="24"/>
+      <circle cx="100" cy="82" r="24"/>
+    </g>
+    <circle cx="100" cy="82" r="9" fill="#00a550"/>
+    <circle cx="100" cy="140" r="6" fill="#e3000f"/>
+  </symbol>
+  <symbol id="solar" viewBox="0 0 220 180">
+    <g fill="#fff" stroke="currentColor" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M50 30 H180 L200 120 H30 Z"/>
+      <path d="M72 30 L62 120 M115 30 V120 M158 30 L168 120 M40 75 H190"/>
+      <path d="M115 120 V150 M85 156 H145"/>
+    </g>
+  </symbol>
+  <symbol id="hub" viewBox="0 0 200 200">
+    <g fill="#fff" stroke="currentColor" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="35" y="95" width="130" height="70" rx="18"/>
+      <path d="M70 70 a42 42 0 0 1 60 0 M52 50 a68 68 0 0 1 96 0"/>
+    </g>
+    <circle cx="70" cy="130" r="7" fill="#0b6fd6"/>
+    <circle cx="100" cy="130" r="7" fill="#ffc800"/>
+  </symbol>
+  <symbol id="lock" viewBox="0 0 200 200">
+    <g fill="#fff" stroke="currentColor" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="55" y="20" width="90" height="160" rx="22"/>
+      <circle cx="100" cy="76" r="20"/>
+      <path d="M80 130 H120"/>
+    </g>
+    <circle cx="100" cy="76" r="7" fill="#00a550"/>
+  </symbol>
   <symbol id="logo" viewBox="0 0 260 200">
-    <!-- brackets -->
     <path d="M62 62 L18 112" stroke="#0b6fd6" stroke-width="13" stroke-linecap="round" fill="none"/>
     <path d="M18 112 L56 160" stroke="#e3000f" stroke-width="13" stroke-linecap="round" fill="none"/>
     <path d="M198 62 L242 112" stroke="#ffc800" stroke-width="13" stroke-linecap="round" fill="none"/>
     <path d="M242 112 L204 160" stroke="#00a550" stroke-width="13" stroke-linecap="round" fill="none"/>
-    <!-- camera -->
     <g transform="translate(70 4) scale(.62)" fill="#fff" stroke="#111" stroke-width="12" stroke-linejoin="round" stroke-linecap="round">
       <path d="M20 22 L112 8 L136 60 L40 84 Z" transform="rotate(10 80 50)"/>
       <path d="M40 84 L136 60 L160 78 L120 98 Z" transform="rotate(10 80 50)"/>
@@ -206,195 +360,546 @@
   </symbol>
 </svg>
 
-<div class="topbar">
-  <div class="container">
-    <span>🚚 <b>Free delivery</b> on orders over Rs. 15,000</span>
-    <span>📞 Call / WhatsApp: +92 300 0000000</span>
-  </div>
+<!-- ===== Announcement ===== -->
+<div class="announce">
+  🌐 <b>Online store</b> – order anytime <span class="sep hide-m">|</span> 📞 <a href="tel:+923053871991"><b>0305 3871991</b></a> <span class="sep hide-m">|</span>
+  🚚 <b>Free delivery</b> on orders over PKR 15,000 <span class="sep hide-m">|</span>
+  <span class="hide-m">💳 Cash on Delivery available</span> <span class="sep hide-m">|</span>
+  <span class="hide-m">🛡️ 1-Year warranty</span>
 </div>
 
+<!-- ===== Header ===== -->
 <header>
-  <div class="container nav">
-    <a href="#home" class="brand" aria-label="CCTV PITS home">
-      <!-- Logo: replace with <img src="logo.png"> if you want to use the original file -->
-      <svg viewBox="0 0 260 200" role="img" aria-label="CCTV PITS logo"><use href="#logo"/></svg>
-    </a>
-    <button class="menu-toggle" id="menuToggle" aria-label="Menu">☰</button>
-    <nav id="nav">
-      <ul>
-        <li><a href="#home">Home</a></li>
-        <li><a href="#categories">Categories</a></li>
-        <li><a href="#products">Shop</a></li>
-        <li><a href="#why">Why Us</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
+  <div class="container hbar">
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
+    <!-- To use your original image: replace <svg> with <img src="logo.png" alt="CCTV PITS" height="52"> -->
+    <a href="#top" class="logo" aria-label="CCTV PITS"><svg viewBox="0 0 260 200"><use href="#logo"/></svg></a>
+    <nav class="main">
+      <a href="#indoor" style="--c:var(--blue)">Security Cameras</a>
+      <a href="#sensors" style="--c:var(--red)">Smart Home</a>
+      <a href="#footer" style="--c:var(--yellow)">Support</a>
+      <a href="#cloud" style="--c:var(--green)">Cloud Play</a>
+      <a href="#footer" style="--c:var(--blue)">Track Order</a>
     </nav>
-    <button class="cart-btn" id="cartBtn">🛒 Cart <span class="count" id="cartCount">0</span></button>
+    <div class="icons">
+      <button class="ico" id="searchBtn" aria-label="Search">🔍</button>
+      <button class="ico" id="accountBtn" aria-label="Account">👤</button>
+      <div class="accmenu" id="accMenu"><b id="accName"></b><small id="accEmail"></small><button id="logoutBtn">Log out</button></div>
+      <button class="ico" aria-label="Wishlist">♡<span class="n" id="wishN">0</span></button>
+      <button class="ico" id="cartBtn" aria-label="Cart">🛒<span class="n" id="cartN">0</span></button>
+      <span class="cart-total" id="cartTotal">PKR 0</span>
+    </div>
   </div>
+  <div class="container searchrow" id="searchRow">
+    <input id="searchInput" type="search" placeholder="Search cameras, sensors, SD cards…">
+  </div>
+  <div class="colorline"></div>
 </header>
 
-<main id="home">
-  <!-- HERO -->
-  <div class="hero">
-    <div class="container hero-grid">
-      <div>
-        <span class="tag"><i></i>Smart security store</span>
-        <h1>Watch over what matters. <span class="b">Control</span> <span class="r">from Anywhere.</span></h1>
-        <p class="lead">HD &amp; 4K CCTV cameras, DVR/NVR kits and accessories — delivered, installed and viewable from your phone, wherever you are.</p>
-        <div class="btns">
-          <a href="#products" class="btn primary">Shop Cameras</a>
-          <a href="#contact" class="btn ghost">Get Free Quote</a>
+<main id="top">
+  <!-- ===== Hero ===== -->
+  <div class="container hero">
+    <div class="slider" id="slider">
+      <div class="slide active" style="--c:var(--blue)">
+        <div>
+          <span class="kicker">New Arrivals</span>
+          <h2>Pan &amp; Tilt Smart Cameras</h2>
+          <p>Crystal-clear 2K video, night vision and motion alerts — control from anywhere on your phone.</p>
+          <a href="#new" class="btn">Shop Now</a>
         </div>
-        <div class="stats">
-          <div><b>5,000+</b><span>Happy customers</span></div>
-          <div><b>24/7</b><span>Remote viewing</span></div>
-          <div><b>1 Year</b><span>Warranty</span></div>
-        </div>
+        <div class="art"><div class="blob"><svg viewBox="0 0 200 200"><use href="#ptz"/></svg></div></div>
       </div>
-      <div class="hero-art">
-        <div class="hero-card">
-          <svg viewBox="0 0 200 170" style="color:#111"><use href="#cam"/></svg>
-          <span class="float f1">Live on mobile</span>
-          <span class="float f2">Night vision</span>
-          <span class="float f3">Motion alerts</span>
+      <div class="slide" style="--c:var(--red)">
+        <div>
+          <span class="kicker">Mega Sale</span>
+          <h2>Outdoor Cameras up to 25% Off</h2>
+          <p>Weatherproof, colour night vision and two-way talk to protect your gate, shop and yard.</p>
+          <a href="#outdoor" class="btn">View Deals</a>
         </div>
+        <div class="art"><div class="blob"><svg viewBox="0 0 200 170"><use href="#cam"/></svg></div></div>
+      </div>
+      <div class="slide" style="--c:var(--green)">
+        <div>
+          <span class="kicker">Wire-Free</span>
+          <h2>Solar &amp; Battery Powered Cameras</h2>
+          <p>No wires, no limits. Install anywhere and keep watching, rain or shine.</p>
+          <a href="#battery" class="btn">Explore</a>
+        </div>
+        <div class="art"><div class="blob"><svg viewBox="0 0 220 180"><use href="#solar"/></svg></div></div>
+      </div>
+      <div class="slide" style="--c:var(--yellow)">
+        <div>
+          <span class="kicker" style="color:#111">Smart Home</span>
+          <h2>Sensors, Locks &amp; Hubs</h2>
+          <p>Build a connected home that alerts you the moment something moves, opens or leaks.</p>
+          <a href="#sensors" class="btn">Discover</a>
+        </div>
+        <div class="art"><div class="blob"><svg viewBox="0 0 200 200"><use href="#lock"/></svg></div></div>
+      </div>
+      <button class="arrow prev" id="prev" aria-label="Previous">‹</button>
+      <button class="arrow next" id="next" aria-label="Next">›</button>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="side-banners">
+      <div class="sb" style="--c:var(--yellow)" class="dark-text">
+        <small>Best Seller</small>
+        <h3 style="color:#111">Indoor Wi-Fi Cameras</h3>
+        <a href="#indoor" style="color:#111">Shop indoor →</a>
+        <svg viewBox="0 0 200 170" style="color:#111"><use href="#dome"/></svg>
+      </div>
+      <div class="sb" style="--c:var(--blue)">
+        <small>Storage</small>
+        <h3>Memory Cards from PKR 2,199</h3>
+        <a href="#accessories">Shop SD cards →</a>
+        <svg viewBox="0 0 160 200"><use href="#sd"/></svg>
       </div>
     </div>
   </div>
 
-  <!-- CATEGORIES -->
-  <section id="categories">
-    <div class="container">
-      <div class="head">
-        <h2>Shop by Category</h2>
-        <p>Everything you need for a complete security setup.</p>
-        <div class="bar"><i></i><i></i><i></i><i></i></div>
-      </div>
-      <div class="cats">
-        <a href="#products" class="cat" style="--c:var(--blue)"><div class="ic">📹</div><h3>Cameras</h3><p>Dome, bullet, PTZ &amp; WiFi</p></a>
-        <a href="#products" class="cat" style="--c:var(--red)"><div class="ic">🖥️</div><h3>DVR / NVR</h3><p>4, 8, 16 &amp; 32 channel</p></a>
-        <a href="#products" class="cat" style="--c:var(--yellow)"><div class="ic">💾</div><h3>Storage</h3><p>Surveillance hard drives</p></a>
-        <a href="#products" class="cat" style="--c:var(--green)"><div class="ic">🔌</div><h3>Accessories</h3><p>Cables, power &amp; connectors</p></a>
-      </div>
+  <!-- ===== Trust strip ===== -->
+  <div class="container">
+    <div class="trust">
+      <div style="--c:var(--blue)"><span class="t-ico">🚚</span><p><b>Nationwide Delivery</b><span>2–4 working days</span></p></div>
+      <div style="--c:var(--red)"><span class="t-ico">🛡️</span><p><b>Official Warranty</b><span>Genuine products</span></p></div>
+      <div style="--c:var(--yellow)"><span class="t-ico" style="color:#111">↩️</span><p><b>Easy Returns</b><span>7-day replacement</span></p></div>
+      <div style="--c:var(--green)"><span class="t-ico">💬</span><p><b>Fast Support</b><span>Call or WhatsApp</span></p></div>
     </div>
-  </section>
+  </div>
 
-  <!-- PRODUCTS -->
-  <section id="products" class="products-bg">
-    <div class="container">
-      <div class="head">
-        <h2>Featured Products</h2>
-        <p>Best sellers picked for homes, shops and offices.</p>
-        <div class="bar"><i></i><i></i><i></i><i></i></div>
-      </div>
-      <div class="products" id="productGrid"></div>
-    </div>
-  </section>
+  <!-- ===== Product sections (filled by JS) ===== -->
+  <div class="container" id="sections"></div>
 
-  <!-- WHY US -->
-  <section id="why">
-    <div class="container">
-      <div class="head">
-        <h2>Why Choose CCTV PITS</h2>
-        <p>Security you can trust, support you can reach.</p>
-        <div class="bar"><i></i><i></i><i></i><i></i></div>
+  <!-- ===== Promo ===== -->
+  <div class="container" id="cloud">
+    <div class="promo">
+      <div class="txt">
+        <small>Cloud Play</small>
+        <h2>Never miss a moment — view recordings from anywhere.</h2>
+        <p>Secure cloud storage keeps your clips safe even if the camera is taken. Watch live or playback in the CCTV PITS app.</p>
+        <a href="#footer" class="btn">Learn More</a>
       </div>
-      <div class="features">
-        <div class="feat"><div class="dot">📱</div><h3>View from Anywhere</h3><p>Watch live and recorded footage on your phone or laptop, any time.</p></div>
-        <div class="feat"><div class="dot">🛠️</div><h3>Expert Installation</h3><p>Professional technicians set everything up and test it for you.</p></div>
-        <div class="feat"><div class="dot">✅</div><h3>Genuine Products</h3><p>Quality-checked cameras and recorders with real warranty cover.</p></div>
-        <div class="feat"><div class="dot">💬</div><h3>Fast Support</h3><p>Friendly help by call or WhatsApp whenever you need it.</p></div>
-      </div>
+      <div class="art"><svg viewBox="0 0 200 170"><use href="#cam"/></svg></div>
     </div>
-  </section>
+  </div>
 
-  <!-- CTA -->
-  <section id="contact" style="padding-top:0">
-    <div class="container">
-      <div class="cta">
-        <div>
-          <h2>Get a free security consultation</h2>
-          <p>Leave your number and we'll call you back with the best setup and price for your place.</p>
-        </div>
-        <form id="leadForm">
-          <input type="tel" placeholder="Your phone number" required>
-          <button type="submit">Call Me Back</button>
-          <div class="ok" id="leadOk">✔ Thank you! We'll contact you shortly.</div>
-        </form>
+  <!-- ===== Shop by room ===== -->
+  <div class="container sec">
+    <div class="sec-head"><h2 style="--c:var(--red)">Shop by Space</h2></div>
+    <div class="rooms">
+      <div class="room" style="--c:var(--blue)"><svg viewBox="0 0 200 200"><use href="#ptz"/></svg><div><h3>Living Room</h3><span>Pan &amp; tilt indoor cameras</span></div></div>
+      <div class="room dk" style="--c:var(--yellow)"><svg viewBox="0 0 200 170"><use href="#dome"/></svg><div><h3>Home Office</h3><span>Compact desk cameras</span></div></div>
+      <div class="room" style="--c:var(--red)"><svg viewBox="0 0 200 200"><use href="#lock"/></svg><div><h3>Front Door</h3><span>Locks &amp; door sensors</span></div></div>
+      <div class="room" style="--c:var(--green)"><svg viewBox="0 0 200 170"><use href="#cam"/></svg><div><h3>Backyard</h3><span>Weatherproof outdoor cameras</span></div></div>
+    </div>
+  </div>
+
+  <!-- ===== About ===== -->
+  <div class="container">
+    <div class="about">
+      <div>
+        <h2>About CCTV PITS</h2>
+        <p>We help homes, shops and offices stay protected with reliable cameras, smart sensors and friendly local support. Our mission is simple: security you can control from anywhere.</p>
+        <a href="#footer" class="btn outline">More About Us</a>
+      </div>
+      <div class="counts">
+        <div style="--c:var(--blue)"><b>5,000+</b><span>Happy customers</span></div>
+        <div style="--c:var(--red)"><b>100+</b><span>Products in stock</span></div>
+        <div style="--c:var(--yellow)"><b>24/7</b><span>Remote viewing</span></div>
+        <div style="--c:var(--green)"><b>1 Year</b><span>Warranty cover</span></div>
       </div>
     </div>
-  </section>
+    <div class="awards">
+      <span class="award">🏆 Trusted Seller</span>
+      <span class="award">⭐ 4.8 Customer Rating</span>
+      <span class="award">✅ Genuine Products</span>
+      <span class="award">🔒 Secure Checkout</span>
+    </div>
+  </div>
+
+  <!-- ===== Blogs ===== -->
+  <div class="container sec">
+    <div class="sec-head"><h2 style="--c:var(--green)">Latest Blogs</h2><div class="tools"><a href="#" class="all" style="--c:var(--green)">View all →</a></div></div>
+    <div class="blogs">
+      <a href="#" class="blog"><div class="bimg" style="background:var(--blue)"><svg viewBox="0 0 200 200"><use href="#ptz"/></svg></div><div class="bb"><time>October 12, 2026</time><h3>How to choose the right home security camera</h3><p>Resolution, field of view and storage — what really matters before you buy.</p></div></a>
+      <a href="#" class="blog"><div class="bimg" style="background:var(--red)"><svg viewBox="0 0 200 170"><use href="#cam"/></svg></div><div class="bb"><time>September 28, 2026</time><h3>5 tips to place outdoor cameras for best coverage</h3><p>Height, angle and lighting tips used by professional installers.</p></div></a>
+      <a href="#" class="blog"><div class="bimg dk" style="background:var(--yellow)"><svg viewBox="0 0 160 200"><use href="#sd"/></svg></div><div class="bb"><time>September 10, 2026</time><h3>Which SD card size do you need?</h3><p>A simple guide to recording days versus card capacity.</p></div></a>
+      <a href="#" class="blog"><div class="bimg" style="background:var(--green)"><svg viewBox="0 0 200 200"><use href="#sensor"/></svg></div><div class="bb"><time>August 22, 2026</time><h3>Smart sensors that make your home safer</h3><p>Motion, door and leak sensors working together with your cameras.</p></div></a>
+    </div>
+  </div>
 </main>
 
-<footer>
+<!-- ===== Footer ===== -->
+<footer id="footer">
   <div class="container">
     <div class="fgrid">
-      <div class="about">
-        <svg viewBox="0 0 260 200" style="width:110px"><use href="#logo"/></svg>
-        <p>Your trusted source for CCTV cameras, recorders and complete security solutions.</p>
+      <div class="about-f">
+        <svg viewBox="0 0 260 200" style="width:120px"><use href="#logo"/></svg>
+        <p>Your trusted online store for CCTV cameras, smart home security and accessories in Pakistan.</p>
+        <div class="social">
+          <a href="#" style="--c:var(--blue)" aria-label="Facebook">f</a>
+          <a href="#" style="--c:var(--red)" aria-label="Instagram">in</a>
+          <a href="#" class="y" style="--c:var(--yellow)" aria-label="WhatsApp">wa</a>
+          <a href="#" style="--c:var(--green)" aria-label="YouTube">▶</a>
+        </div>
       </div>
-      <div><h4>Shop</h4><ul><li><a href="#products">Cameras</a></li><li><a href="#products">DVR / NVR</a></li><li><a href="#products">Hard Drives</a></li><li><a href="#products">Accessories</a></li></ul></div>
-      <div><h4>Company</h4><ul><li><a href="#why">Why Us</a></li><li><a href="#contact">Contact</a></li><li><a href="#">Warranty Policy</a></li><li><a href="#">Delivery Info</a></li></ul></div>
-      <div><h4>Contact</h4><ul><li>📍 Your City, Pakistan</li><li>📞 +92 300 0000000</li><li>✉️ info@cctvpits.com</li><li>🕘 Mon–Sat, 9am–8pm</li></ul></div>
+      <div style="--c:var(--blue)"><h4>Products</h4><ul><li><a href="#indoor">All Products</a></li><li><a href="#indoor">Security Cameras</a></li><li><a href="#sensors">Smart Home</a></li><li><a href="#accessories">Accessories</a></li></ul></div>
+      <div style="--c:var(--red)"><h4>About Us</h4><ul><li><a href="#">Who We Are</a></li><li><a href="#">CCTV PITS App</a></li><li><a href="#">Blogs</a></li></ul></div>
+      <div style="--c:var(--yellow)"><h4>After Sales</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Refund &amp; Return</a></li><li><a href="#">Terms &amp; Conditions</a></li><li><a href="#">Shipping &amp; Cancellation</a></li></ul></div>
+      <div style="--c:var(--green)"><h4>Customer Care</h4><ul class="care"><li>🌐 100% online store – delivering all over Pakistan</li><li>📞 <a href="tel:+923053871991">0305 3871991</a></li><li>💬 <a href="https://wa.me/923053871991" target="_blank" rel="noopener">WhatsApp us</a></li><li>🕘 Support: 10am – 6pm</li></ul></div>
     </div>
-    <div class="copy">
-      <span>© <span id="year"></span> CCTV PITS. All rights reserved.</span>
-      <span>Control from Anywhere</span>
-    </div>
+    <div class="copy"><span>All Rights Reserved © <span id="year"></span> CCTV PITS</span><span>Control from Anywhere</span></div>
   </div>
 </footer>
 
+<!-- Auth modal -->
+<div class="overlay" id="authOverlay"></div>
+<div class="modal" id="authModal" role="dialog" aria-modal="true" aria-label="Login or Register">
+  <button class="mx" id="authClose" aria-label="Close">×</button>
+  <svg class="mlogo" viewBox="0 0 260 200"><use href="#logo"/></svg>
+  <div class="tabs">
+    <button id="tabLogin" class="on" type="button">Login</button>
+    <button id="tabRegister" type="button">Register</button>
+  </div>
+
+  <form id="loginForm" class="on" novalidate>
+    <div class="field"><label for="liEmail">Email</label><input id="liEmail" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+    <div class="field"><label for="liPass">Password</label><input id="liPass" type="password" autocomplete="current-password" placeholder="Your password" required></div>
+    <button type="button" class="linkbtn" id="forgotBtn">Forgot password?</button>
+    <button class="btn" type="submit" id="liSubmit">Login</button>
+  </form>
+
+  <form id="registerForm" novalidate>
+    <div class="field"><label for="rgName">Full name</label><input id="rgName" type="text" autocomplete="name" placeholder="Your name" required></div>
+    <div class="field"><label for="rgPhone">Mobile number</label><input id="rgPhone" type="tel" autocomplete="tel" placeholder="03XXXXXXXXX" required></div>
+    <div class="field"><label for="rgEmail">Email</label><input id="rgEmail" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+    <div class="field"><label for="rgPass">Password</label><input id="rgPass" type="password" autocomplete="new-password" placeholder="At least 6 characters" required></div>
+    <button class="btn" type="submit" id="rgSubmit">Create account</button>
+  </form>
+
+  <div class="or">or</div>
+  <button class="gbtn" id="googleBtn" type="button">
+    <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+    Continue with Google
+  </button>
+  <div class="amsg" id="authMsg"></div>
+</div>
+
+<!-- Floating -->
+<a class="float-wa" href="https://wa.me/923053871991" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
+<button class="totop" id="toTop" aria-label="Back to top">↑</button>
+
+<!-- Cart drawer -->
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="dh"><h3>Your Cart</h3><button id="closeCart" aria-label="Close">×</button></div>
+  <div class="items" id="items"></div>
+  <div class="dfoot"><div class="sum"><span>Total</span><span id="sum">PKR 0</span></div><button class="btn" id="checkout">Checkout</button></div>
+</aside>
+
+<!-- Mobile menu -->
+<aside class="mmenu" id="mmenu">
+  <button class="x" id="closeMenu" aria-label="Close">×</button>
+  <a href="#indoor">Security Cameras</a><a href="#sensors">Smart Home</a><a href="#footer">Support</a><a href="#cloud">Cloud Play</a><a href="#footer">Track Order</a>
+</aside>
+
 <script>
-  const products = [
-    {name:"2MP Dome Camera",spec:"1080p • Night vision • Indoor",price:3500,old:4200,color:"--blue",badge:"Best Seller"},
-    {name:"4MP Bullet Camera",spec:"2K • Weatherproof • 40m IR",price:5200,old:6000,color:"--red",badge:"Sale"},
-    {name:"WiFi PTZ Camera",spec:"360° • 2-way audio • Phone app",price:7800,old:null,color:"--yellow",badge:"New",dark:true},
-    {name:"Solar Outdoor Camera",spec:"4G/WiFi • Battery • Motion alerts",price:16500,old:18500,color:"--green",badge:"Popular"},
-    {name:"4-Channel DVR Kit",spec:"4 cameras • 500GB HDD • Cables",price:24000,old:27500,color:"--green",badge:"Full Kit"},
-    {name:"8-Channel NVR",spec:"4K support • PoE • H.265+",price:14500,old:null,color:"--blue",badge:"Pro"},
-    {name:"1TB Surveillance HDD",spec:"24/7 recording • Reliable",price:9800,old:10500,color:"--yellow",badge:"Storage",dark:true},
-    {name:"Power Supply 12V 10A",spec:"8-way • Stable output",price:2600,old:null,color:"--red",badge:"Accessory"}
-  ];
-  const fmt = n => "Rs. " + n.toLocaleString("en-PK");
-  const grid = document.getElementById("productGrid");
-  grid.innerHTML = products.map((p,i)=>`
-    <article class="card" style="--c:var(${p.color})">
-      <div class="thumb">
-        <span class="badge ${p.dark?'dark':''}">${p.badge}</span>
-        <svg viewBox="0 0 200 170"><use href="#cam"/></svg>
+/* ---------- Data ---------- */
+const sections = [
+  {id:"new", title:"New Arrivals", color:"--blue", items:[
+    {n:"Pan & Tilt Smart Camera 3MP", i:"ptz", p:6999, o:7799, r:6, tag:"sale"},
+    {n:"Pan & Tilt Smart Camera 1080P", i:"ptz", p:9499, r:1},
+    {n:"Type-C Pan & Tilt Camera 2K", i:"ptz", p:12049, r:2, tag:"new"},
+    {n:"Dual-Lens Pan & Tilt 2K Camera", i:"ptz", p:20999, r:1, tag:"new"},
+    {n:"Dual-Lens Pan & Tilt 3K Camera", i:"ptz", p:24999, r:3, tag:"new"},
+    {n:"Smart Fingerprint Door Lock", i:"lock", p:49999, r:0, tag:"new"},
+    {n:"Wi-Fi Smart Camera 2K+", i:"cam", p:13399, o:14499, r:6, tag:"sale", oos:true}
+  ]},
+  {id:"accessories", title:"Accessories", color:"--yellow", items:[
+    {n:"Surveillance SD Card 32GB", i:"sd", p:2199, r:2},
+    {n:"Surveillance SD Card 64GB", i:"sd", p:3699, r:3},
+    {n:"Surveillance SD Card 128GB", i:"sd", p:5999, r:0},
+    {n:"Surveillance SD Card 256GB", i:"sd", p:11999, o:14999, r:1, tag:"sale"},
+    {n:"Solar Charging Panel 4.2W", i:"solar", p:5999, o:7499, r:3, tag:"sale"},
+    {n:"Solar Charging Panel 6W Type-C", i:"solar", p:9499, r:0, tag:"new"}
+  ]},
+  {id:"indoor", title:"Indoor Wi-Fi Cameras", color:"--blue", items:[
+    {n:"Mini Indoor Wi-Fi Camera 1080P", i:"cam", p:8499, o:8999, r:37, tag:"sale"},
+    {n:"Pan & Tilt Indoor Camera 2K+", i:"ptz", p:11399, r:2},
+    {n:"Pan & Tilt Indoor Camera 3MP", i:"ptz", p:7499, r:0},
+    {n:"Type-C Pan & Tilt 1080P", i:"ptz", p:10099, r:4},
+    {n:"Type-C Pan & Tilt 3K (5MP)", i:"ptz", p:17499, r:1},
+    {n:"Dual-Lens Indoor Camera 2K+", i:"dome", p:14499, r:1, tag:"new"}
+  ]},
+  {id:"outdoor", title:"Outdoor Wi-Fi Cameras", color:"--red", items:[
+    {n:"Color Night Vision Camera", i:"cam", p:9949, o:12999, r:2, tag:"sale"},
+    {n:"Outdoor Pan & Tilt 2K", i:"ptz", p:19999, r:1},
+    {n:"Outdoor Pan & Tilt Wi-Fi", i:"ptz", p:12999, o:15499, r:11, tag:"sale"},
+    {n:"Outdoor 4G Pan & Tilt Camera", i:"ptz", p:16999, o:18500, r:0, tag:"sale"},
+    {n:"Dual-Lens Outdoor 4MP", i:"dome", p:19499, r:0},
+    {n:"4K Dual-Lens Outdoor Camera", i:"cam", p:24999, r:1, oos:true}
+  ]},
+  {id:"battery", title:"Battery Powered Cameras", color:"--green", items:[
+    {n:"4K Solar Battery Camera", i:"solar", p:39500, r:1, tag:"new"},
+    {n:"Wi-Fi Battery Camera", i:"cam", p:21999, r:0, tag:"new", oos:true},
+    {n:"Battery Pan & Tilt Camera", i:"ptz", p:41999, r:1},
+    {n:"Battery Baby Monitor", i:"dome", p:25999, o:34999, r:0, tag:"sale"},
+    {n:"Battery Camera Kit", i:"cam", p:65999, r:1}
+  ]},
+  {id:"sensors", title:"Smart Home Sensors", color:"--yellow", items:[
+    {n:"4-Piece Home Sensor Kit", i:"sensor", p:21999, o:29999, r:0, tag:"sale"},
+    {n:"PIR Motion Sensor", i:"sensor", p:4199, o:4399, r:0, tag:"sale"},
+    {n:"Water Leak Sensor", i:"sensor", p:3599, o:3999, r:0, tag:"sale"},
+    {n:"Smart Home Gateway", i:"hub", p:11999, o:12999, r:0, tag:"sale"},
+    {n:"Door & Window Sensor", i:"sensor", p:3499, r:0, oos:true}
+  ]}
+];
+
+const fmt = n => "PKR " + n.toLocaleString("en-US");
+const stars = r => r ? "★★★★★" : "☆☆☆☆☆";
+let uid = 0;
+
+/* ---------- Render product sections ---------- */
+const wrap = document.getElementById("sections");
+wrap.innerHTML = sections.map(s => `
+  <section class="sec" id="${s.id}" style="--c:var(${s.color})">
+    <div class="sec-head">
+      <h2>${s.title}</h2>
+      <div class="tools">
+        <a href="#${s.id}" class="all">View all →</a>
+        <button class="nav-btn" data-dir="-1" data-t="${s.id}" aria-label="Previous">‹</button>
+        <button class="nav-btn" data-dir="1" data-t="${s.id}" aria-label="Next">›</button>
       </div>
-      <div class="info">
-        <h3>${p.name}</h3>
-        <div class="stars">★★★★★</div>
-        <div class="spec">${p.spec}</div>
-        <div class="buy">
-          <div class="price">${fmt(p.price)}${p.old?`<s>${fmt(p.old)}</s>`:""}</div>
-          <button class="add" data-i="${i}">Add</button>
+    </div>
+    <div class="track" id="t-${s.id}">
+      ${s.items.map(p => { const id = ++uid; p.id = id; return `
+      <article class="pcard" data-id="${id}" data-name="${p.n.toLowerCase()}" style="--c:var(${s.color})">
+        <div class="pimg">
+          <div class="tags">
+            ${p.o ? '<span class="tag sale">SALE</span>' : ''}
+            ${p.tag==="new" ? '<span class="tag new">NEW</span>' : ''}
+            ${p.oos ? '<span class="tag oos">OUT OF STOCK</span>' : ''}
+          </div>
+          <button class="wish" aria-label="Add to wishlist">♥</button>
+          <svg viewBox="${symView(p.i)}"><use href="#${p.i}"/></svg>
         </div>
-      </div>
-    </article>`).join("");
+        <div class="pbody">
+          <h3>${p.n}</h3>
+          <div class="rate"><span class="st">${stars(p.r)}</span><span>${p.r ? p.r + (p.r>1?" reviews":" review") : "No reviews"}</span></div>
+          <div class="price"><span class="now">${fmt(p.p)}</span>${p.o ? `<s>${fmt(p.o)}</s>` : ""}</div>
+          <button class="addbtn" ${p.oos?"disabled":""}>${p.oos?"Out of stock":"Add to cart"}</button>
+        </div>
+      </article>`; }).join("")}
+    </div>
+  </section>`).join("");
 
-  let count = 0;
-  const countEl = document.getElementById("cartCount");
-  grid.addEventListener("click", e=>{
-    const b = e.target.closest(".add"); if(!b) return;
-    count++; countEl.textContent = count;
-    b.textContent = "Added ✓"; b.classList.add("done");
-    setTimeout(()=>{b.textContent="Add"; b.classList.remove("done");},1200);
-  });
-  document.getElementById("cartBtn").addEventListener("click",()=>{
-    alert(count ? `You have ${count} item(s) in your cart.` : "Your cart is empty.");
-  });
+function symView(i){
+  return {cam:"0 0 200 170",ptz:"0 0 200 200",dome:"0 0 200 170",sd:"0 0 160 200",sensor:"0 0 200 200",solar:"0 0 220 180",hub:"0 0 200 200",lock:"0 0 200 200"}[i];
+}
+const all = sections.flatMap(s => s.items);
 
-  document.getElementById("menuToggle").addEventListener("click",()=>document.getElementById("nav").classList.toggle("open"));
-  document.querySelectorAll("#nav a").forEach(a=>a.addEventListener("click",()=>document.getElementById("nav").classList.remove("open")));
+/* carousel arrows */
+document.addEventListener("click", e => {
+  const b = e.target.closest(".nav-btn"); if(!b) return;
+  const t = document.getElementById("t-" + b.dataset.t);
+  t.scrollBy({left: t.clientWidth * .8 * b.dataset.dir, behavior:"smooth"});
+});
 
-  document.getElementById("leadForm").addEventListener("submit",e=>{
-    e.preventDefault();
-    document.getElementById("leadOk").style.display="block";
+/* ---------- Cart & wishlist ---------- */
+let cart = {}; let wish = new Set();
+const $ = id => document.getElementById(id);
+function renderCart(){
+  const ids = Object.keys(cart);
+  const count = ids.reduce((a,k)=>a+cart[k],0);
+  const total = ids.reduce((a,k)=>a+cart[k]*all.find(p=>p.id==k).p,0);
+  $("cartN").textContent = count; $("cartTotal").textContent = fmt(total); $("sum").textContent = fmt(total);
+  $("items").innerHTML = ids.length ? ids.map(k=>{const p=all.find(x=>x.id==k);return `
+    <div class="item"><div class="ti"><svg viewBox="${symView(p.i)}"><use href="#${p.i}"/></svg></div>
+    <div class="nm">${p.n}<small>${cart[k]} × ${fmt(p.p)}</small></div>
+    <button class="rm" data-rm="${k}" aria-label="Remove">🗑</button></div>`}).join("") : '<div class="empty">Your cart is empty.</div>';
+}
+renderCart();
+document.addEventListener("click", e => {
+  const add = e.target.closest(".addbtn");
+  if(add && !add.disabled){
+    const id = add.closest(".pcard").dataset.id; cart[id] = (cart[id]||0)+1; renderCart();
+    add.textContent = "Added ✓"; add.classList.add("done");
+    setTimeout(()=>{add.textContent="Add to cart"; add.classList.remove("done");},1100);
+  }
+  const w = e.target.closest(".wish");
+  if(w){ const id = w.closest(".pcard").dataset.id; w.classList.toggle("on"); w.classList.contains("on") ? wish.add(id) : wish.delete(id); $("wishN").textContent = wish.size; }
+  const rm = e.target.closest("[data-rm]");
+  if(rm){ delete cart[rm.dataset.rm]; renderCart(); }
+});
+const openCart = o => { $("drawer").classList.toggle("open",o); $("overlay").classList.toggle("open",o); };
+$("cartBtn").onclick = () => openCart(true);
+$("closeCart").onclick = $("overlay").onclick = () => { openCart(false); $("mmenu").classList.remove("open"); };
+$("checkout").onclick = () => alert(Object.keys(cart).length ? "Demo checkout – connect a payment method to go live." : "Your cart is empty.");
+
+/* ---------- Search ---------- */
+$("searchBtn").onclick = () => { $("searchRow").classList.toggle("open"); $("searchInput").focus(); };
+$("searchInput").addEventListener("input", e => {
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll(".pcard").forEach(c => c.style.display = (!q || c.dataset.name.includes(q)) ? "" : "none");
+});
+
+/* ---------- Mobile menu ---------- */
+$("menuBtn").onclick = () => { $("mmenu").classList.add("open"); $("overlay").classList.add("open"); };
+$("closeMenu").onclick = () => { $("mmenu").classList.remove("open"); $("overlay").classList.remove("open"); };
+document.querySelectorAll("#mmenu a").forEach(a => a.onclick = () => { $("mmenu").classList.remove("open"); $("overlay").classList.remove("open"); });
+
+/* ---------- Hero slider ---------- */
+const slides = [...document.querySelectorAll(".slide")];
+const dots = $("dots"); let cur = 0, timer;
+slides.forEach((_,i)=>{ const b=document.createElement("button"); b.onclick=()=>go(i); b.setAttribute("aria-label","Slide "+(i+1)); dots.appendChild(b); });
+function go(i){
+  cur = (i+slides.length)%slides.length;
+  slides.forEach((s,k)=>s.classList.toggle("active",k===cur));
+  [...dots.children].forEach((d,k)=>d.classList.toggle("on",k===cur));
+  clearInterval(timer); timer = setInterval(()=>go(cur+1),5500);
+}
+$("prev").onclick = () => go(cur-1); $("next").onclick = () => go(cur+1);
+go(0);
+
+/* ---------- Misc ---------- */
+const toTop = $("toTop");
+addEventListener("scroll", () => toTop.classList.toggle("show", scrollY > 600));
+toTop.onclick = () => scrollTo({top:0,behavior:"smooth"});
+$("year").textContent = new Date().getFullYear();
+</script>
+
+<!-- ===== Firebase: Login / Register / Firestore ===== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         signOut, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+/* 1) PASTE YOUR FIREBASE CONFIG HERE (Firebase Console → Project settings → Your apps → Web app) */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const configured = !firebaseConfig.apiKey.startsWith("YOUR_");
+let auth, db;
+if (configured) { const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }
+
+const $ = id => document.getElementById(id);
+const modal = $("authModal"), overlay = $("authOverlay"), msg = $("authMsg");
+
+function show(text, type){ msg.className = "amsg " + (type || ""); msg.textContent = text || ""; }
+function openModal(){ show(""); modal.classList.add("open"); overlay.classList.add("open"); }
+function closeModal(){ modal.classList.remove("open"); overlay.classList.remove("open"); }
+function tab(which){
+  const login = which === "login";
+  $("tabLogin").classList.toggle("on", login); $("tabRegister").classList.toggle("on", !login);
+  $("loginForm").classList.toggle("on", login); $("registerForm").classList.toggle("on", !login);
+  show("");
+}
+$("tabLogin").onclick = () => tab("login");
+$("tabRegister").onclick = () => tab("register");
+$("authClose").onclick = closeModal; overlay.onclick = closeModal;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+function friendly(err){
+  const c = (err && err.code) || "";
+  const map = {
+    "auth/email-already-in-use":"This email is already registered. Please log in.",
+    "auth/invalid-email":"Please enter a valid email address.",
+    "auth/weak-password":"Password must be at least 6 characters.",
+    "auth/invalid-credential":"Wrong email or password.",
+    "auth/user-not-found":"No account found with this email.",
+    "auth/wrong-password":"Wrong email or password.",
+    "auth/too-many-requests":"Too many attempts. Please try again later.",
+    "auth/network-request-failed":"Network error. Check your internet connection.",
+    "auth/popup-closed-by-user":"Google sign-in was cancelled.",
+    "auth/unauthorized-domain":"This domain is not authorized in Firebase yet.",
+    "auth/operation-not-allowed":"This sign-in method is not enabled in Firebase yet.",
+    "permission-denied":"Database permission denied. Check your Firestore rules."
+  };
+  return map[c] || "Something went wrong. Please try again.";
+}
+function needConfig(){ show("Firebase is not set up yet. Paste your Firebase config in index.html.", "err"); }
+
+/* Register */
+$("registerForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!configured) return needConfig();
+  const name = $("rgName").value.trim(), phone = $("rgPhone").value.replace(/[\s-]/g,""),
+        email = $("rgEmail").value.trim(), pass = $("rgPass").value;
+  if (name.length < 2) return show("Please enter your full name.", "err");
+  if (!/^(03\d{9}|\+923\d{9})$/.test(phone)) return show("Enter a valid mobile number like 03XXXXXXXXX.", "err");
+  if (pass.length < 6) return show("Password must be at least 6 characters.", "err");
+  const btn = $("rgSubmit"); btn.disabled = true; btn.textContent = "Creating…";
+  try{
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(cred.user, { displayName: name });
+    await setDoc(doc(db, "users", cred.user.uid), { name, phone, email, createdAt: serverTimestamp() });
+    show("Account created. Welcome!", "ok");
+    setTimeout(closeModal, 900);
     e.target.reset();
+  }catch(err){ show(friendly(err), "err"); }
+  btn.disabled = false; btn.textContent = "Create account";
+});
+
+/* Login */
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!configured) return needConfig();
+  const btn = $("liSubmit"); btn.disabled = true; btn.textContent = "Logging in…";
+  try{
+    await signInWithEmailAndPassword(auth, $("liEmail").value.trim(), $("liPass").value);
+    show("Logged in.", "ok"); setTimeout(closeModal, 700); e.target.reset();
+  }catch(err){ show(friendly(err), "err"); }
+  btn.disabled = false; btn.textContent = "Login";
+});
+
+/* Forgot password */
+$("forgotBtn").onclick = async () => {
+  if (!configured) return needConfig();
+  const email = $("liEmail").value.trim();
+  if (!email) return show("Type your email above first, then tap Forgot password.", "err");
+  try{ await sendPasswordResetEmail(auth, email); show("Password reset email sent. Check your inbox.", "ok"); }
+  catch(err){ show(friendly(err), "err"); }
+};
+
+/* Google */
+$("googleBtn").onclick = async () => {
+  if (!configured) return needConfig();
+  try{
+    const { user } = await signInWithPopup(auth, new GoogleAuthProvider());
+    const ref = doc(db, "users", user.uid);
+    if (!(await getDoc(ref)).exists())
+      await setDoc(ref, { name: user.displayName || "", phone: "", email: user.email, createdAt: serverTimestamp() });
+    closeModal();
+  }catch(err){ show(friendly(err), "err"); }
+};
+
+/* Account button + menu */
+const accBtn = $("accountBtn"), accMenu = $("accMenu");
+accBtn.onclick = e => {
+  e.stopPropagation();
+  if (configured && auth.currentUser) accMenu.classList.toggle("open"); else openModal();
+};
+document.addEventListener("click", e => { if (!accMenu.contains(e.target)) accMenu.classList.remove("open"); });
+$("logoutBtn").onclick = async () => { await signOut(auth); accMenu.classList.remove("open"); };
+
+if (configured) {
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      const n = user.displayName || user.email || "U";
+      accBtn.innerHTML = '<span class="avatar">' + n.trim().charAt(0).toUpperCase() + '</span>';
+      $("accName").textContent = user.displayName || "My account";
+      $("accEmail").textContent = user.email || "";
+    } else { accBtn.textContent = "👤"; accMenu.classList.remove("open"); }
   });
-  document.getElementById("year").textContent = new Date().getFullYear();
+}
 </script>
 </body>
 </html>
