@@ -3,9 +3,8 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   updateProfile, sendPasswordResetEmail, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
-const HOME = "index.html"; // where to go after login
 const form = document.getElementById("auth-form");
 const msg = document.getElementById("msg");
 const btn = form.querySelector("button.primary");
@@ -25,8 +24,14 @@ const errors = {
 };
 const friendly = e => errors[e.code] || "Something went wrong. Please try again.";
 
-// Already signed in? Skip the form.
-onAuthStateChanged(auth, u => { if (u && !form.dataset.busy) location.replace(HOME); });
+// Admins go to the admin dashboard, everyone else to the store.
+async function goHome(u) {
+  let admin = false;
+  try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
+  location.replace(admin ? "admin.html" : "index.html");
+}
+
+onAuthStateChanged(auth, u => { if (u && !form.dataset.busy) goHome(u); });
 
 form.addEventListener("submit", async e => {
   e.preventDefault();
@@ -51,7 +56,7 @@ form.addEventListener("submit", async e => {
       await signInWithEmailAndPassword(auth, v.email.trim(), v.password);
       show("Logged in. Taking you to the store...", "ok");
     }
-    setTimeout(() => location.replace(HOME), 700);
+    setTimeout(() => goHome(auth.currentUser), 700);
   } catch (err) {
     show(err.code === "custom" ? err.message : friendly(err), "err");
     btn.disabled = false;

@@ -76,15 +76,15 @@ footer{padding:28px 5vw;font-size:14px;color:var(--muted);border-top:1px solid v
 <section id="categories">
   <h2>Shop by category</h2>
   <div class="cats">
-    <a class="cat" style="--c:var(--blue)" href="#products">Wi-Fi cameras</a>
-    <a class="cat" style="--c:var(--red)" href="#products">DVR and NVR</a>
-    <a class="cat" style="--c:var(--yellow)" href="#products">Hard drives</a>
-    <a class="cat" style="--c:var(--green)" href="#products">Accessories</a>
+    <a class="cat" style="--c:var(--blue)" href="#products" data-cat="Wi-Fi cameras">Wi-Fi cameras</a>
+    <a class="cat" style="--c:var(--red)" href="#products" data-cat="DVR and NVR">DVR and NVR</a>
+    <a class="cat" style="--c:var(--yellow)" href="#products" data-cat="Hard drives">Hard drives</a>
+    <a class="cat" style="--c:var(--green)" href="#products" data-cat="Accessories">Accessories</a>
   </div>
 </section>
 
 <section id="products" style="background:var(--soft)">
-  <h2>Featured products</h2>
+  <h2>Featured products <button class="btn ghost sm" id="showall" style="margin-left:10px">Show all</button></h2>
   <div class="grid" id="grid"></div>
 </section>
 
@@ -98,32 +98,53 @@ footer{padding:28px 5vw;font-size:14px;color:var(--muted);border-top:1px solid v
 <footer>&copy; CCTV PITS. Control from Anywhere.</footer>
 
 <script type="module">
-import { auth } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+import { collection, getDocs, query, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
-// Edit your products here. Put images in the repo and set image: "photo.jpg"
 const WHATSAPP = "923001234567"; // your number, country code first, no +
-const products = [
-  { name: "Wi-Fi Indoor Camera 2MP", price: 6500, image: "" },
-  { name: "Outdoor Bullet Camera 4MP", price: 9800, image: "" },
-  { name: "4 Channel DVR Kit", price: 24500, image: "" },
-  { name: "1TB Surveillance Hard Drive", price: 12500, image: "" },
-  { name: "Solar Wi-Fi Camera", price: 18900, image: "" },
-  { name: "Power Adapter and Cables", price: 1500, image: "" }
+const fallback = [
+  { name: "Wi-Fi Indoor Camera 2MP", price: 6500, category: "Wi-Fi cameras" },
+  { name: "Outdoor Bullet Camera 4MP", price: 9800, category: "Wi-Fi cameras" },
+  { name: "4 Channel DVR Kit", price: 24500, category: "DVR and NVR" },
+  { name: "1TB Surveillance Hard Drive", price: 12500, category: "Hard drives" }
 ];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const icon = '<svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><path d="M3 6l13 4-2 6L3 12zM16 10l5-1v6l-5-1M8 16l-2 4h5"/></svg>';
-document.getElementById("grid").innerHTML = products.map(p => `
-  <article class="card">
-    <div class="img">${p.image ? `<img src="${p.image}" alt="${p.name}">` : icon}</div>
-    <div class="body"><h3>${p.name}</h3><div class="price">Rs. ${p.price.toLocaleString()}</div>
-    <a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent("I want to order: " + p.name)}">Order on WhatsApp</a></div>
-  </article>`).join("");
+const grid = document.getElementById("grid");
+let all = [], filter = "";
+
+function render() {
+  const list = filter ? all.filter(p => p.category === filter) : all;
+  grid.innerHTML = list.length ? list.map(p => `
+    <article class="card">
+      <div class="img">${p.image ? `<img src="${esc(p.image)}" alt="${esc(p.name)}">` : icon}</div>
+      <div class="body"><h3>${esc(p.name)}</h3>${p.description ? `<p style="font-size:13px;color:var(--muted)">${esc(p.description)}</p>` : ""}
+      <div class="price">Rs. ${Number(p.price).toLocaleString()}</div>
+      <a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent("I want to order: " + p.name)}">Order on WhatsApp</a></div>
+    </article>`).join("") : "<p>No products in this category yet.</p>";
+}
+document.querySelectorAll(".cat").forEach(a => a.addEventListener("click", () => { filter = a.dataset.cat; render(); }));
+document.getElementById("showall").addEventListener("click", () => { filter = ""; render(); });
+
+(async () => {
+  try {
+    const snap = await getDocs(query(collection(db, "products"), orderBy("createdAt", "desc")));
+    all = snap.docs.map(d => d.data());
+  } catch (e) { all = []; }
+  if (!all.length) all = fallback;
+  render();
+})();
 
 const acc = document.getElementById("account");
-onAuthStateChanged(auth, u => {
-  if (!u) return;
+const guest = '<a class="btn ghost sm" href="login.html">Log in</a><a class="btn sm" href="register.html">Register</a>';
+onAuthStateChanged(auth, async u => {
+  if (!u) { acc.innerHTML = guest; return; }   // shows Log in/Register again right after logout
+  let admin = false;
+  try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
+  if (!auth.currentUser) return;
   const name = (u.displayName || u.email || "").split(" ")[0];
-  acc.innerHTML = `<span>Hi, ${name.replace(/[<>&]/g, "")}</span><button class="btn ghost sm" id="out">Log out</button>`;
+  acc.innerHTML = `<span>Hi, ${esc(name)}</span><a class="btn ghost sm" href="${admin ? "admin.html" : "dashboard.html"}">${admin ? "Admin" : "My account"}</a><button class="btn sm" id="out">Log out</button>`;
   document.getElementById("out").onclick = () => signOut(auth);
 });
 </script>

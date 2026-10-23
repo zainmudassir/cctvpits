@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My account | CCTV PITS</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="dash.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html"><img src="logo.png" alt="" onerror="this.style.display='none'">CCTV PITS</a>
+  <nav><a href="index.html">Store</a><a href="#" id="out">Log out</a></nav>
+</header>
+<main class="wrap">
+  <h1 id="hello">My account</h1>
+  <p class="sub">Your details and settings.</p>
+  <div class="box"><h2>Account</h2>
+    <div class="kv"><b>Name</b><span id="v-name"></span><b>Email</b><span id="v-email"></span><b>Phone</b><span id="v-phone"></span><b>Member since</b><span id="v-since"></span></div>
+  </div>
+  <div class="box"><h2>Update details</h2>
+    <form id="f" class="wide">
+      <div class="row"><div><label for="name">Full name</label><input id="name" name="name" required></div>
+      <div><label for="phone">Phone number</label><input id="phone" name="phone" type="tel" required></div></div>
+      <button class="primary" type="submit" style="max-width:220px">Save changes</button>
+      <div id="msg" class="msg" role="alert"></div>
+    </form>
+  </div>
+</main>
+<script type="module">
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+const $ = id => document.getElementById(id);
+const show = (t, c) => { $("msg").textContent = t; $("msg").className = "msg " + c; };
+$("out").onclick = e => { e.preventDefault(); signOut(auth); };
+let user;
+onAuthStateChanged(auth, async u => {
+  if (!u) return location.replace("login.html");
+  user = u;
+  let d = {};
+  try { d = (await getDoc(doc(db, "users", u.uid))).data() || {}; } catch (e) {}
+  const name = d.name || u.displayName || "";
+  $("hello").textContent = "Hi, " + (name.split(" ")[0] || "there");
+  $("v-name").textContent = name || "-";
+  $("v-email").textContent = u.email;
+  $("v-phone").textContent = d.phone || "-";
+  $("v-since").textContent = d.createdAt ? d.createdAt.toDate().toLocaleDateString() : "-";
+  $("name").value = name; $("phone").value = d.phone || "";
+});
+$("f").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("name").value.trim(), phone = $("phone").value.trim();
+  try {
+    await updateDoc(doc(db, "users", user.uid), { name, phone });
+    await updateProfile(user, { displayName: name });
+    $("v-name").textContent = name; $("v-phone").textContent = phone;
+    show("Details saved.", "ok");
+  } catch (err) { show("Could not save. Try again.", "err"); }
+});
+</script>
+</body>
+</html>
