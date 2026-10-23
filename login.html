@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log in | CCTV PITS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body data-page="login">
+<header class="topbar">
+  <a class="brand" href="index.html"><img src="logo.png" alt="" onerror="this.style.display='none'">CCTV PITS</a>
+  <nav><a href="index.html">Home</a><a href="register.html">Create account</a></nav>
+</header>
+<main class="shell">
+  <section class="panel">
+    <h2>Control from anywhere.</h2>
+    <p>Log in to track orders and manage your cameras, DVRs and accessories.</p>
+  </section>
+  <section class="form-wrap">
+    <form id="auth-form" novalidate>
+      <h1>Log in</h1>
+      <p class="sub">Welcome back to CCTV PITS.</p>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+      <button type="button" class="link" id="reset">Reset password</button>
+      <button class="primary" type="submit">Log in</button>
+      <div id="msg" class="msg" role="alert"></div>
+      <p class="alt">New here? <a href="register.html">Create an account</a></p>
+    </form>
+  </section>
+</main>
+<script type="module" src="auth.js"></script>
+</body>
+</html>

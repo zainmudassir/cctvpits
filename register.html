@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create account | CCTV PITS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body data-page="register">
+<header class="topbar">
+  <a class="brand" href="index.html"><img src="logo.png" alt="" onerror="this.style.display='none'">CCTV PITS</a>
+  <nav><a href="index.html">Home</a><a href="login.html">Log in</a></nav>
+</header>
+<main class="shell">
+  <section class="panel">
+    <h2>Secure your place today.</h2>
+    <p>Create an account to order cameras, save your details and check out faster.</p>
+  </section>
+  <section class="form-wrap">
+    <form id="auth-form" novalidate>
+      <h1>Create account</h1>
+      <p class="sub">It takes less than a minute.</p>
+      <label for="name">Full name</label>
+      <input id="name" name="name" autocomplete="name" required>
+      <label for="phone">Phone number</label>
+      <input id="phone" name="phone" type="tel" autocomplete="tel" required>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" minlength="6" required>
+      <label for="confirm">Confirm password</label>
+      <input id="confirm" name="confirm" type="password" autocomplete="new-password" required>
+      <button class="primary" type="submit">Create account</button>
+      <div id="msg" class="msg" role="alert"></div>
+      <p class="alt">Already registered? <a href="login.html">Log in</a></p>
+    </form>
+  </section>
+</main>
+<script type="module" src="auth.js"></script>
+</body>
+</html>
