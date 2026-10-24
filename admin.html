@@ -31,14 +31,26 @@
       <div class="row"><div><label for="pstock">Stock</label><input id="pstock" type="number" min="0" value="10"></div>
       <div><label for="pcmp">Old price (optional, shows Sale)</label><input id="pcmp" type="number" min="0"></div></div>
       <label style="display:flex;align-items:center;font-weight:600"><input id="pnew" type="checkbox"> Mark as New</label>
-      <label style="display:flex;align-items:center;font-weight:600"><input id="pslide" type="checkbox"> Show in banner slider</label>
-      <label for="pbanner">Banner image for slider (wide image, about 2000 x 800)</label><input id="pbanner" type="file" accept="image/*">
       <img id="preview" alt="">
       <label for="pdesc">Short description</label>
       <textarea id="pdesc" maxlength="200"></textarea>
       <button class="primary" type="submit" style="max-width:220px">Add product</button>
       <div id="pmsg" class="msg" role="alert"></div>
     </form>
+  </div>
+
+  <div class="box"><h2>Homepage banners (<span id="bcount">0</span> of 4)</h2>
+    <p class="sub" style="margin-top:0">Wide images shown in the slider at the top of the store. Add up to 4. The link is optional: when set, tapping the banner opens it.</p>
+    <form id="bf" class="wide">
+      <label for="bfile">Banner image (wide, about 2000 x 800)</label>
+      <input id="bfile" type="file" accept="image/*" required>
+      <img id="bprev" alt="" style="max-width:260px;border-radius:6px;margin-top:10px;display:none">
+      <label for="blink">Link (optional)</label>
+      <input id="blink" placeholder="https://... or cart.html">
+      <button class="primary" id="bgo" type="submit" style="max-width:220px">Add banner</button>
+      <div id="bmsg" class="msg" role="alert"></div>
+    </form>
+    <div class="scroll" style="margin-top:18px"><table class="tbl"><thead><tr><th>Banner</th><th>Link</th><th></th></tr></thead><tbody id="blist"></tbody></table></div>
   </div>
 
   <div class="box"><h2>Orders (<span id="ocount">0</span>, <span id="opend">0</span> pending)</h2>
@@ -82,7 +94,7 @@
 <script type="module">
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { writeBatch, doc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, serverTimestamp }
+import { deleteField, writeBatch, doc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
@@ -90,7 +102,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const show = (t, c) => { $("pmsg").textContent = t; $("pmsg").className = "msg " + c; };
 $("out").onclick = e => { e.preventDefault(); signOut(auth); };
 
-let imageData = "", bannerData = "";
+let imageData = "";
 
 // Shrinks the photo in the browser so it fits in Firestore (no Storage plan needed)
 function shrink(file, max = 700) {
@@ -116,25 +128,20 @@ $("pimg").addEventListener("change", async e => {
   } catch (err) { show("That file is not a valid image.", "err"); }
 });
 
-$("pbanner").addEventListener("change", async e => {
-  const f = e.target.files[0];
-  if (!f) { bannerData = ""; return; }
-  try { bannerData = await shrink(f, 1600); } catch (err) { bannerData = ""; show("That banner is not a valid image.", "err"); }
-});
-
 async function loadProducts() {
   const snap = await getDocs(query(collection(db, "products"), orderBy("createdAt", "desc")));
+  // one-time tidy: banners now live in their own section, so remove old banner data from products
+  snap.docs.filter(d => d.data().bannerImage !== undefined || d.data().showInBanner !== undefined)
+    .forEach(d => updateDoc(d.ref, { bannerImage: deleteField(), showInBanner: deleteField() }).catch(() => {}));
   $("pcount").textContent = snap.size;
   $("plist").innerHTML = snap.docs.map(d => { const p = d.data(), sale = Number(p.comparePrice) > Number(p.price); return `
-    <tr data-id="${d.id}" data-slider="${!!p.showInBanner}" data-new="${!!p.isNew}" data-banner="${!!p.bannerImage}">
+    <tr data-id="${d.id}" data-new="${!!p.isNew}">
       <td>${p.image ? `<img src="${esc(p.image)}" alt="">` : ""}</td>
-      <td>${esc(p.name)}<br>${p.showInBanner ? '<span class="pill confirmed">Slider</span> ' : ""}${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span> ' : ""}${p.stock === 0 ? '<span class="pill">Out of stock</span>' : ""}</td>
+      <td>${esc(p.name)}<br>${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span> ' : ""}${p.stock === 0 ? '<span class="pill">Out of stock</span>' : ""}</td>
       <td>${esc(p.category)}</td>
       <td>${sale ? "<s>" + rs(p.comparePrice) + "</s><br>" : ""}${rs(p.price)}</td>
-      <td style="min-width:250px"><div style="display:flex;flex-wrap:wrap;gap:6px">
+      <td style="min-width:230px"><div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="sm" data-act="photo">Photo</button>
-        <button class="sm" data-act="banner">Banner image</button>
-        <button class="sm" data-act="slider">${p.showInBanner ? "Remove from slider" : "Add to slider"}</button>
         <button class="sm" data-act="new">${p.isNew ? "Unmark New" : "Mark New"}</button>
         <button class="sm" data-act="price">Edit price</button>
         <button class="sm del" data-act="del">Delete</button></div></td>
@@ -154,12 +161,7 @@ $("plist").addEventListener("click", async e => {
   const tr = b.closest("tr"), id = tr.dataset.id, ref = doc(db, "products", id), act = b.dataset.act;
   try {
     if (act === "del") { if (!confirm("Delete this product?")) return; await deleteDoc(ref); }
-    else if (act === "photo" || act === "banner") { rowId = id; rowMode = act; rowimg.click(); return; }
-    else if (act === "slider") {
-      const on = tr.dataset.slider === "true";
-      if (!on && tr.dataset.banner !== "true") return alert("Upload a banner image first with the Banner image button.");
-      await updateDoc(ref, { showInBanner: !on });
-    }
+    else if (act === "photo") { rowId = id; rowimg.click(); return; }
     else if (act === "new") await updateDoc(ref, { isNew: tr.dataset.new !== "true" });
     else if (act === "price") {
       const v = prompt("New price (Rs.)");
@@ -175,7 +177,6 @@ $("plist").addEventListener("click", async e => {
 
 $("pf").addEventListener("submit", async e => {
   e.preventDefault();
-  if ($("pslide").checked && !bannerData) return show("Upload a banner image to show this product in the slider.", "err");
   const btn = e.target.querySelector("button.primary");
   btn.disabled = true;
   try {
@@ -186,14 +187,12 @@ $("pf").addEventListener("submit", async e => {
       stock: Number($("pstock").value),
       comparePrice: Number($("pcmp").value) || 0,
       isNew: $("pnew").checked,
-      showInBanner: $("pslide").checked && !!bannerData,
-      bannerImage: bannerData,
       description: $("pdesc").value.trim(),
       image: imageData,
       createdAt: serverTimestamp(),
       createdBy: auth.currentUser.uid
     });
-    e.target.reset(); imageData = ""; bannerData = ""; $("preview").style.display = "none";
+    e.target.reset(); imageData = ""; $("preview").style.display = "none";
     show("Product added. It is now live on the store.", "ok");
     loadProducts();
   } catch (err) {
@@ -280,7 +279,7 @@ $("impgo").addEventListener("click", async () => {
         name: String(p.name).trim(), category: p.category || "Other", price: Number(p.price),
         stock: p.stock === undefined ? 10 : Number(p.stock),
         description: String(p.desc || p.description || "").slice(0, 200), image: p.image || "",
-        comparePrice: Number(p.comparePrice || 0), isNew: !!p.isNew, showInBanner: false, bannerImage: "",
+        comparePrice: Number(p.comparePrice || 0), isNew: !!p.isNew,
         createdAt: serverTimestamp(), createdBy: auth.currentUser.uid
       }));
       await b.commit();
@@ -291,16 +290,53 @@ $("impgo").addEventListener("click", async () => {
 });
 
 // Add or change a product photo from the product list
-let rowId = null, rowMode = "photo";
+let rowId = null;
 const rowimg = document.createElement("input"); rowimg.type = "file"; rowimg.accept = "image/*"; rowimg.hidden = true; document.body.appendChild(rowimg);
 rowimg.addEventListener("change", async () => {
   const f = rowimg.files[0]; rowimg.value = ""; if (!f || !rowId) return;
+  try { await updateDoc(doc(db, "products", rowId), { image: await shrink(f) }); loadProducts(); }
+  catch (err) { alert("Could not save the photo."); }
+});
+
+let bannerData = "", bannerTotal = 0;
+const bshow = (t, c) => { $("bmsg").textContent = t; $("bmsg").className = "msg " + c; };
+$("bfile").addEventListener("change", async e => {
+  const f = e.target.files[0];
+  if (!f) { bannerData = ""; $("bprev").style.display = "none"; return; }
+  try { bannerData = await shrink(f, 1600); $("bprev").src = bannerData; $("bprev").style.display = "block"; }
+  catch (err) { bannerData = ""; bshow("That file is not a valid image.", "err"); }
+});
+async function loadBanners() {
+  const snap = await getDocs(query(collection(db, "banners"), orderBy("createdAt", "asc")));
+  bannerTotal = snap.size;
+  $("bcount").textContent = snap.size;
+  $("bgo").disabled = snap.size >= 4;
+  if (snap.size >= 4) bshow("Maximum 4 banners. Delete one to add another.", "err");
+  $("blist").innerHTML = snap.docs.map(d => { const b = d.data(); return `
+    <tr data-id="${d.id}"><td><img src="${esc(b.image)}" alt="" style="width:150px;height:auto;aspect-ratio:2.4/1;object-fit:cover"></td>
+    <td>${b.link ? esc(b.link) : '<span class="pill">No link</span>'}</td>
+    <td><button class="sm del" data-act="del">Delete</button></td></tr>`; }).join("") || '<tr><td colspan="3">No banners yet. The store shows a plain welcome slide.</td></tr>';
+}
+$("blist").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b || !confirm("Delete this banner?")) return;
+  try { await deleteDoc(doc(db, "banners", b.closest("tr").dataset.id)); $("bmsg").className = "msg"; loadBanners(); }
+  catch (err) { alert("Could not delete. Check your Firestore rules."); }
+});
+$("bf").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (bannerTotal >= 4) return bshow("Maximum 4 banners. Delete one to add another.", "err");
+  if (!bannerData) return bshow("Choose a banner image.", "err");
+  let link = $("blink").value.trim();
+  if (/^www\./i.test(link)) link = "https://" + link;
+  if (link && !/^https?:\/\//i.test(link) && /^[a-z][a-z0-9+.-]*:/i.test(link)) return bshow("The link must start with https://", "err");
+  $("bgo").disabled = true;
   try {
-    await updateDoc(doc(db, "products", rowId), rowMode === "banner"
-      ? { bannerImage: await shrink(f, 1600), showInBanner: true }
-      : { image: await shrink(f) });
-    loadProducts();
-  } catch (err) { alert("Could not save the image."); }
+    await addDoc(collection(db, "banners"), { image: bannerData, link, createdAt: serverTimestamp(), createdBy: auth.currentUser.uid });
+    e.target.reset(); bannerData = ""; $("bprev").style.display = "none";
+    bshow("Banner added. It is now live on the store.", "ok");
+  } catch (err) { bshow("Could not add banner. Check your Firestore rules.", "err"); }
+  await loadBanners();
+  if (bannerTotal < 4) $("bgo").disabled = false;
 });
 
 onAuthStateChanged(auth, async u => {
@@ -309,7 +345,7 @@ onAuthStateChanged(auth, async u => {
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   if (!admin) return location.replace("dashboard.html");
   $("main").hidden = false;
-  loadProducts(); loadUsers(); loadAccounts(); loadOrders();
+  loadProducts(); loadUsers(); loadAccounts(); loadOrders(); loadBanners();
 });
 </script>
 </body>

@@ -32,8 +32,9 @@ nav a:hover{color:var(--blue)}
 
 /* banner slider: products marked "Show in banner slider" in admin */
 .slider{position:relative;aspect-ratio:2.4/1;min-height:170px;max-height:620px;background:#111;overflow:hidden;width:100%}
-.slide{position:absolute;inset:0;opacity:0;transition:opacity .6s;cursor:pointer}
+.slide{position:absolute;inset:0;opacity:0;transition:opacity .6s;display:block}
 .slide.on{opacity:1;z-index:1}
+a.slide{cursor:pointer}
 .slide img{width:100%;height:100%;object-fit:cover;display:block}
 .slider .nv{position:absolute;top:50%;transform:translateY(-50%);z-index:3;background:rgba(255,255,255,.88);border:0;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:15px}
 .nv.prev{left:12px}.nv.next{right:12px}
@@ -178,14 +179,22 @@ $("rows").addEventListener("click", e => {
   addToCart(p); b.textContent = "Added \u2713"; setTimeout(() => b.textContent = "Add to cart", 1200);
 });
 
-function initSlider() {
-  const el = $("slider"), slides = all.filter(p => p.showInBanner && p.bannerImage).slice(0, 6);
+const safeUrl = l => {
+  l = String(l || "").trim(); if (!l) return "";
+  if (/^www\./i.test(l)) l = "https://" + l;
+  return (/^https?:\/\//i.test(l) || !/^[a-z][a-z0-9+.-]*:/i.test(l)) ? l : "";
+};
+function initSlider(banners) {
+  const el = $("slider"), slides = banners.filter(b => b.image).slice(0, 4);
   if (!slides.length) {
     el.innerHTML = '<div class="slide on ph"><div class="ph-in"><h1>Control from Anywhere</h1><p>Smart cameras, locks and sensors for your home and shop.</p><a class="btn" href="#rows">Shop now</a></div></div>';
     return;
   }
   const many = slides.length > 1;
-  el.innerHTML = slides.map((p, i) => `<div class="slide${i ? "" : " on"}" data-id="${esc(p.id)}"><img src="${esc(p.bannerImage)}" alt="${esc(p.name)}"></div>`).join("")
+  el.innerHTML = slides.map((b, i) => {
+    const u = safeUrl(b.link), img = `<img src="${esc(b.image)}" alt="Banner ${i + 1}">`, on = i ? "" : " on";
+    return u ? `<a class="slide${on}" href="${esc(u)}"${/^https?:/i.test(u) ? ' target="_blank" rel="noopener"' : ""}>${img}</a>` : `<div class="slide${on}">${img}</div>`;
+  }).join("")
     + (many ? `<button class="nv prev" aria-label="Previous">&#10094;</button><button class="nv next" aria-label="Next">&#10095;</button><div class="dots">${slides.map((_, i) => `<i data-i="${i}" class="${i ? "" : "on"}"></i>`).join("")}</div>` : "");
   const items = [...el.querySelectorAll(".slide")], dots = [...el.querySelectorAll(".dots i")];
   let i = 0, timer;
@@ -194,10 +203,7 @@ function initSlider() {
   el.addEventListener("click", e => {
     if (e.target.closest(".prev")) { go(i - 1); start(); return; }
     if (e.target.closest(".next")) { go(i + 1); start(); return; }
-    const d = e.target.closest(".dots i"); if (d) { go(Number(d.dataset.i)); start(); return; }
-    const s = e.target.closest(".slide"); if (!s) return;
-    const c = document.querySelector('.card[data-id="' + s.dataset.id + '"]');
-    if (c) { c.scrollIntoView({ behavior: "smooth", block: "center" }); c.classList.add("flash"); setTimeout(() => c.classList.remove("flash"), 1800); }
+    const d = e.target.closest(".dots i"); if (d) { go(Number(d.dataset.i)); start(); }
   });
   let x0 = null;
   el.addEventListener("touchstart", e => x0 = e.touches[0].clientX, { passive: true });
@@ -213,7 +219,9 @@ function initSlider() {
     all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (e) { all = []; }
   if (!all.length) all = fallback;
-  initSlider(); renderCats(); render();
+  let banners = [];
+  try { banners = (await getDocs(query(collection(db, "banners"), orderBy("createdAt", "asc")))).docs.map(d => d.data()); } catch (e) {}
+  initSlider(banners); renderCats(); render();
 })();
 
 const upd = () => $("cc").textContent = cartCount();
