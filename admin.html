@@ -43,8 +43,10 @@
     <p class="sub" style="margin-top:0">Wide images shown in the slider at the top of the store. Add up to 4. The link is optional: when set, tapping the banner opens it.</p>
     <form id="bf" class="wide">
       <label for="bfile">Banner image (wide, about 2000 x 800)</label>
-      <input id="bfile" type="file" accept="image/*" required>
+      <input id="bfile" type="file" accept="image/*">
       <img id="bprev" alt="" style="max-width:260px;border-radius:6px;margin-top:10px;display:none">
+      <label for="burl">Or image path (fastest): upload the file to GitHub, then paste its path, for example banners/b1.jpg</label>
+      <input id="burl" placeholder="banners/b1.jpg">
       <label for="blink">Link (optional)</label>
       <input id="blink" placeholder="https://... or cart.html">
       <button class="primary" id="bgo" type="submit" style="max-width:220px">Add banner</button>
@@ -105,7 +107,7 @@ $("out").onclick = e => { e.preventDefault(); signOut(auth); };
 let imageData = "";
 
 // Shrinks the photo in the browser so it fits in Firestore (no Storage plan needed)
-function shrink(file, max = 700) {
+function shrink(file, max = 700, q = 0.78) {
   return new Promise((res, rej) => {
     const img = new Image(), url = URL.createObjectURL(file);
     img.onload = () => {
@@ -114,7 +116,7 @@ function shrink(file, max = 700) {
       c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      res(c.toDataURL("image/jpeg", 0.78));
+      res(c.toDataURL("image/jpeg", q));
     };
     img.onerror = rej; img.src = url;
   });
@@ -303,7 +305,7 @@ const bshow = (t, c) => { $("bmsg").textContent = t; $("bmsg").className = "msg 
 $("bfile").addEventListener("change", async e => {
   const f = e.target.files[0];
   if (!f) { bannerData = ""; $("bprev").style.display = "none"; return; }
-  try { bannerData = await shrink(f, 1600); $("bprev").src = bannerData; $("bprev").style.display = "block"; }
+  try { bannerData = await shrink(f, 1400, 0.7); $("bprev").src = bannerData; $("bprev").style.display = "block"; }
   catch (err) { bannerData = ""; bshow("That file is not a valid image.", "err"); }
 });
 async function loadBanners() {
@@ -325,13 +327,14 @@ $("blist").addEventListener("click", async e => {
 $("bf").addEventListener("submit", async e => {
   e.preventDefault();
   if (bannerTotal >= 4) return bshow("Maximum 4 banners. Delete one to add another.", "err");
-  if (!bannerData) return bshow("Choose a banner image.", "err");
+  const img = bannerData || $("burl").value.trim();
+  if (!img) return bshow("Choose a banner image or paste an image path.", "err");
   let link = $("blink").value.trim();
   if (/^www\./i.test(link)) link = "https://" + link;
   if (link && !/^https?:\/\//i.test(link) && /^[a-z][a-z0-9+.-]*:/i.test(link)) return bshow("The link must start with https://", "err");
   $("bgo").disabled = true;
   try {
-    await addDoc(collection(db, "banners"), { image: bannerData, link, createdAt: serverTimestamp(), createdBy: auth.currentUser.uid });
+    await addDoc(collection(db, "banners"), { image: img, link, createdAt: serverTimestamp(), createdBy: auth.currentUser.uid });
     e.target.reset(); bannerData = ""; $("bprev").style.display = "none";
     bshow("Banner added. It is now live on the store.", "ok");
   } catch (err) { bshow("Could not add banner. Check your Firestore rules.", "err"); }
