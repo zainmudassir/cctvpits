@@ -11,7 +11,7 @@
 <body>
 <header class="topbar">
   <a class="brand" href="index.html"><img src="logo.png" alt="" onerror="this.style.display='none'">CCTV PITS</a>
-  <nav><a href="index.html">Store</a><a href="#" id="out">Log out</a></nav>
+  <nav><a href="index.html">Store</a><a href="cart.html">Cart</a><a href="#" id="out">Log out</a></nav>
 </header>
 <main class="wrap">
   <h1 id="hello">My account</h1>
@@ -27,14 +27,27 @@
       <div id="msg" class="msg" role="alert"></div>
     </form>
   </div>
+  <div class="box" id="orders"><h2>My orders</h2><div id="olist">Loading...</div></div>
 </main>
 <script type="module">
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { collection, query, where, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 const $ = id => document.getElementById(id);
 const show = (t, c) => { $("msg").textContent = t; $("msg").className = "msg " + c; };
 $("out").onclick = e => { e.preventDefault(); signOut(auth); };
+import { rs, esc } from "./cart.js";
+async function loadOrders(uid) {
+  try {
+    const snap = await getDocs(query(collection(db, "orders"), where("userId", "==", uid)));
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    $("olist").innerHTML = list.map(o => `<div class="order">
+      <div class="oh"><b>#${o.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(o.status)}">${esc(o.status)}</span><span>${o.createdAt ? o.createdAt.toDate().toLocaleDateString() : ""}</span></div>
+      <div>${(o.items || []).map(i => esc(i.name) + " x " + i.qty).join(", ")}</div>
+      <div><b>${rs(o.total)}</b> &middot; Paid to ${esc(o.payment?.bankName)} &middot; Trx ID: ${esc(o.trxId)}</div>
+    </div>`).join("") || "<p>No orders yet.</p>";
+  } catch (e) { $("olist").textContent = "Could not load orders."; }
+}
 let user;
 onAuthStateChanged(auth, async u => {
   if (!u) return location.replace("login.html");
@@ -48,6 +61,7 @@ onAuthStateChanged(auth, async u => {
   $("v-phone").textContent = d.phone || "-";
   $("v-since").textContent = d.createdAt ? d.createdAt.toDate().toLocaleDateString() : "-";
   $("name").value = name; $("phone").value = d.phone || "";
+  loadOrders(u.uid);
 });
 $("f").addEventListener("submit", async e => {
   e.preventDefault();

@@ -36,6 +36,27 @@
     </form>
   </div>
 
+  <div class="box"><h2>Orders (<span id="ocount">0</span>, <span id="opend">0</span> pending)</h2>
+    <div id="olist">Loading...</div>
+  </div>
+
+  <div class="box"><h2>Payment settings</h2>
+    <p class="sub" style="margin-top:0">Customers choose one of these accounts at checkout and send payment there.</p>
+    <form id="af" class="wide">
+      <div class="row">
+        <div><label for="abank">Bank name</label><input id="abank" required></div>
+        <div><label for="atitle">Account title</label><input id="atitle" required></div>
+      </div>
+      <div class="row">
+        <div><label for="anum">Account number</label><input id="anum" required></div>
+        <div><label for="anote">Note (optional)</label><input id="anote" placeholder="e.g. IBAN or branch"></div>
+      </div>
+      <button class="primary" type="submit" style="max-width:220px">Add account</button>
+      <div id="amsg" class="msg" role="alert"></div>
+    </form>
+    <div class="scroll" style="margin-top:18px"><table class="tbl"><thead><tr><th>Bank</th><th>Title</th><th>Number</th><th>Status</th><th></th></tr></thead><tbody id="alist"></tbody></table></div>
+  </div>
+
   <div class="box"><h2>Products (<span id="pcount">0</span>)</h2>
     <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th></th></tr></thead><tbody id="plist"></tbody></table></div>
   </div>
@@ -44,6 +65,7 @@
     <div class="scroll"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th></tr></thead><tbody id="ulist"></tbody></table></div>
   </div>
 </main>
+<div class="lb" id="lb" hidden><img alt=""></div>
 
 <script type="module">
 import { auth, db } from "./firebase.js";
@@ -140,13 +162,70 @@ $("pf").addEventListener("submit", async e => {
   btn.disabled = false;
 });
 
+const rs = n => "Rs. " + Number(n).toLocaleString();
+const lb = $("lb");
+lb.addEventListener("click", () => lb.hidden = true);
+
+async function loadAccounts() {
+  const snap = await getDocs(collection(db, "paymentAccounts"));
+  $("alist").innerHTML = snap.docs.map(d => { const a = d.data(), on = a.active !== false; return `
+    <tr data-id="${d.id}" data-on="${on}"><td>${esc(a.bankName)}</td><td>${esc(a.accountTitle)}</td><td>${esc(a.accountNumber)}</td>
+    <td><span class="pill ${on ? "confirmed" : ""}">${on ? "Active" : "Hidden"}</span></td>
+    <td style="white-space:nowrap"><button class="sm" data-act="toggle">${on ? "Hide" : "Show"}</button> <button class="sm del" data-act="del">Delete</button></td></tr>`; }).join("")
+    || '<tr><td colspan="5">No accounts yet. Add one above.</td></tr>';
+}
+$("alist").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const tr = b.closest("tr"), ref = doc(db, "paymentAccounts", tr.dataset.id);
+  try {
+    if (b.dataset.act === "del") { if (!confirm("Delete this account?")) return; await deleteDoc(ref); }
+    else await updateDoc(ref, { active: tr.dataset.on !== "true" });
+    loadAccounts();
+  } catch (err) { alert("Action failed. Check your Firestore rules."); }
+});
+$("af").addEventListener("submit", async e => {
+  e.preventDefault();
+  const m = $("amsg");
+  try {
+    await addDoc(collection(db, "paymentAccounts"), {
+      bankName: $("abank").value.trim(), accountTitle: $("atitle").value.trim(),
+      accountNumber: $("anum").value.trim(), note: $("anote").value.trim(),
+      active: true, createdAt: serverTimestamp()
+    });
+    e.target.reset(); m.textContent = "Account added."; m.className = "msg ok"; loadAccounts();
+  } catch (err) { m.textContent = "Could not add account. Check your Firestore rules."; m.className = "msg err"; }
+});
+
+async function loadOrders() {
+  const snap = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc")));
+  $("ocount").textContent = snap.size;
+  $("opend").textContent = snap.docs.filter(d => d.data().status === "pending").length;
+  $("olist").innerHTML = snap.docs.map(d => { const o = d.data(), c = o.customer || {}, p = o.payment || {}; return `
+    <div class="order" data-id="${d.id}">
+      <div class="oh"><b>#${d.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(o.status)}">${esc(o.status)}</span><span>${o.createdAt ? o.createdAt.toDate().toLocaleString() : ""}</span></div>
+      <div><b>${esc(c.name)}</b> &middot; ${esc(c.phone)} &middot; ${esc(o.email)}</div>
+      <div>${esc(c.address)}, ${esc(c.city)}${c.note ? " (" + esc(c.note) + ")" : ""}</div>
+      <div>${(o.items || []).map(i => esc(i.name) + " x " + i.qty).join(", ")}</div>
+      <div><b>${rs(o.total)}</b> &middot; Paid to ${esc(p.bankName)} ${esc(p.accountNumber)} &middot; Trx ID: <b>${esc(o.trxId)}</b></div>
+      ${o.screenshot ? `<img class="thumb" src="${esc(o.screenshot)}" alt="Payment screenshot">` : ""}
+      <div><button class="sm" data-st="confirmed">Confirm payment</button> <button class="sm del" data-st="rejected">Reject</button> <button class="sm" data-st="delivered">Mark delivered</button></div>
+    </div>`; }).join("") || "<p>No orders yet.</p>";
+}
+$("olist").addEventListener("click", async e => {
+  const img = e.target.closest("img.thumb");
+  if (img) { lb.querySelector("img").src = img.src; lb.hidden = false; return; }
+  const b = e.target.closest("button[data-st]"); if (!b) return;
+  try { await updateDoc(doc(db, "orders", b.closest(".order").dataset.id), { status: b.dataset.st }); loadOrders(); }
+  catch (err) { alert("Could not update order."); }
+});
+
 onAuthStateChanged(auth, async u => {
   if (!u) return location.replace("login.html");
   let admin = false;
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   if (!admin) return location.replace("dashboard.html");
   $("main").hidden = false;
-  loadProducts(); loadUsers();
+  loadProducts(); loadUsers(); loadAccounts(); loadOrders();
 });
 </script>
 </body>

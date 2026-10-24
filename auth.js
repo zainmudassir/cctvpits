@@ -28,7 +28,9 @@ const friendly = e => errors[e.code] || "Something went wrong. Please try again.
 async function goHome(u) {
   let admin = false;
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
-  location.replace(admin ? "admin.html" : "index.html");
+  const next = new URLSearchParams(location.search).get("next");
+  const ok = /^[a-z]+\.html$/.test(next || "");
+  location.replace(admin ? "admin.html" : (ok ? next : "dashboard.html"));
 }
 
 onAuthStateChanged(auth, u => { if (u && !form.dataset.busy) goHome(u); });
@@ -51,10 +53,10 @@ form.addEventListener("submit", async e => {
         role: "customer",
         createdAt: serverTimestamp()
       });
-      show("Account created. Taking you to the store...", "ok");
+      show("Account created. Redirecting...", "ok");
     } else {
       await signInWithEmailAndPassword(auth, v.email.trim(), v.password);
-      show("Logged in. Taking you to the store...", "ok");
+      show("Logged in. Redirecting...", "ok");
     }
     setTimeout(() => goHome(auth.currentUser), 700);
   } catch (err) {

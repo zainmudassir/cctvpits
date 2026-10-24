@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout | CCTV PITS</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="dash.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html"><img src="logo.png" alt="" onerror="this.style.display='none'">CCTV PITS</a>
+  <nav><a href="cart.html">Back to cart</a></nav>
+</header>
+<main class="wrap" id="main" hidden>
+  <h1>Checkout</h1>
+  <form id="f" class="wide">
+  <div class="cols">
+    <div>
+      <div class="box"><h2>Delivery details</h2>
+        <div class="row"><div><label for="name">Full name</label><input id="name" required></div>
+        <div><label for="phone">Phone</label><input id="phone" type="tel" required></div></div>
+        <label for="address">Address</label><input id="address" required>
+        <div class="row"><div><label for="city">City</label><input id="city" required></div>
+        <div><label for="note">Note (optional)</label><input id="note"></div></div>
+      </div>
+      <div class="box"><h2>Payment</h2>
+        <p class="sub" style="margin-top:0">Send the total to one of these accounts, then enter the transaction ID and upload your payment screenshot.</p>
+        <div id="accts">Loading accounts...</div>
+        <label for="trx">Transaction ID</label><input id="trx" required>
+        <label for="shot">Payment screenshot</label><input id="shot" type="file" accept="image/*" required>
+        <img id="preview" alt="">
+      </div>
+    </div>
+    <div class="box"><h2>Order summary</h2>
+      <div id="sum"></div>
+      <button class="primary" type="submit" id="place">Place order</button>
+      <div id="msg" class="msg" role="alert"></div>
+    </div>
+  </div>
+  </form>
+</main>
+<script type="module">
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+import { collection, getDocs, addDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { getCart, cartTotal, clearCart, rs, esc, shrink } from "./cart.js";
+
+const $ = id => document.getElementById(id);
+const show = (t, c) => { $("msg").textContent = t; $("msg").className = "msg " + c; };
+let accounts = [], shot = "";
+
+$("shot").addEventListener("change", async e => {
+  const f = e.target.files[0];
+  if (!f) { shot = ""; $("preview").style.display = "none"; return; }
+  try { shot = await shrink(f); $("preview").src = shot; $("preview").style.display = "block"; }
+  catch (err) { shot = ""; show("That file is not a valid image.", "err"); }
+});
+
+onAuthStateChanged(auth, async u => {
+  if (!u) return location.replace("login.html?next=checkout.html");
+  if (!getCart().length) return location.replace("cart.html");
+  $("main").hidden = false;
+  try {
+    const d = (await getDoc(doc(db, "users", u.uid))).data() || {};
+    $("name").value = d.name || u.displayName || ""; $("phone").value = d.phone || "";
+  } catch (e) {}
+  $("sum").innerHTML = getCart().map(i => `<div class="line"><span>${esc(i.name)} x ${i.qty}</span><span>${rs(i.price * i.qty)}</span></div>`).join("")
+    + `<div class="line total"><span>Total</span><span>${rs(cartTotal())}</span></div>`;
+  try {
+    const snap = await getDocs(collection(db, "paymentAccounts"));
+    accounts = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => a.active !== false);
+  } catch (e) {}
+  $("accts").innerHTML = accounts.length ? accounts.map(a => `
+    <label class="acct"><input type="radio" name="acct" value="${esc(a.id)}"><span><b>${esc(a.bankName)}</b>${esc(a.accountTitle)}<br>Account: <b style="display:inline">${esc(a.accountNumber)}</b>${a.note ? "<br>" + esc(a.note) : ""}</span></label>`).join("")
+    : "<p>Payment accounts are not available yet. Please contact the store.</p>";
+});
+
+$("f").addEventListener("submit", async e => {
+  e.preventDefault();
+  const sel = document.querySelector('input[name="acct"]:checked');
+  if (!sel) return show("Select the account you paid to.", "err");
+  if (!shot) return show("Upload your payment screenshot.", "err");
+  if (shot.length > 900000) return show("Screenshot is too large. Try a smaller image.", "err");
+  const a = accounts.find(x => x.id === sel.value), u = auth.currentUser;
+  $("place").disabled = true;
+  try {
+    await addDoc(collection(db, "orders"), {
+      userId: u.uid, email: u.email,
+      customer: { name: $("name").value.trim(), phone: $("phone").value.trim(), address: $("address").value.trim(), city: $("city").value.trim(), note: $("note").value.trim() },
+      items: getCart(), total: cartTotal(),
+      payment: { accountId: a.id, bankName: a.bankName, accountTitle: a.accountTitle, accountNumber: a.accountNumber },
+      trxId: $("trx").value.trim(), screenshot: shot,
+      status: "pending", createdAt: serverTimestamp()
+    });
+    clearCart();
+    show("Order placed. It is pending until we confirm your payment.", "ok");
+    setTimeout(() => location.replace("dashboard.html"), 1500);
+  } catch (err) { show("Could not place order. Please try again.", "err"); $("place").disabled = false; }
+});
+</script>
+</body>
+</html>

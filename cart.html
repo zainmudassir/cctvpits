@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cart | CCTV PITS</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="dash.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html"><img src="logo.png" alt="" onerror="this.style.display='none'">CCTV PITS</a>
+  <nav><a href="index.html">Continue shopping</a></nav>
+</header>
+<main class="wrap">
+  <h1>Your cart</h1>
+  <div class="box" id="box"></div>
+</main>
+<script type="module">
+import { getCart, setQty, cartTotal, rs, esc } from "./cart.js";
+const box = document.getElementById("box");
+function draw() {
+  const c = getCart();
+  if (!c.length) { box.innerHTML = '<p>Your cart is empty.</p><p style="margin-top:14px"><a class="btn" style="display:inline-block;background:var(--blue);color:#fff;padding:12px 20px;border-radius:6px;font-weight:700;text-decoration:none" href="index.html">Shop products</a></p>'; return; }
+  box.innerHTML = c.map(i => `<div class="line"><span><b>${esc(i.name)}</b><br>${rs(i.price)}</span>
+    <span class="qty"><button data-id="${esc(i.id)}" data-d="-1">-</button>${i.qty}<button data-id="${esc(i.id)}" data-d="1">+</button></span>
+    <b>${rs(i.price * i.qty)}</b></div>`).join("")
+    + `<div class="line total"><span>Total</span><span>${rs(cartTotal())}</span></div>
+    <a class="primary" style="display:block;text-align:center;text-decoration:none;margin-top:18px;padding:14px;border-radius:6px;background:var(--blue);color:#fff;font-weight:700" href="checkout.html">Proceed to checkout</a>`;
+}
+box.addEventListener("click", e => {
+  const b = e.target.closest("button[data-id]"); if (!b) return;
+  const i = getCart().find(x => x.id === b.dataset.id);
+  setQty(b.dataset.id, i.qty + Number(b.dataset.d)); draw();
+});
+draw();
+</script>
+</body>
+</html>
