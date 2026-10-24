@@ -25,9 +25,10 @@
       </div>
       <div class="row">
         <div><label for="pcat">Category</label>
-          <select id="pcat"><option>Wi-Fi cameras</option><option>DVR and NVR</option><option>Hard drives</option><option>Accessories</option></select></div>
+          <input id="pcat" list="cats" required placeholder="Pick or type a category"><datalist id="cats"><option>Indoor Camera</option><option>Outdoor Camera</option><option>Battery Camera</option><option>Accessory</option><option>Sensor</option><option>Smart Lock</option><option>Cleaning</option></datalist></div>
         <div><label for="pimg">Photo</label><input id="pimg" type="file" accept="image/*"></div>
       </div>
+      <div class="row"><div><label for="pstock">Stock</label><input id="pstock" type="number" min="0" value="10"></div><div></div></div>
       <img id="preview" alt="">
       <label for="pdesc">Short description</label>
       <textarea id="pdesc" maxlength="200"></textarea>
@@ -57,6 +58,13 @@
     <div class="scroll" style="margin-top:18px"><table class="tbl"><thead><tr><th>Bank</th><th>Title</th><th>Number</th><th>Status</th><th></th></tr></thead><tbody id="alist"></tbody></table></div>
   </div>
 
+  <div class="box"><h2>Import products</h2>
+    <p class="sub" style="margin-top:0">Upload <b>products.json</b> to add many products at once. Products with a name that already exists are skipped, so it is safe to run twice.</p>
+    <input id="impfile" type="file" accept=".json,application/json">
+    <button class="primary" id="impgo" type="button" style="max-width:220px" disabled>Import products</button>
+    <div id="impmsg" class="msg" role="alert"></div>
+  </div>
+
   <div class="box"><h2>Products (<span id="pcount">0</span>)</h2>
     <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th></th></tr></thead><tbody id="plist"></tbody></table></div>
   </div>
@@ -70,7 +78,7 @@
 <script type="module">
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { doc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, serverTimestamp }
+import { writeBatch, doc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
@@ -110,8 +118,8 @@ async function loadProducts() {
   $("plist").innerHTML = snap.docs.map(d => { const p = d.data(); return `
     <tr data-id="${d.id}">
       <td>${p.image ? `<img src="${esc(p.image)}" alt="">` : ""}</td>
-      <td>${esc(p.name)}</td><td>${esc(p.category)}</td><td>Rs. ${Number(p.price).toLocaleString()}</td>
-      <td style="white-space:nowrap"><button class="sm" data-act="price">Edit price</button> <button class="sm del" data-act="del">Delete</button></td>
+      <td>${esc(p.name)}${p.stock === 0 ? " <span class=\"pill rejected\">Out of stock</span>" : ""}</td><td>${esc(p.category)}</td><td>Rs. ${Number(p.price).toLocaleString()}</td>
+      <td style="white-space:nowrap"><button class="sm" data-act="photo">Photo</button> <button class="sm" data-act="price">Edit price</button> <button class="sm del" data-act="del">Delete</button></td>
     </tr>`; }).join("") || '<tr><td colspan="5">No products yet. Add your first one above.</td></tr>';
 }
 
@@ -130,6 +138,8 @@ $("plist").addEventListener("click", async e => {
     if (b.dataset.act === "del") {
       if (!confirm("Delete this product?")) return;
       await deleteDoc(ref);
+    } else if (b.dataset.act === "photo") {
+      rowId = id; rowimg.click(); return;
     } else {
       const v = prompt("New price (Rs.)");
       if (v === null || isNaN(Number(v)) || v.trim() === "") return;
@@ -147,7 +157,8 @@ $("pf").addEventListener("submit", async e => {
     await addDoc(collection(db, "products"), {
       name: $("pname").value.trim(),
       price: Number($("pprice").value),
-      category: $("pcat").value,
+      category: $("pcat").value.trim(),
+      stock: Number($("pstock").value),
       description: $("pdesc").value.trim(),
       image: imageData,
       createdAt: serverTimestamp(),
@@ -217,6 +228,45 @@ $("olist").addEventListener("click", async e => {
   const b = e.target.closest("button[data-st]"); if (!b) return;
   try { await updateDoc(doc(db, "orders", b.closest(".order").dataset.id), { status: b.dataset.st }); loadOrders(); }
   catch (err) { alert("Could not update order."); }
+});
+
+let impList = [];
+$("impfile").addEventListener("change", async e => {
+  const m = $("impmsg"); impList = []; $("impgo").disabled = true;
+  try {
+    const d = JSON.parse(await e.target.files[0].text());
+    impList = (Array.isArray(d) ? d : d.products || []).filter(p => p && p.name && !isNaN(Number(p.price)));
+    m.textContent = impList.length + " products found. Tap Import to add them."; m.className = "msg ok";
+    $("impgo").disabled = !impList.length;
+  } catch (err) { m.textContent = "That is not a valid products.json file."; m.className = "msg err"; }
+});
+$("impgo").addEventListener("click", async () => {
+  const m = $("impmsg"); $("impgo").disabled = true;
+  try {
+    const have = new Set((await getDocs(collection(db, "products"))).docs.map(d => String(d.data().name).trim().toLowerCase()));
+    const fresh = impList.filter(p => !have.has(String(p.name).trim().toLowerCase()));
+    for (let i = 0; i < fresh.length; i += 400) {
+      const b = writeBatch(db);
+      fresh.slice(i, i + 400).forEach(p => b.set(doc(collection(db, "products")), {
+        name: String(p.name).trim(), category: p.category || "Other", price: Number(p.price),
+        stock: p.stock === undefined ? 10 : Number(p.stock),
+        description: String(p.desc || p.description || "").slice(0, 200), image: p.image || "",
+        createdAt: serverTimestamp(), createdBy: auth.currentUser.uid
+      }));
+      await b.commit();
+    }
+    m.textContent = fresh.length + " products imported, " + (impList.length - fresh.length) + " skipped (already exist).";
+    m.className = "msg ok"; loadProducts();
+  } catch (err) { m.textContent = "Import failed. Check you are logged in as admin and your Firestore rules are published."; m.className = "msg err"; $("impgo").disabled = false; }
+});
+
+// Add or change a product photo from the product list
+let rowId = null;
+const rowimg = document.createElement("input"); rowimg.type = "file"; rowimg.accept = "image/*"; rowimg.hidden = true; document.body.appendChild(rowimg);
+rowimg.addEventListener("change", async () => {
+  const f = rowimg.files[0]; rowimg.value = ""; if (!f || !rowId) return;
+  try { await updateDoc(doc(db, "products", rowId), { image: await shrink(f) }); loadProducts(); }
+  catch (err) { alert("Could not save the photo."); }
 });
 
 onAuthStateChanged(auth, async u => {

@@ -77,12 +77,7 @@ footer{padding:28px 5vw;font-size:14px;color:var(--muted);border-top:1px solid v
 
 <section id="categories">
   <h2>Shop by category</h2>
-  <div class="cats">
-    <a class="cat" style="--c:var(--blue)" href="#products" data-cat="Wi-Fi cameras">Wi-Fi cameras</a>
-    <a class="cat" style="--c:var(--red)" href="#products" data-cat="DVR and NVR">DVR and NVR</a>
-    <a class="cat" style="--c:var(--yellow)" href="#products" data-cat="Hard drives">Hard drives</a>
-    <a class="cat" style="--c:var(--green)" href="#products" data-cat="Accessories">Accessories</a>
-  </div>
+  <div class="cats" id="cats"></div>
 </section>
 
 <section id="products" style="background:var(--soft)">
@@ -124,10 +119,15 @@ function render() {
       <div class="img">${p.image ? `<img src="${esc(p.image)}" alt="${esc(p.name)}">` : icon}</div>
       <div class="body"><h3>${esc(p.name)}</h3>${p.description ? `<p style="font-size:13px;color:var(--muted)">${esc(p.description)}</p>` : ""}
       <div class="price">Rs. ${Number(p.price).toLocaleString()}</div>
-      <button class="btn sm" data-id="${esc(p.id)}">Add to cart</button></div>
+      ${p.stock === 0 ? '<button class="btn sm" disabled style="opacity:.5">Out of stock</button>' : `<button class="btn sm" data-id="${esc(p.id)}">Add to cart</button>`}</div>
     </article>`).join("") : "<p>No products in this category yet.</p>";
 }
-document.querySelectorAll(".cat").forEach(a => a.addEventListener("click", () => { filter = a.dataset.cat; render(); }));
+const colors = ["var(--blue)", "var(--red)", "var(--yellow)", "var(--green)"];
+function renderCats() {
+  const cats = [...new Set(all.map(p => p.category).filter(Boolean))];
+  document.getElementById("cats").innerHTML = cats.map((c, i) => `<a class="cat" style="--c:${colors[i % 4]}" href="#products" data-cat="${esc(c)}">${esc(c)}</a>`).join("");
+}
+document.getElementById("cats").addEventListener("click", e => { const a = e.target.closest(".cat"); if (a) { filter = a.dataset.cat; render(); } });
 document.getElementById("showall").addEventListener("click", () => { filter = ""; render(); });
 
 (async () => {
@@ -136,7 +136,7 @@ document.getElementById("showall").addEventListener("click", () => { filter = ""
     all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (e) { all = []; }
   if (!all.length) all = fallback;
-  render();
+  renderCats(); render();
 })();
 
 const cc = document.getElementById("cc");
