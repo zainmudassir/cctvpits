@@ -28,7 +28,11 @@
           <input id="pcat" list="cats" required placeholder="Pick or type a category"><datalist id="cats"><option>Indoor Camera</option><option>Outdoor Camera</option><option>Battery Camera</option><option>Accessory</option><option>Sensor</option><option>Smart Lock</option><option>Cleaning</option></datalist></div>
         <div><label for="pimg">Photo</label><input id="pimg" type="file" accept="image/*"></div>
       </div>
-      <div class="row"><div><label for="pstock">Stock</label><input id="pstock" type="number" min="0" value="10"></div><div></div></div>
+      <div class="row"><div><label for="pstock">Stock</label><input id="pstock" type="number" min="0" value="10"></div>
+      <div><label for="pcmp">Old price (optional, shows Sale)</label><input id="pcmp" type="number" min="0"></div></div>
+      <label style="display:flex;align-items:center;font-weight:600"><input id="pnew" type="checkbox"> Mark as New</label>
+      <label style="display:flex;align-items:center;font-weight:600"><input id="pslide" type="checkbox"> Show in banner slider</label>
+      <label for="pbanner">Banner image for slider (wide image, about 2000 x 800)</label><input id="pbanner" type="file" accept="image/*">
       <img id="preview" alt="">
       <label for="pdesc">Short description</label>
       <textarea id="pdesc" maxlength="200"></textarea>
@@ -86,7 +90,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const show = (t, c) => { $("pmsg").textContent = t; $("pmsg").className = "msg " + c; };
 $("out").onclick = e => { e.preventDefault(); signOut(auth); };
 
-let imageData = "";
+let imageData = "", bannerData = "";
 
 // Shrinks the photo in the browser so it fits in Firestore (no Storage plan needed)
 function shrink(file, max = 700) {
@@ -112,14 +116,28 @@ $("pimg").addEventListener("change", async e => {
   } catch (err) { show("That file is not a valid image.", "err"); }
 });
 
+$("pbanner").addEventListener("change", async e => {
+  const f = e.target.files[0];
+  if (!f) { bannerData = ""; return; }
+  try { bannerData = await shrink(f, 1600); } catch (err) { bannerData = ""; show("That banner is not a valid image.", "err"); }
+});
+
 async function loadProducts() {
   const snap = await getDocs(query(collection(db, "products"), orderBy("createdAt", "desc")));
   $("pcount").textContent = snap.size;
-  $("plist").innerHTML = snap.docs.map(d => { const p = d.data(); return `
-    <tr data-id="${d.id}">
+  $("plist").innerHTML = snap.docs.map(d => { const p = d.data(), sale = Number(p.comparePrice) > Number(p.price); return `
+    <tr data-id="${d.id}" data-slider="${!!p.showInBanner}" data-new="${!!p.isNew}" data-banner="${!!p.bannerImage}">
       <td>${p.image ? `<img src="${esc(p.image)}" alt="">` : ""}</td>
-      <td>${esc(p.name)}${p.stock === 0 ? " <span class=\"pill rejected\">Out of stock</span>" : ""}</td><td>${esc(p.category)}</td><td>Rs. ${Number(p.price).toLocaleString()}</td>
-      <td style="white-space:nowrap"><button class="sm" data-act="photo">Photo</button> <button class="sm" data-act="price">Edit price</button> <button class="sm del" data-act="del">Delete</button></td>
+      <td>${esc(p.name)}<br>${p.showInBanner ? '<span class="pill confirmed">Slider</span> ' : ""}${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span> ' : ""}${p.stock === 0 ? '<span class="pill">Out of stock</span>' : ""}</td>
+      <td>${esc(p.category)}</td>
+      <td>${sale ? "<s>" + rs(p.comparePrice) + "</s><br>" : ""}${rs(p.price)}</td>
+      <td style="min-width:250px"><div style="display:flex;flex-wrap:wrap;gap:6px">
+        <button class="sm" data-act="photo">Photo</button>
+        <button class="sm" data-act="banner">Banner image</button>
+        <button class="sm" data-act="slider">${p.showInBanner ? "Remove from slider" : "Add to slider"}</button>
+        <button class="sm" data-act="new">${p.isNew ? "Unmark New" : "Mark New"}</button>
+        <button class="sm" data-act="price">Edit price</button>
+        <button class="sm del" data-act="del">Delete</button></div></td>
     </tr>`; }).join("") || '<tr><td colspan="5">No products yet. Add your first one above.</td></tr>';
 }
 
@@ -133,17 +151,23 @@ async function loadUsers() {
 
 $("plist").addEventListener("click", async e => {
   const b = e.target.closest("button"); if (!b) return;
-  const id = b.closest("tr").dataset.id, ref = doc(db, "products", id);
+  const tr = b.closest("tr"), id = tr.dataset.id, ref = doc(db, "products", id), act = b.dataset.act;
   try {
-    if (b.dataset.act === "del") {
-      if (!confirm("Delete this product?")) return;
-      await deleteDoc(ref);
-    } else if (b.dataset.act === "photo") {
-      rowId = id; rowimg.click(); return;
-    } else {
+    if (act === "del") { if (!confirm("Delete this product?")) return; await deleteDoc(ref); }
+    else if (act === "photo" || act === "banner") { rowId = id; rowMode = act; rowimg.click(); return; }
+    else if (act === "slider") {
+      const on = tr.dataset.slider === "true";
+      if (!on && tr.dataset.banner !== "true") return alert("Upload a banner image first with the Banner image button.");
+      await updateDoc(ref, { showInBanner: !on });
+    }
+    else if (act === "new") await updateDoc(ref, { isNew: tr.dataset.new !== "true" });
+    else if (act === "price") {
       const v = prompt("New price (Rs.)");
-      if (v === null || isNaN(Number(v)) || v.trim() === "") return;
-      await updateDoc(ref, { price: Number(v) });
+      if (v === null || v.trim() === "" || isNaN(Number(v))) return;
+      const o = prompt("Old price to show as Sale (blank = keep as is, 0 = remove sale)");
+      const upd = { price: Number(v) };
+      if (o !== null && o.trim() !== "" && !isNaN(Number(o))) upd.comparePrice = Number(o);
+      await updateDoc(ref, upd);
     }
     loadProducts();
   } catch (err) { alert("Action failed. Check your Firestore rules."); }
@@ -151,6 +175,7 @@ $("plist").addEventListener("click", async e => {
 
 $("pf").addEventListener("submit", async e => {
   e.preventDefault();
+  if ($("pslide").checked && !bannerData) return show("Upload a banner image to show this product in the slider.", "err");
   const btn = e.target.querySelector("button.primary");
   btn.disabled = true;
   try {
@@ -159,12 +184,16 @@ $("pf").addEventListener("submit", async e => {
       price: Number($("pprice").value),
       category: $("pcat").value.trim(),
       stock: Number($("pstock").value),
+      comparePrice: Number($("pcmp").value) || 0,
+      isNew: $("pnew").checked,
+      showInBanner: $("pslide").checked && !!bannerData,
+      bannerImage: bannerData,
       description: $("pdesc").value.trim(),
       image: imageData,
       createdAt: serverTimestamp(),
       createdBy: auth.currentUser.uid
     });
-    e.target.reset(); imageData = ""; $("preview").style.display = "none";
+    e.target.reset(); imageData = ""; bannerData = ""; $("preview").style.display = "none";
     show("Product added. It is now live on the store.", "ok");
     loadProducts();
   } catch (err) {
@@ -251,6 +280,7 @@ $("impgo").addEventListener("click", async () => {
         name: String(p.name).trim(), category: p.category || "Other", price: Number(p.price),
         stock: p.stock === undefined ? 10 : Number(p.stock),
         description: String(p.desc || p.description || "").slice(0, 200), image: p.image || "",
+        comparePrice: Number(p.comparePrice || 0), isNew: !!p.isNew, showInBanner: false, bannerImage: "",
         createdAt: serverTimestamp(), createdBy: auth.currentUser.uid
       }));
       await b.commit();
@@ -261,12 +291,16 @@ $("impgo").addEventListener("click", async () => {
 });
 
 // Add or change a product photo from the product list
-let rowId = null;
+let rowId = null, rowMode = "photo";
 const rowimg = document.createElement("input"); rowimg.type = "file"; rowimg.accept = "image/*"; rowimg.hidden = true; document.body.appendChild(rowimg);
 rowimg.addEventListener("change", async () => {
   const f = rowimg.files[0]; rowimg.value = ""; if (!f || !rowId) return;
-  try { await updateDoc(doc(db, "products", rowId), { image: await shrink(f) }); loadProducts(); }
-  catch (err) { alert("Could not save the photo."); }
+  try {
+    await updateDoc(doc(db, "products", rowId), rowMode === "banner"
+      ? { bannerImage: await shrink(f, 1600), showInBanner: true }
+      : { image: await shrink(f) });
+    loadProducts();
+  } catch (err) { alert("Could not save the image."); }
 });
 
 onAuthStateChanged(auth, async u => {
