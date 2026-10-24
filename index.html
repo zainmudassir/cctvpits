@@ -102,7 +102,9 @@ footer a:hover{color:var(--blue)}
   </nav>
 </header>
 
-<div class="slider" id="slider"></div>
+<div class="slider" id="slider">
+  <div class="slide on ph"><div class="ph-in"><h1>Control from Anywhere</h1><p>Smart cameras, locks and sensors for your home and shop.</p><a class="btn" href="#rows">Shop now</a></div></div>
+</div>
 <div class="cats" id="cats"></div>
 <div id="rows"></div>
 
@@ -178,55 +180,6 @@ $("rows").addEventListener("click", e => {
   const p = all.find(x => x.id === b.dataset.id); if (!p) return;
   addToCart(p); b.textContent = "Added \u2713"; setTimeout(() => b.textContent = "Add to cart", 1200);
 });
-
-let sliderTimer, shown = "";
-const safeUrl = l => {
-  l = String(l || "").trim(); if (!l) return "";
-  if (/^www\./i.test(l)) l = "https://" + l;
-  return (/^https?:\/\//i.test(l) || !/^[a-z][a-z0-9+.-]*:/i.test(l)) ? l : "";
-};
-function initSlider(banners) {
-  clearInterval(sliderTimer);
-  const old = $("slider"), el = old.cloneNode(false); old.replaceWith(el);
-  const slides = banners.filter(b => b.image).slice(0, 4);
-  if (!slides.length) {
-    el.innerHTML = '<div class="slide on ph"><div class="ph-in"><h1>Control from Anywhere</h1><p>Smart cameras, locks and sensors for your home and shop.</p><a class="btn" href="#rows">Shop now</a></div></div>';
-    return;
-  }
-  const many = slides.length > 1;
-  el.innerHTML = slides.map((b, i) => {
-    const u = safeUrl(b.link), img = `<img src="${esc(b.image)}" alt="Banner ${i + 1}" decoding="async">`, on = i ? "" : " on";
-    return u ? `<a class="slide${on}" href="${esc(u)}"${/^https?:/i.test(u) ? ' target="_blank" rel="noopener"' : ""}>${img}</a>` : `<div class="slide${on}">${img}</div>`;
-  }).join("")
-    + (many ? `<button class="nv prev" aria-label="Previous">&#10094;</button><button class="nv next" aria-label="Next">&#10095;</button><div class="dots">${slides.map((_, i) => `<i data-i="${i}" class="${i ? "" : "on"}"></i>`).join("")}</div>` : "");
-  const items = [...el.querySelectorAll(".slide")], dots = [...el.querySelectorAll(".dots i")];
-  let i = 0;
-  const go = n => { i = (n + items.length) % items.length; items.forEach((s, k) => s.classList.toggle("on", k === i)); dots.forEach((d, k) => d.classList.toggle("on", k === i)); };
-  const start = () => { clearInterval(sliderTimer); if (many) sliderTimer = setInterval(() => go(i + 1), 5000); };
-  el.addEventListener("click", e => {
-    if (e.target.closest(".prev")) { go(i - 1); start(); return; }
-    if (e.target.closest(".next")) { go(i + 1); start(); return; }
-    const d = e.target.closest(".dots i"); if (d) { go(Number(d.dataset.i)); start(); }
-  });
-  let x0 = null;
-  el.addEventListener("touchstart", e => x0 = e.touches[0].clientX, { passive: true });
-  el.addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 40) { go(i + (dx < 0 ? 1 : -1)); start(); } });
-  el.addEventListener("mouseenter", () => clearInterval(sliderTimer));
-  el.addEventListener("mouseleave", start);
-  start();
-}
-
-// Banners load on their own (not after products) and are cached for instant repeat visits
-const BK = "cctvpits_banners";
-const showBanners = b => { const j = JSON.stringify(b); if (j === shown) return; shown = j; initSlider(b); };
-try { const c = JSON.parse(localStorage.getItem(BK)); if (c && c.length) showBanners(c); } catch (e) {}
-getDocs(query(collection(db, "banners"), orderBy("createdAt", "asc")))
-  .then(snap => {
-    const b = snap.docs.map(d => d.data());
-    showBanners(b);
-    try { localStorage.setItem(BK, JSON.stringify(b)); } catch (e) { try { localStorage.removeItem(BK); } catch (e2) {} }
-  })
-  .catch(() => { if (!shown) showBanners([]); });
 
 (async () => {
   try {

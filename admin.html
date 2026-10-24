@@ -39,22 +39,6 @@
     </form>
   </div>
 
-  <div class="box"><h2>Homepage banners (<span id="bcount">0</span> of 4)</h2>
-    <p class="sub" style="margin-top:0">Wide images shown in the slider at the top of the store. Add up to 4. The link is optional: when set, tapping the banner opens it.</p>
-    <form id="bf" class="wide">
-      <label for="bfile">Banner image (wide, about 2000 x 800)</label>
-      <input id="bfile" type="file" accept="image/*">
-      <img id="bprev" alt="" style="max-width:260px;border-radius:6px;margin-top:10px;display:none">
-      <label for="burl">Or image path (fastest): upload the file to GitHub, then paste its path, for example banners/b1.jpg</label>
-      <input id="burl" placeholder="banners/b1.jpg">
-      <label for="blink">Link (optional)</label>
-      <input id="blink" placeholder="https://... or cart.html">
-      <button class="primary" id="bgo" type="submit" style="max-width:220px">Add banner</button>
-      <div id="bmsg" class="msg" role="alert"></div>
-    </form>
-    <div class="scroll" style="margin-top:18px"><table class="tbl"><thead><tr><th>Banner</th><th>Link</th><th></th></tr></thead><tbody id="blist"></tbody></table></div>
-  </div>
-
   <div class="box"><h2>Orders (<span id="ocount">0</span>, <span id="opend">0</span> pending)</h2>
     <div id="olist">Loading...</div>
   </div>
@@ -300,55 +284,13 @@ rowimg.addEventListener("change", async () => {
   catch (err) { alert("Could not save the photo."); }
 });
 
-let bannerData = "", bannerTotal = 0;
-const bshow = (t, c) => { $("bmsg").textContent = t; $("bmsg").className = "msg " + c; };
-$("bfile").addEventListener("change", async e => {
-  const f = e.target.files[0];
-  if (!f) { bannerData = ""; $("bprev").style.display = "none"; return; }
-  try { bannerData = await shrink(f, 1400, 0.7); $("bprev").src = bannerData; $("bprev").style.display = "block"; }
-  catch (err) { bannerData = ""; bshow("That file is not a valid image.", "err"); }
-});
-async function loadBanners() {
-  const snap = await getDocs(query(collection(db, "banners"), orderBy("createdAt", "asc")));
-  bannerTotal = snap.size;
-  $("bcount").textContent = snap.size;
-  $("bgo").disabled = snap.size >= 4;
-  if (snap.size >= 4) bshow("Maximum 4 banners. Delete one to add another.", "err");
-  $("blist").innerHTML = snap.docs.map(d => { const b = d.data(); return `
-    <tr data-id="${d.id}"><td><img src="${esc(b.image)}" alt="" style="width:150px;height:auto;aspect-ratio:2.4/1;object-fit:cover"></td>
-    <td>${b.link ? esc(b.link) : '<span class="pill">No link</span>'}</td>
-    <td><button class="sm del" data-act="del">Delete</button></td></tr>`; }).join("") || '<tr><td colspan="3">No banners yet. The store shows a plain welcome slide.</td></tr>';
-}
-$("blist").addEventListener("click", async e => {
-  const b = e.target.closest("button"); if (!b || !confirm("Delete this banner?")) return;
-  try { await deleteDoc(doc(db, "banners", b.closest("tr").dataset.id)); $("bmsg").className = "msg"; loadBanners(); }
-  catch (err) { alert("Could not delete. Check your Firestore rules."); }
-});
-$("bf").addEventListener("submit", async e => {
-  e.preventDefault();
-  if (bannerTotal >= 4) return bshow("Maximum 4 banners. Delete one to add another.", "err");
-  const img = bannerData || $("burl").value.trim();
-  if (!img) return bshow("Choose a banner image or paste an image path.", "err");
-  let link = $("blink").value.trim();
-  if (/^www\./i.test(link)) link = "https://" + link;
-  if (link && !/^https?:\/\//i.test(link) && /^[a-z][a-z0-9+.-]*:/i.test(link)) return bshow("The link must start with https://", "err");
-  $("bgo").disabled = true;
-  try {
-    await addDoc(collection(db, "banners"), { image: img, link, createdAt: serverTimestamp(), createdBy: auth.currentUser.uid });
-    e.target.reset(); bannerData = ""; $("bprev").style.display = "none";
-    bshow("Banner added. It is now live on the store.", "ok");
-  } catch (err) { bshow("Could not add banner. Check your Firestore rules.", "err"); }
-  await loadBanners();
-  if (bannerTotal < 4) $("bgo").disabled = false;
-});
-
 onAuthStateChanged(auth, async u => {
   if (!u) return location.replace("login.html");
   let admin = false;
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   if (!admin) return location.replace("dashboard.html");
   $("main").hidden = false;
-  loadProducts(); loadUsers(); loadAccounts(); loadOrders(); loadBanners();
+  loadProducts(); loadUsers(); loadAccounts(); loadOrders();
 });
 </script>
 </body>
