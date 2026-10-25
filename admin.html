@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b6bd6">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<meta name="robots" content="noindex, nofollow">
 <title>Admin | CCTV PITS</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="auth.css">
@@ -67,6 +71,16 @@
     <div id="impmsg" class="msg" role="alert"></div>
   </div>
 
+  <div class="box"><h2>Product photos (fast loading)</h2>
+    <p class="sub" style="margin-top:0">Upload photos to a <b>products</b> folder in your GitHub repo, named as shown below, then tap Link. Use .jpg files about 600 px wide and under 100 KB.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="sm" id="pnames" type="button">Show file names</button>
+      <button class="sm" id="plink" type="button">Link photos by name</button>
+    </div>
+    <textarea id="pnamebox" readonly style="display:none;margin-top:12px;min-height:200px;font-family:monospace;font-size:13px"></textarea>
+    <div id="plmsg" class="msg" role="alert"></div>
+  </div>
+
   <div class="box"><h2>Products (<span id="pcount">0</span>)</h2>
     <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th></th></tr></thead><tbody id="plist"></tbody></table></div>
   </div>
@@ -128,6 +142,7 @@ async function loadProducts() {
       <td>${sale ? "<s>" + rs(p.comparePrice) + "</s><br>" : ""}${rs(p.price)}</td>
       <td style="min-width:230px"><div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="sm" data-act="photo">Photo</button>
+        <button class="sm" data-act="path">Image path</button>
         <button class="sm" data-act="new">${p.isNew ? "Unmark New" : "Mark New"}</button>
         <button class="sm" data-act="price">Edit price</button>
         <button class="sm del" data-act="del">Delete</button></div></td>
@@ -148,6 +163,11 @@ $("plist").addEventListener("click", async e => {
   try {
     if (act === "del") { if (!confirm("Delete this product?")) return; await deleteDoc(ref); }
     else if (act === "photo") { rowId = id; rowimg.click(); return; }
+    else if (act === "path") {
+      const v = prompt("Image path or link, for example products/h6c.jpg");
+      if (v === null) return;
+      await updateDoc(ref, { image: v.trim() });
+    }
     else if (act === "new") await updateDoc(ref, { isNew: tr.dataset.new !== "true" });
     else if (act === "price") {
       const v = prompt("New price (Rs.)");
@@ -282,6 +302,28 @@ rowimg.addEventListener("change", async () => {
   const f = rowimg.files[0]; rowimg.value = ""; if (!f || !rowId) return;
   try { await updateDoc(doc(db, "products", rowId), { image: await shrink(f) }); loadProducts(); }
   catch (err) { alert("Could not save the photo."); }
+});
+
+const slug = n => String(n).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const plshow = (t, c) => { $("plmsg").textContent = t; $("plmsg").className = "msg " + c; };
+$("pnames").addEventListener("click", async () => {
+  const snap = await getDocs(collection(db, "products"));
+  const box = $("pnamebox");
+  box.value = snap.docs.map(d => slug(d.data().name) + ".jpg").sort().join("\n");
+  box.style.display = "block"; box.select();
+});
+$("plink").addEventListener("click", async () => {
+  try {
+    const snap = await getDocs(collection(db, "products"));
+    const todo = snap.docs.filter(d => !d.data().image);
+    for (let i = 0; i < todo.length; i += 400) {
+      const b = writeBatch(db);
+      todo.slice(i, i + 400).forEach(d => b.update(d.ref, { image: "products/" + slug(d.data().name) + ".jpg" }));
+      await b.commit();
+    }
+    plshow(todo.length + " products linked to products/<name>.jpg. Products that already had a photo were left alone.", "ok");
+    loadProducts();
+  } catch (err) { plshow("Could not link photos. Check you are admin and your rules are published.", "err"); }
 });
 
 onAuthStateChanged(auth, async u => {
