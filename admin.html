@@ -43,6 +43,8 @@
     </form>
   </div>
 
+  <div class="box"><h2>Installation requests (<span id="icount">0</span>, <span id="inew">0</span> new)</h2><div id="ilist">Loading...</div></div>
+
   <div class="box"><h2>Orders (<span id="ocount">0</span>, <span id="opend">0</span> pending)</h2>
     <div id="olist">Loading...</div>
   </div>
@@ -247,7 +249,7 @@ async function loadOrders() {
   $("opend").textContent = snap.docs.filter(d => d.data().status === "pending").length;
   $("olist").innerHTML = snap.docs.map(d => { const o = d.data(), c = o.customer || {}, p = o.payment || {}; return `
     <div class="order" data-id="${d.id}">
-      <div class="oh"><b>#${d.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(o.status)}">${esc(o.status)}</span><span>${o.createdAt ? o.createdAt.toDate().toLocaleString() : ""}</span></div>
+      <div class="oh"><b>#${d.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(o.status)}">${esc(o.status)}</span>${o.installation ? '<span class="pill new">Installation requested</span>' : ""}<span>${o.createdAt ? o.createdAt.toDate().toLocaleString() : ""}</span></div>
       <div><b>${esc(c.name)}</b> &middot; ${esc(c.phone)} &middot; ${esc(o.email)}</div>
       <div>${esc(c.address)}, ${esc(c.city)}${c.note ? " (" + esc(c.note) + ")" : ""}</div>
       <div>${(o.items || []).map(i => esc(i.name) + " x " + i.qty).join(", ")}</div>
@@ -326,13 +328,33 @@ $("plink").addEventListener("click", async () => {
   } catch (err) { plshow("Could not link photos. Check you are admin and your rules are published.", "err"); }
 });
 
+async function loadInstalls() {
+  const snap = await getDocs(query(collection(db, "installRequests"), orderBy("createdAt", "desc")));
+  $("icount").textContent = snap.size;
+  $("inew").textContent = snap.docs.filter(d => d.data().status === "new").length;
+  $("ilist").innerHTML = snap.docs.map(d => { const r = d.data(); return `
+    <div class="order" data-id="${d.id}">
+      <div class="oh"><b>#${d.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(r.status)}">${esc(r.status)}</span><span>${r.createdAt ? r.createdAt.toDate().toLocaleString() : ""}</span></div>
+      <div><b>${esc(r.name)}</b> &middot; ${esc(r.phone)} &middot; ${esc(r.email)}</div>
+      <div>${esc(r.placeType)} &middot; ${esc(r.cameras)} cameras${r.preferredDate ? " &middot; preferred " + esc(r.preferredDate) : ""}</div>
+      <div>${esc(r.address)}, ${esc(r.city)}</div>
+      ${r.notes ? `<div>Notes: ${esc(r.notes)}</div>` : ""}
+      <div><button class="sm" data-st="contacted">Contacted</button> <button class="sm" data-st="scheduled">Scheduled</button> <button class="sm" data-st="done">Done</button> <button class="sm del" data-st="cancelled">Cancel</button></div>
+    </div>`; }).join("") || "<p>No requests yet.</p>";
+}
+$("ilist").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-st]"); if (!b) return;
+  try { await updateDoc(doc(db, "installRequests", b.closest(".order").dataset.id), { status: b.dataset.st }); loadInstalls(); }
+  catch (err) { alert("Could not update request."); }
+});
+
 onAuthStateChanged(auth, async u => {
   if (!u) return location.replace("login.html");
   let admin = false;
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   if (!admin) return location.replace("dashboard.html");
   $("main").hidden = false;
-  loadProducts(); loadUsers(); loadAccounts(); loadOrders();
+  loadProducts(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls();
 });
 </script>
 </body>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book CCTV Camera Installation | CCTV PITS</title>
+<meta name="theme-color" content="#0b6bd6">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<meta name="description" content="Book professional CCTV camera installation for your home, shop or office with CCTV PITS. Tell us what you need and we will contact you to confirm the visit and price.">
+<link rel="canonical" href="https://yourdomain.com/install.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CCTV PITS">
+<meta property="og:title" content="Book CCTV Camera Installation | CCTV PITS">
+<meta property="og:description" content="Professional CCTV installation for homes, shops and offices. Send a request and we will contact you.">
+<meta property="og:url" content="https://yourdomain.com/install.html">
+<meta property="og:image" content="https://yourdomain.com/logo.png">
+<meta name="twitter:card" content="summary">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="dash.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html"><img src="logo.png" alt="" onerror="this.style.display='none'">CCTV PITS</a>
+  <nav><a href="index.html">Store</a><a href="dashboard.html">My account</a></nav>
+</header>
+<main class="wrap">
+  <h1>Book CCTV installation</h1>
+  <p class="sub">Tell us where you need cameras. We will contact you to confirm the visit and the price.</p>
+
+  <div class="box"><h2>What we install</h2>
+    <p>CCTV cameras for homes, shops and offices, Wi-Fi and battery cameras, smart locks and sensors, and setup so you can watch live on your phone from anywhere. We also repair and upgrade existing systems.</p>
+  </div>
+
+  <div class="box" id="gate" hidden><h2>Log in to send a request</h2>
+    <p class="sub" style="margin-top:0">It only takes a minute, and you can track your request in your account.</p>
+    <a class="primary" style="display:inline-block;max-width:none;padding:12px 22px;border-radius:6px;background:var(--blue);color:#fff;font-weight:700;text-decoration:none" href="login.html?next=install.html">Log in</a>
+    <a style="margin-left:14px;font-weight:700;color:var(--blue);text-decoration:none" href="register.html">Create account</a>
+  </div>
+
+  <div class="box" id="formbox" hidden><h2>Your details</h2>
+    <form id="f" class="wide">
+      <div class="row"><div><label for="name">Full name</label><input id="name" required></div>
+      <div><label for="phone">Phone</label><input id="phone" type="tel" required></div></div>
+      <label for="address">Address</label><input id="address" required>
+      <div class="row"><div><label for="city">City</label><input id="city" required></div>
+      <div><label for="place">Place type</label><select id="place"><option>Home</option><option>Shop</option><option>Office</option><option>Other</option></select></div></div>
+      <div class="row"><div><label for="cams">Number of cameras</label><input id="cams" type="number" min="1" max="100" value="2" required></div>
+      <div><label for="date">Preferred date (optional)</label><input id="date" type="date"></div></div>
+      <label for="notes">Notes (optional)</label><textarea id="notes" maxlength="400" placeholder="For example: indoor or outdoor, existing system, anything we should know"></textarea>
+      <button class="primary" type="submit" id="go" style="max-width:240px">Send request</button>
+      <div id="msg" class="msg" role="alert"></div>
+    </form>
+  </div>
+</main>
+<script type="module">
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+import { doc, getDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+const $ = id => document.getElementById(id);
+const show = (t, c) => { $("msg").textContent = t; $("msg").className = "msg " + c; };
+onAuthStateChanged(auth, async u => {
+  if (!u) { $("gate").hidden = false; $("formbox").hidden = true; return; }
+  $("gate").hidden = true; $("formbox").hidden = false;
+  try {
+    const d = (await getDoc(doc(db, "users", u.uid))).data() || {};
+    if (!$("name").value) $("name").value = d.name || u.displayName || "";
+    if (!$("phone").value) $("phone").value = d.phone || "";
+  } catch (e) {}
+});
+$("f").addEventListener("submit", async e => {
+  e.preventDefault();
+  const u = auth.currentUser; if (!u) return;
+  $("go").disabled = true;
+  try {
+    await addDoc(collection(db, "installRequests"), {
+      userId: u.uid, email: u.email,
+      name: $("name").value.trim(), phone: $("phone").value.trim(),
+      address: $("address").value.trim(), city: $("city").value.trim(),
+      placeType: $("place").value, cameras: Number($("cams").value),
+      preferredDate: $("date").value, notes: $("notes").value.trim(),
+      status: "new", createdAt: serverTimestamp()
+    });
+    e.target.reset(); $("cams").value = 2;
+    show("Request sent. We will contact you soon. You can see it in your account.", "ok");
+  } catch (err) { show("Could not send your request. Please try again.", "err"); }
+  $("go").disabled = false;
+});
+</script>
+</body>
+</html>

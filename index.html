@@ -6,17 +6,17 @@
 <meta name="theme-color" content="#0b6bd6">
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="apple-touch-icon" href="logo.png">
-<meta name="description" content="Buy CCTV cameras, smart locks and sensors online at CCTV PITS. Control from anywhere, genuine products and fast delivery.">
+<meta name="description" content="CCTV PITS installs CCTV cameras, smart locks and sensors for homes, shops and offices. Book professional installation or buy security cameras online.">
 <link rel="canonical" href="https://yourdomain.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="CCTV PITS">
-<meta property="og:title" content="CCTV PITS | CCTV Cameras and Smart Home Security">
-<meta property="og:description" content="Buy CCTV cameras, smart locks and sensors online at CCTV PITS. Control from anywhere, genuine products and fast delivery.">
+<meta property="og:title" content="CCTV Camera Installation and Security Cameras | CCTV PITS">
+<meta property="og:description" content="CCTV PITS installs CCTV cameras, smart locks and sensors for homes, shops and offices. Book professional installation or buy security cameras online.">
 <meta property="og:url" content="https://yourdomain.com/">
 <meta property="og:image" content="https://yourdomain.com/logo.png">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"CCTV PITS","url":"https://yourdomain.com/","logo":"https://yourdomain.com/logo.png","slogan":"Control from Anywhere"},{"@type":"WebSite","name":"CCTV PITS","url":"https://yourdomain.com/","potentialAction":{"@type":"SearchAction","target":"https://yourdomain.com/?q={search_term_string}","query-input":"required name=search_term_string"}}]}</script>
-<title>CCTV PITS | CCTV Cameras and Smart Home Security</title>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"CCTV PITS","url":"https://yourdomain.com/","logo":"https://yourdomain.com/logo.png","slogan":"Control from Anywhere","description":"CCTV camera installation and security products for homes, shops and offices."},{"@type":"WebSite","name":"CCTV PITS","url":"https://yourdomain.com/","potentialAction":{"@type":"SearchAction","target":"https://yourdomain.com/?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"Service","name":"CCTV camera installation","description":"Professional installation of CCTV cameras, smart locks and sensors for homes, shops and offices.","provider":{"@type":"Organization","name":"CCTV PITS"},"url":"https://yourdomain.com/install.html"}]}</script>
+<title>CCTV Camera Installation and Security Cameras | CCTV PITS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -83,6 +83,10 @@ h2{font-size:24px;font-weight:800;margin-bottom:18px}
 .price{font-weight:800;color:var(--blue)}
 .price s{color:var(--muted);font-weight:600;font-size:13px;margin-right:6px}
 .card .btn{margin-top:auto}
+.svc{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.svc div{background:#fff;border:1px solid var(--line);border-top:5px solid var(--c);border-radius:8px;padding:18px}
+.svc h3{font-size:16px;margin-bottom:6px}
+.svc p{font-size:14px;color:var(--muted)}
 .perks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;background:var(--ink)!important;color:#fff}
 .perks div{padding-left:14px;border-left:4px solid var(--c)}
 .perks b{display:block}
@@ -118,28 +122,39 @@ footer a:hover{color:var(--blue)}
   <a class="brand" href="index.html"><img src="logo.png" alt="" onerror="this.style.display='none'">CCTV PITS</a>
   <form id="sf" role="search" onsubmit="return false"><input id="q" type="search" placeholder="Search products" autocomplete="off"></form>
   <nav>
-    <span class="links"><a href="#rows">Shop</a><a href="dashboard.html#orders">Track order</a><a href="info.html#contact">Support</a></span>
+    <span class="links"><a href="install.html">Book installation</a><a href="#rows">Shop</a><a href="dashboard.html#orders">Track order</a><a href="info.html#contact">Support</a></span>
     <a class="cartlink" href="cart.html">Cart (<span id="cc">0</span>)</a>
     <div id="account"><a class="btn ghost sm" href="login.html">Log in</a><a class="btn sm" href="register.html">Register</a></div>
   </nav>
 </header>
 
 <div class="slider" id="slider">
-  <div class="slide on ph"><div class="ph-in"><h1>Control from Anywhere</h1><p>Smart cameras, locks and sensors for your home and shop.</p><a class="btn" href="#rows">Shop now</a></div></div>
+  <div class="slide on ph"><div class="ph-in"><h1>Control from Anywhere</h1><p>Professional CCTV installation for homes, shops and offices.</p><a class="btn" href="install.html">Book installation</a> <a class="btn ghost" href="#rows">Shop cameras</a></div></div>
 </div>
 <div class="cats" id="cats"></div>
 <div id="rows"></div>
 
+<section id="services">
+  <h2>Our installation services</h2>
+  <div class="svc">
+    <div style="--c:var(--blue)"><h3>Home CCTV</h3><p>Indoor and outdoor cameras set up so you can watch live on your phone.</p></div>
+    <div style="--c:var(--red)"><h3>Shop and office</h3><p>Multi-camera systems with recording, planned around your space.</p></div>
+    <div style="--c:var(--yellow)"><h3>Locks and sensors</h3><p>Smart locks, door sensors and alarms installed and connected.</p></div>
+    <div style="--c:var(--green)"><h3>Repair and upgrade</h3><p>We fix and improve your existing camera system.</p></div>
+  </div>
+  <p style="margin-top:20px"><a class="btn" href="install.html">Book installation</a></p>
+</section>
+
 <section class="perks">
   <div style="--c:var(--blue)"><b>Live on your phone</b><span>Control from anywhere</span></div>
-  <div style="--c:var(--red)"><b>Night vision</b><span>Clear video in the dark</span></div>
+  <div style="--c:var(--red)"><b>Expert installation</b><span>Done by our team</span></div>
   <div style="--c:var(--yellow)"><b>Warranty</b><span>Genuine products</span></div>
   <div style="--c:var(--green)"><b>Fast delivery</b><span>Across Pakistan</span></div>
 </section>
 
 <footer>
   <div class="fcols">
-    <div><h3>CCTV PITS</h3><ul><li>Control from Anywhere</li><li><a href="info.html#contact">Contact us</a></li></ul></div>
+    <div><h3>CCTV PITS</h3><ul><li>Control from Anywhere</li><li><a href="install.html">Book installation</a></li><li><a href="info.html#contact">Contact us</a></li></ul></div>
     <div><h3>Support</h3><ul><li><a href="dashboard.html#orders">Track order</a></li><li><a href="info.html#shipping">Shipping and delivery</a></li><li><a href="info.html#refund">Refund and returns</a></li><li><a href="info.html#privacy">Privacy policy</a></li></ul></div>
     <div><h3>Account</h3><ul><li><a href="login.html">Log in</a></li><li><a href="register.html">Register</a></li><li><a href="cart.html">Cart</a></li></ul></div>
   </div>

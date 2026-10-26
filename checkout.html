@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b6bd6">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<meta name="robots" content="noindex, nofollow">
 <title>Checkout | CCTV PITS</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="auth.css">
@@ -24,6 +28,7 @@
         <label for="address">Address</label><input id="address" required>
         <div class="row"><div><label for="city">City</label><input id="city" required></div>
         <div><label for="note">Note (optional)</label><input id="note"></div></div>
+        <label class="acct" style="margin-top:16px"><input type="checkbox" id="inst"><span><b>Add professional installation</b>Our team installs your products. The installation price is confirmed after we contact you.</span></label>
       </div>
       <div class="box"><h2>Payment</h2>
         <p class="sub" style="margin-top:0">Send the total to one of these accounts, then enter the transaction ID and upload your payment screenshot.</p>
@@ -92,7 +97,7 @@ $("f").addEventListener("submit", async e => {
       items: getCart(), total: cartTotal(),
       payment: { accountId: a.id, bankName: a.bankName, accountTitle: a.accountTitle, accountNumber: a.accountNumber },
       trxId: $("trx").value.trim(), screenshot: shot,
-      status: "pending", createdAt: serverTimestamp()
+      installation: $("inst").checked, status: "pending", createdAt: serverTimestamp()
     });
     clearCart();
     show("Order placed. It is pending until we confirm your payment.", "ok");
