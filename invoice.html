@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Invoice | CCTV PITS</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="dash.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html"><img src="logo.png" alt="" onerror="this.style.display='none'">CCTV PITS</a>
+  <nav><a href="index.html">Store</a></nav>
+</header>
+<main class="wrap">
+  <h1>Installation invoice</h1>
+  <div class="box" id="box">Loading...</div>
+</main>
+<script type="module">
+import { db } from "./firebase.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { makePdf, money } from "./invoice.js";
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const id = new URLSearchParams(location.search).get("id");
+const box = document.getElementById("box");
+(async () => {
+  try {
+    const s = id && await getDoc(doc(db, "invoices", id));
+    if (!s || !s.exists()) { box.textContent = "Invoice not found."; return; }
+    const v = s.data(), c = v.customer || {};
+    box.innerHTML = `<h2>${esc(v.number)}</h2>
+      <p class="sub" style="margin-top:0">${esc(v.date)}</p>
+      <p><b>${esc(c.name)}</b><br>${esc(c.phone)}<br>${esc([c.address, c.city].filter(Boolean).join(", "))}</p>
+      <table class="tbl" style="margin:16px 0"><thead><tr><th>Installed item</th><th>Qty</th></tr></thead><tbody>
+      ${(v.items || []).map(i => `<tr><td>${esc(i.name)}</td><td>${esc(i.quantity)}</td></tr>`).join("")}</tbody></table>
+      <div class="line total"><span>Installation charges</span><span>${money(v.installationPrice)}</span></div>
+      ${v.notes ? `<p class="sub">${esc(v.notes)}</p>` : ""}
+      <button class="primary" id="dl" style="max-width:240px;margin-top:14px">Download PDF</button>`;
+    document.getElementById("dl").onclick = async () => { (await makePdf(v)).save(v.number + ".pdf"); };
+  } catch (e) { box.textContent = "Could not load the invoice."; }
+})();
+</script>
+</body>
+</html>

@@ -11,6 +11,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="auth.css">
 <link rel="stylesheet" href="dash.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>.inv{border-top:1px dashed var(--line);margin-top:8px;padding-top:10px}.inv .row{margin-bottom:6px}</style>
 </head>
 <body>
 <header class="topbar">
@@ -41,6 +43,16 @@
       <button class="primary" type="submit" style="max-width:220px">Add product</button>
       <div id="pmsg" class="msg" role="alert"></div>
     </form>
+  </div>
+
+  <div class="box"><h2>WhatsApp settings (wasms.net)</h2>
+    <p class="sub" style="margin-top:0">Used to send installation invoices. Sending goes through your Cloudflare Worker. The API key is saved privately in your database and only admins can read it.</p>
+    <div class="row"><div><label for="wkey">API key (wasms_...)</label><input id="wkey" type="password" autocomplete="off" placeholder="Leave empty to keep the saved key"></div>
+    <div><label for="wcc">Default country code</label><input id="wcc" value="92"></div></div>
+    <label for="wurl">Worker URL</label><input id="wurl" placeholder="https://cctvpits-wa.yourname.workers.dev">
+    <label for="wid">WhatsApp account ID (optional)</label><input id="wid" placeholder="Leave empty to use the first connected number">
+    <button class="primary" id="wsave" type="button" style="max-width:200px;margin-top:12px">Save settings</button>
+    <div id="wmsg" class="msg" role="alert"></div>
   </div>
 
   <div class="box"><h2>Installation requests (<span id="icount">0</span>, <span id="inew">0</span> new)</h2><div id="ilist">Loading...</div></div>
@@ -96,8 +108,12 @@
 <script type="module">
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { deleteField, writeBatch, doc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, serverTimestamp }
+import { setDoc, deleteField, writeBatch, doc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+import { storage } from "./firebase.js";
+import { ref as sref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-storage.js";
+import { makePdf, money } from "./invoice.js";
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -328,10 +344,12 @@ $("plink").addEventListener("click", async () => {
   } catch (err) { plshow("Could not link photos. Check you are admin and your rules are published.", "err"); }
 });
 
+let reqs = {};
 async function loadInstalls() {
   const snap = await getDocs(query(collection(db, "installRequests"), orderBy("createdAt", "desc")));
   $("icount").textContent = snap.size;
   $("inew").textContent = snap.docs.filter(d => d.data().status === "new").length;
+  reqs = {}; snap.docs.forEach(d => reqs[d.id] = d.data());
   $("ilist").innerHTML = snap.docs.map(d => { const r = d.data(); return `
     <div class="order" data-id="${d.id}">
       <div class="oh"><b>#${d.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(r.status)}">${esc(r.status)}</span><span>${r.createdAt ? r.createdAt.toDate().toLocaleString() : ""}</span></div>
@@ -340,22 +358,97 @@ async function loadInstalls() {
       ${(r.items || []).map(i => `<div>&bull; ${esc(i.quantity)} x ${esc(i.name)}</div>`).join("")}
       <div>${esc(r.address)}, ${esc(r.city)}</div>
       ${r.notes ? `<div>Notes: ${esc(r.notes)}</div>` : ""}
-      <div><button class="sm" data-st="contacted">Contacted</button> <button class="sm" data-st="scheduled">Scheduled</button> <button class="sm" data-st="done">Done</button> <button class="sm del" data-st="cancelled">Cancel</button></div>
+      <div><button class="sm" data-st="contacted">Contacted</button> <button class="sm" data-st="scheduled">Scheduled</button> <button class="sm" data-st="done">Done</button> <button class="sm del" data-st="cancelled">Cancel</button> <button class="sm" data-inv="open">${r.invoiceId ? "Invoice" : "Create invoice"}</button></div>
+      ${r.invoiceId ? `<div>Invoice ${esc(r.invoiceNumber)}: ${money(r.invoiceAmount)}${r.invoiceSentAt ? " &middot; sent on WhatsApp" : ""}</div>` : ""}
+      <div class="inv" hidden>
+        <div class="row"><div><label>Installation price (Rs.)</label><input type="number" min="1" step="1" class="ip" value="${esc(r.invoiceAmount || "")}"></div>
+        <div><label>Send to WhatsApp number</label><input class="iw" value="${esc(r.phone)}"></div></div>
+        <label>Invoice note (optional)</label><input class="in" maxlength="200" value="${esc(r.invoiceNotes || "")}">
+        <div style="margin-top:10px"><button class="sm" data-inv="send">Generate PDF &amp; send on WhatsApp</button> <button class="sm" data-inv="dl">Download PDF only</button></div>
+        <div class="msg im" role="alert"></div>
+      </div>
     </div>`; }).join("") || "<p>No requests yet.</p>";
 }
+// ---------- invoices ----------
+const normPhone = (p, cc) => { let n = String(p || "").replace(/\D/g, ""); if (n.startsWith("00")) n = n.slice(2); else if (n.startsWith("0")) n = (cc || "92") + n.slice(1); return n; };
+async function buildInvoice(card, id) {
+  const r = reqs[id], price = Number(card.querySelector(".ip").value);
+  if (!(price > 0)) throw new Error("Enter the installation price.");
+  const d = new Date();
+  const inv = {
+    number: r.invoiceNumber || ("INV-" + d.toISOString().slice(0, 10).replace(/-/g, "") + "-" + id.slice(0, 4).toUpperCase()),
+    date: r.invoiceDate || d.toLocaleDateString("en-GB"),
+    customer: { name: r.name, phone: r.phone, email: r.email || "", address: r.address, city: r.city },
+    items: (r.items || []).map(i => ({ name: i.name, quantity: i.quantity })),
+    installationPrice: price, notes: card.querySelector(".in").value.trim(),
+    requestId: id, userId: r.userId
+  };
+  if (!inv.items.length) inv.items = [{ name: "CCTV installation (" + (r.cameras || 1) + " item" + (r.cameras > 1 ? "s" : "") + ")", quantity: r.cameras || 1 }];
+  return inv;
+}
+async function saveInvoice(id, inv) {
+  const r = reqs[id];
+  let invId = r.invoiceId;
+  if (invId) await setDoc(doc(db, "invoices", invId), { ...inv, createdAt: serverTimestamp() });
+  else { const ref = await addDoc(collection(db, "invoices"), { ...inv, createdAt: serverTimestamp() }); invId = ref.id; }
+  return invId;
+}
 $("ilist").addEventListener("click", async e => {
+  const ib = e.target.closest("button[data-inv]");
+  if (ib) {
+    const card = ib.closest(".order"), id = card.dataset.id, box = card.querySelector(".inv"), m = card.querySelector(".im");
+    const say = (t, c) => { m.textContent = t; m.className = "msg im " + c; };
+    if (ib.dataset.inv === "open") { box.hidden = !box.hidden; return; }
+    ib.disabled = true;
+    try {
+      const inv = await buildInvoice(card, id);
+      if (ib.dataset.inv === "dl") { (await makePdf(inv)).save(inv.number + ".pdf"); say("PDF downloaded.", "ok"); ib.disabled = false; return; }
+      say("Preparing invoice...", "ok");
+      const set = (await getDoc(doc(db, "secrets", "wasms"))).data() || {};
+      if (!set.apiKey || !set.workerUrl) throw new Error("Save your wasms.net API key and Worker URL in WhatsApp settings first.");
+      const to = normPhone(card.querySelector(".iw").value, set.countryCode);
+      if (to.length < 10) throw new Error("Enter a valid WhatsApp number with country code.");
+      const invId = await saveInvoice(id, inv);
+      const link = location.origin + "/invoice.html?id=" + invId;
+      // upload the PDF so it can be sent as a document (needs Firebase Storage); otherwise send the link only
+      let pdfUrl = "";
+      try {
+        const pdf = await makePdf(inv);
+        const f = sref(storage, "invoices/" + invId + ".pdf");
+        await uploadBytes(f, pdf.output("blob"), { contentType: "application/pdf" });
+        pdfUrl = await getDownloadURL(f);
+      } catch (err) { console.warn("PDF upload failed", err); }
+      const text = "Hello " + r.name + ", your CCTV PITS installation invoice " + inv.number + " is ready.\nInstallation charges: " + money(inv.installationPrice) + (inv.notes ? "\n" + inv.notes : "") + "\nView or download: " + link + "\nThank you!";
+      const body = { to, message: text };
+      if (pdfUrl) Object.assign(body, { media_url: pdfUrl, media_type: "document", filename: inv.number + ".pdf" });
+      const res = await fetch(set.workerUrl, { method: "POST", headers: { Authorization: "Bearer " + await auth.currentUser.getIdToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || !out.ok) throw new Error("WhatsApp: " + (out.error || res.status));
+      await updateDoc(doc(db, "installRequests", id), { invoiceId: invId, invoiceNumber: inv.number, invoiceDate: inv.date, invoiceAmount: inv.installationPrice, invoiceNotes: inv.notes, invoiceSentAt: serverTimestamp() });
+      say(pdfUrl ? "Invoice PDF sent on WhatsApp." : "Invoice link sent on WhatsApp (PDF file upload needs Firebase Storage).", "ok");
+      setTimeout(loadInstalls, 1500);
+    } catch (err) { say(err.message || "Could not send the invoice.", "err"); }
+    ib.disabled = false; return;
+  }
   const b = e.target.closest("button[data-st]"); if (!b) return;
   try { await updateDoc(doc(db, "installRequests", b.closest(".order").dataset.id), { status: b.dataset.st }); loadInstalls(); }
   catch (err) { alert("Could not update request."); }
 });
 
+async function loadWa() { try { const s = (await getDoc(doc(db, "secrets", "wasms"))).data() || {}; $("wcc").value = s.countryCode || "92"; $("wid").value = s.accountId || ""; $("wurl").value = s.workerUrl || ""; if (s.apiKey) $("wkey").placeholder = "Saved. Type a new key to replace it"; } catch (e) {} }
+$("wsave").onclick = async () => {
+  const m = $("wmsg"), data = { countryCode: $("wcc").value.replace(/\D/g, "") || "92", accountId: $("wid").value.trim(), workerUrl: $("wurl").value.trim().replace(/\/+$/, "") };
+  if ($("wkey").value.trim()) data.apiKey = $("wkey").value.trim();
+  try { await setDoc(doc(db, "secrets", "wasms"), data, { merge: true }); $("wkey").value = ""; m.textContent = "Saved."; m.className = "msg ok"; loadWa(); }
+  catch (e) { m.textContent = "Could not save. Publish the new Firestore rules first."; m.className = "msg err"; }
+};
 onAuthStateChanged(auth, async u => {
   if (!u) return location.replace("login.html");
   let admin = false;
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   if (!admin) return location.replace("dashboard.html");
   $("main").hidden = false;
-  loadProducts(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls();
+  loadProducts(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
 });
 </script>
 </body>

@@ -12,6 +12,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // WhatsApp API key etc. Admin only.
+    match /secrets/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Installation invoices. The document id is random, so only someone with
+    // the link (sent on WhatsApp) can open one. Listing and writing: admin only.
+    match /invoices/{id} {
+      allow get: if true;
+      allow list, create, update, delete: if isAdmin();
+    }
+
     match /products/{id} {
       allow read: if true;
       allow write: if isAdmin();
@@ -32,7 +44,6 @@ service cloud.firestore {
     }
 
     match /installRequests/{id} {
-      // items = [{productId, name, price, quantity}] chosen on the install page
       allow create: if request.auth != null
                     && request.resource.data.userId == request.auth.uid
                     && request.resource.data.status == 'new'

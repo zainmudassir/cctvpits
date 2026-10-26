@@ -61,6 +61,7 @@ async function loadInstalls(uid) {
       <div class="oh"><b>#${r.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(r.status)}">${esc(r.status)}</span><span>${r.createdAt ? r.createdAt.toDate().toLocaleDateString() : ""}</span></div>
       <div>${esc(r.placeType)} &middot; ${esc(r.cameras)} item${r.cameras > 1 ? "s" : ""} &middot; ${esc(r.address)}, ${esc(r.city)}</div>
       ${(r.items || []).map(i => `<div>&bull; ${esc(i.quantity)} x ${esc(i.name)}</div>`).join("")}
+      ${r.invoiceId ? `<div><a style="color:var(--blue);font-weight:700" href="invoice.html?id=${esc(r.invoiceId)}">View invoice ${esc(r.invoiceNumber)} (Rs. ${esc(Number(r.invoiceAmount).toLocaleString())})</a></div>` : ""}
     </div>`).join("") || "<p>No installation requests yet.</p>";
   } catch (e) { $("ilist").textContent = "Could not load requests."; }
 }
