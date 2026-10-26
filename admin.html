@@ -336,7 +336,8 @@ async function loadInstalls() {
     <div class="order" data-id="${d.id}">
       <div class="oh"><b>#${d.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(r.status)}">${esc(r.status)}</span><span>${r.createdAt ? r.createdAt.toDate().toLocaleString() : ""}</span></div>
       <div><b>${esc(r.name)}</b> &middot; ${esc(r.phone)} &middot; ${esc(r.email)}</div>
-      <div>${esc(r.placeType)} &middot; ${esc(r.cameras)} cameras${r.preferredDate ? " &middot; preferred " + esc(r.preferredDate) : ""}</div>
+      <div>${esc(r.placeType)} &middot; ${esc(r.cameras)} item${r.cameras > 1 ? "s" : ""}${r.preferredDate ? " &middot; preferred " + esc(r.preferredDate) : ""}</div>
+      ${(r.items || []).map(i => `<div>&bull; ${esc(i.quantity)} x ${esc(i.name)}</div>`).join("")}
       <div>${esc(r.address)}, ${esc(r.city)}</div>
       ${r.notes ? `<div>Notes: ${esc(r.notes)}</div>` : ""}
       <div><button class="sm" data-st="contacted">Contacted</button> <button class="sm" data-st="scheduled">Scheduled</button> <button class="sm" data-st="done">Done</button> <button class="sm del" data-st="cancelled">Cancel</button></div>

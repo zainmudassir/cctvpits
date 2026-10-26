@@ -19,6 +19,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="auth.css">
 <link rel="stylesheet" href="dash.css">
+<style>
+.plist{max-height:380px;overflow-y:auto;border:1.5px solid var(--line);border-radius:8px}
+.pi{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.pi:last-child{border-bottom:0}
+.pi.on{background:#f2f8ff}
+.pi img{width:44px;height:44px;object-fit:cover;border-radius:5px;background:var(--soft);flex:none}
+.pi .t{flex:1;min-width:0;font-size:14px}
+.pi .t b{display:block;font-weight:700}
+.pi .t span{color:var(--muted);font-size:12px}
+.pi .qty input{width:46px;text-align:center;padding:5px 2px;border:1.5px solid var(--line);border-radius:5px;font:inherit}
+.psum{margin-top:10px;font-size:14px;font-weight:600;padding:10px 12px;border-radius:6px;background:var(--soft)}
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -46,8 +58,12 @@
       <label for="address">Address</label><input id="address" required>
       <div class="row"><div><label for="city">City</label><input id="city" required></div>
       <div><label for="place">Place type</label><select id="place"><option>Home</option><option>Shop</option><option>Office</option><option>Other</option></select></div></div>
-      <div class="row"><div><label for="cams">Number of cameras</label><input id="cams" type="number" min="1" max="100" value="2" required></div>
-      <div><label for="date">Preferred date (optional)</label><input id="date" type="date"></div></div>
+      <label>Products to install</label>
+      <p class="sub" style="margin:0 0 8px">Choose the products you want installed and how many of each.</p>
+      <input id="psearch" type="search" placeholder="Search products" autocomplete="off" style="margin-bottom:10px">
+      <div id="plist" class="plist"><p class="sub">Loading products...</p></div>
+      <div id="psum" class="psum">No products selected yet.</div>
+      <label for="date">Preferred date (optional)</label><input id="date" type="date">
       <label for="notes">Notes (optional)</label><textarea id="notes" maxlength="400" placeholder="For example: indoor or outdoor, existing system, anything we should know"></textarea>
       <button class="primary" type="submit" id="go" style="max-width:240px">Send request</button>
       <div id="msg" class="msg" role="alert"></div>
@@ -57,9 +73,54 @@
 <script type="module">
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
-import { doc, getDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { doc, getDoc, getDocs, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 const $ = id => document.getElementById(id);
 const show = (t, c) => { $("msg").textContent = t; $("msg").className = "msg " + c; };
+const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const rs = n => "Rs " + Number(n || 0).toLocaleString();
+let products = [];
+const qtys = {}; // productId -> quantity
+const MAXQ = 100;
+
+function renderList() {
+  const t = $("psearch").value.trim().toLowerCase();
+  const list = products.filter(p => !t || (p.name + " " + (p.category || "")).toLowerCase().includes(t));
+  $("plist").innerHTML = list.map(p => { const q = qtys[p.id] || 0; return `
+    <div class="pi${q ? " on" : ""}" data-id="${esc(p.id)}">
+      ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" onerror="this.remove()">` : ""}
+      <div class="t"><b>${esc(p.name)}</b><span>${esc(p.category || "")}${p.category ? " &middot; " : ""}${rs(p.price)}</span></div>
+      <div class="qty"><button type="button" data-d="-1" aria-label="Less">-</button><input type="number" min="0" max="${MAXQ}" value="${q}" aria-label="Quantity"><button type="button" data-d="1" aria-label="More">+</button></div>
+    </div>`; }).join("") || "<p class='sub' style='padding:12px'>No products found.</p>";
+}
+function summary() {
+  const sel = products.filter(p => qtys[p.id] > 0);
+  const n = sel.reduce((a, p) => a + qtys[p.id], 0);
+  $("psum").textContent = n ? sel.map(p => qtys[p.id] + " x " + p.name).join(", ") + "  (total " + n + " item" + (n > 1 ? "s" : "") + ")" : "No products selected yet.";
+}
+function setQty(id, v) {
+  v = Math.max(0, Math.min(MAXQ, Math.floor(Number(v)) || 0));
+  qtys[id] = v;
+  const row = $("plist").querySelector(`.pi[data-id="${CSS.escape(id)}"]`);
+  if (row) { row.classList.toggle("on", v > 0); row.querySelector("input").value = v; }
+  summary();
+}
+$("plist").addEventListener("click", e => {
+  const b = e.target.closest("button[data-d]"); if (!b) return;
+  const id = b.closest(".pi").dataset.id;
+  setQty(id, (qtys[id] || 0) + Number(b.dataset.d));
+});
+$("plist").addEventListener("change", e => {
+  if (e.target.matches("input")) setQty(e.target.closest(".pi").dataset.id, e.target.value);
+});
+$("psearch").addEventListener("input", renderList);
+(async () => {
+  try {
+    const snap = await getDocs(collection(db, "products"));
+    products = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    renderList(); summary();
+  } catch (e) { $("plist").innerHTML = "<p class='sub' style='padding:12px'>Could not load products. Please refresh.</p>"; }
+})();
+
 onAuthStateChanged(auth, async u => {
   if (!u) { $("gate").hidden = false; $("formbox").hidden = true; return; }
   $("gate").hidden = true; $("formbox").hidden = false;
@@ -72,17 +133,19 @@ onAuthStateChanged(auth, async u => {
 $("f").addEventListener("submit", async e => {
   e.preventDefault();
   const u = auth.currentUser; if (!u) return;
+  const items = products.filter(p => qtys[p.id] > 0).map(p => ({ productId: p.id, name: p.name, price: Number(p.price) || 0, quantity: qtys[p.id] }));
+  if (!items.length) { show("Please select at least one product and quantity.", "err"); return; }
   $("go").disabled = true;
   try {
     await addDoc(collection(db, "installRequests"), {
       userId: u.uid, email: u.email,
       name: $("name").value.trim(), phone: $("phone").value.trim(),
       address: $("address").value.trim(), city: $("city").value.trim(),
-      placeType: $("place").value, cameras: Number($("cams").value),
+      placeType: $("place").value, items, cameras: items.reduce((a, i) => a + i.quantity, 0),
       preferredDate: $("date").value, notes: $("notes").value.trim(),
       status: "new", createdAt: serverTimestamp()
     });
-    e.target.reset(); $("cams").value = 2;
+    e.target.reset(); for (const k in qtys) delete qtys[k]; renderList(); summary();
     show("Request sent. We will contact you soon. You can see it in your account.", "ok");
   } catch (err) { show("Could not send your request. Please try again.", "err"); }
   $("go").disabled = false;

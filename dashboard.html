@@ -59,7 +59,8 @@ async function loadInstalls(uid) {
     const list = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     $("ilist").innerHTML = list.map(r => `<div class="order">
       <div class="oh"><b>#${r.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(r.status)}">${esc(r.status)}</span><span>${r.createdAt ? r.createdAt.toDate().toLocaleDateString() : ""}</span></div>
-      <div>${esc(r.placeType)} &middot; ${esc(r.cameras)} cameras &middot; ${esc(r.address)}, ${esc(r.city)}</div>
+      <div>${esc(r.placeType)} &middot; ${esc(r.cameras)} item${r.cameras > 1 ? "s" : ""} &middot; ${esc(r.address)}, ${esc(r.city)}</div>
+      ${(r.items || []).map(i => `<div>&bull; ${esc(i.quantity)} x ${esc(i.name)}</div>`).join("")}
     </div>`).join("") || "<p>No installation requests yet.</p>";
   } catch (e) { $("ilist").textContent = "Could not load requests."; }
 }
