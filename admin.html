@@ -347,7 +347,7 @@ const cLower = s => String(s || "").trim().toLowerCase();
 async function loadCompanies() {
   let snap, psnap;
   try { snap = await getDocs(query(collection(db, "companies"), orderBy("name"))); }
-  catch (err) { cshow("Could not load companies. Publish the new Firestore rules first.", "err"); return; }
+  catch (err) { cshow("Could not load companies (" + (err.code || err.message) + "). Publish the Firestore rules in the Firebase console first.", "err"); return; }
   try { psnap = await getDocs(collection(db, "products")); productCache = psnap.docs.map(d => d.data()); } catch (err) {}
   companyList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   $("ccount").textContent = companyList.length;
@@ -443,7 +443,7 @@ const usedBy = k => productCache.filter(p => cLower(p.brand) === cLower(k.brand)
 async function loadCategories() {
   let snap;
   try { snap = await getDocs(collection(db, "categories")); }
-  catch (err) { kshow("Could not load categories. Publish the new Firestore rules first.", "err"); return; }
+  catch (err) { kshow("Could not load categories (" + (err.code || err.message) + "). Publish the Firestore rules in the Firebase console first.", "err"); return; }
   categoryList = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(k => k.name && k.brand)
     .sort((x, y) => x.brand.localeCompare(y.brand) || x.name.localeCompare(y.name));
   $("kcount").textContent = categoryList.length;
