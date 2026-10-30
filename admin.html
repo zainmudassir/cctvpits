@@ -40,7 +40,7 @@
   </div>
 
   <div class="box"><h2>Companies (<span id="ccount">0</span>)</h2>
-    <p class="sub">Products are organised as Company, then Category, then Product. Add a company here, then pick it when you add a product.</p>
+    <p class="sub">Products are organised as Company, then Category, then Product. Add a company here, add its categories in the Categories section below, then pick both when you add a product.</p>
     <form id="cf" class="wide">
       <div class="row">
         <div><label for="cname">Company name</label><input id="cname" required maxlength="40" placeholder="For example: Hikvision"></div>
@@ -53,6 +53,20 @@
     <button class="sm" id="cdef" type="button" hidden>Add default and existing companies</button>
   </div>
 
+  <div class="box"><h2>Categories (<span id="kcount">0</span>)</h2>
+    <p class="sub">Every company has its own categories. Add them here, then choose the company and category when you add a product.</p>
+    <form id="kf" class="wide">
+      <div class="row">
+        <div><label for="kbrand">Company</label><select id="kbrand" required><option value="">Select a company</option></select></div>
+        <div><label for="kname">Category name</label><input id="kname" required maxlength="120" placeholder="For example: Turbo HD Cameras (separate with commas to add several)"></div>
+      </div>
+      <button class="primary" type="submit" style="max-width:200px;margin-top:10px">Add category</button>
+      <div id="kmsg" class="msg" role="alert"></div>
+    </form>
+    <div class="scroll"><table class="tbl"><thead><tr><th>Company</th><th>Category</th><th>Products</th><th></th></tr></thead><tbody id="klist"></tbody></table></div>
+    <button class="sm" id="kdef" type="button" hidden>Add categories from existing products</button>
+  </div>
+
   <div class="box"><h2>Add product</h2>
     <form id="pf" class="wide">
       <div class="row">
@@ -63,7 +77,7 @@
         <div><label for="pbrand">Company</label>
           <select id="pbrand" required><option value="">Select a company</option></select></div>
         <div><label for="pcat">Category</label>
-          <input id="pcat" list="cats" required placeholder="Pick or type a category (shown under the company)"><datalist id="cats"></datalist></div>
+          <select id="pcat" required><option value="">Select a company first</option></select></div>
       </div>
       <div class="row">
         <div><label for="pimg">Photo</label><input id="pimg" type="file" accept="image/*"></div>
@@ -304,8 +318,12 @@ $("plist").addEventListener("click", async e => {
       if (c === null) return;
       const match = names.find(n => n.toLowerCase() === c.trim().toLowerCase());
       if (!match) { alert("That company does not exist. Add it in the Companies section first."); return; }
-      const k = prompt("Category", cur.category || ""); if (k === null) return;
-      await updateDoc(ref, { brand: match, category: k.trim() || cur.category || "Other" });
+      const ks = categoryList.filter(x => cLower(x.brand) === cLower(match)).map(x => x.name);
+      if (!ks.length) { alert(match + " has no categories yet. Add them in the Categories section first."); return; }
+      const k = prompt("Category under " + match + ". Choose one of:\n" + ks.join(", "), cur.category || ""); if (k === null) return;
+      const km = ks.find(n => cLower(n) === cLower(k));
+      if (!km) { alert("That category does not exist under " + match + ". Add it in the Categories section first."); return; }
+      await updateDoc(ref, { brand: match, category: km });
     }
     else if (act === "price") {
       const v = prompt("New price (Rs.)");
@@ -322,8 +340,7 @@ $("plist").addEventListener("click", async e => {
 
 // ---------- companies (Company > Category > Product) ----------
 const DEF_COMPANIES = ["Hikvision", "Dahua", "EZVIZ", "Imou", "Uniview (UNV)", "HiLook", "TP-Link Tapo", "Reolink"];
-const DEF_CATS = ["Indoor Camera", "Outdoor Camera", "Battery Camera", "Doorbell", "DVR / NVR", "Accessory"];
-let companyList = [], productCache = [];
+let companyList = [], productCache = [], categoryList = [];
 const cshow = (t, c) => { $("cmsg").textContent = t; $("cmsg").className = "msg " + c; };
 const cLower = s => String(s || "").trim().toLowerCase();
 
@@ -345,17 +362,23 @@ async function loadCompanies() {
   const missing = [...new Set([...DEF_COMPANIES, ...productCache.map(p => String(p.brand || "").trim()).filter(Boolean)])].filter(n => !known.has(cLower(n)));
   $("cdef").hidden = !missing.length; $("cdef").dataset.missing = JSON.stringify(missing);
   fillCompanySelect(); fillCategoryList();
+  await loadCategories();
 }
 function fillCompanySelect() {
-  const sel = $("pbrand"), cur = sel.value;
-  sel.innerHTML = '<option value="">Select a company</option>' + companyList.map(c => `<option>${esc(c.name)}</option>`).join("");
-  if (cur && companyList.some(c => c.name === cur)) sel.value = cur;
+  const opts = companyList.map(c => `<option>${esc(c.name)}</option>`).join("");
+  [["pbrand", "Select a company"], ["kbrand", "Select a company"]].forEach(([id, label]) => {
+    const sel = $(id), cur = sel.value;
+    sel.innerHTML = `<option value="">${label}</option>` + opts;
+    if (cur && companyList.some(c => c.name === cur)) sel.value = cur;
+  });
 }
-// suggest the categories already used under the chosen company, plus the usual ones
+// the category list of the product form only shows the categories of the chosen company
 function fillCategoryList() {
-  const co = $("pbrand").value;
-  const used = productCache.filter(p => !co || cLower(p.brand) === cLower(co)).map(p => String(p.category || "").trim()).filter(Boolean);
-  $("cats").innerHTML = [...new Set([...used, ...DEF_CATS])].map(c => `<option>${esc(c)}</option>`).join("");
+  const co = $("pbrand").value, sel = $("pcat"), cur = sel.value;
+  const list = categoryList.filter(k => cLower(k.brand) === cLower(co));
+  sel.innerHTML = (!co ? '<option value="">Select a company first</option>' : list.length ? '<option value="">Select a category</option>' : '<option value="">No categories for this company yet - add one in Categories</option>')
+    + list.map(k => `<option>${esc(k.name)}</option>`).join("");
+  if (cur && list.some(k => k.name === cur)) sel.value = cur;
 }
 $("pbrand").addEventListener("change", fillCategoryList);
 
@@ -387,7 +410,9 @@ $("clist").addEventListener("click", async e => {
     if (b.dataset.ca === "del") {
       const n = productCache.filter(p => cLower(p.brand) === cLower(name)).length;
       if (n) { cshow(name + " still has " + n + " product" + (n > 1 ? "s" : "") + ". Delete them or move them to another company first.", "err"); return; }
-      if (!confirm("Delete " + name + "?")) return;
+      const ks = categoryList.filter(k => cLower(k.brand) === cLower(name));
+      if (!confirm("Delete " + name + (ks.length ? " and its " + ks.length + " categor" + (ks.length > 1 ? "ies" : "y") : "") + "?")) return;
+      if (ks.length) { const bt = writeBatch(db); ks.forEach(k => bt.delete(doc(db, "categories", k.id))); await bt.commit(); }
       await deleteDoc(r);
     } else if (b.dataset.ca === "rename") {
       const v = prompt("New company name", name); if (v === null) return;
@@ -400,6 +425,8 @@ $("clist").addEventListener("click", async e => {
       for (let i = 0; i < mine.length; i += 400) {
         const bt = writeBatch(db); mine.slice(i, i + 400).forEach(d => bt.update(d.ref, { brand: nn })); await bt.commit();
       }
+      const myk = categoryList.filter(k => cLower(k.brand) === cLower(name));
+      if (myk.length) { const bt = writeBatch(db); myk.forEach(k => bt.update(doc(db, "categories", k.id), { brand: nn })); await bt.commit(); }
       loadProducts();
     } else {
       const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
@@ -410,9 +437,85 @@ $("clist").addEventListener("click", async e => {
   } catch (err) { cshow("Could not update. Check your admin login and Firestore rules.", "err"); }
 });
 
+// ---------- categories (each belongs to one company) ----------
+const kshow = (t, c) => { $("kmsg").textContent = t; $("kmsg").className = "msg " + c; };
+const usedBy = k => productCache.filter(p => cLower(p.brand) === cLower(k.brand) && cLower(p.category) === cLower(k.name)).length;
+async function loadCategories() {
+  let snap;
+  try { snap = await getDocs(collection(db, "categories")); }
+  catch (err) { kshow("Could not load categories. Publish the new Firestore rules first.", "err"); return; }
+  categoryList = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(k => k.name && k.brand)
+    .sort((x, y) => x.brand.localeCompare(y.brand) || x.name.localeCompare(y.name));
+  $("kcount").textContent = categoryList.length;
+  $("klist").innerHTML = categoryList.map(k => `
+    <tr data-id="${k.id}" data-name="${esc(k.name)}" data-brand="${esc(k.brand)}">
+      <td><b>${esc(k.brand)}</b></td><td>${esc(k.name)}</td><td>${usedBy(k)}</td>
+      <td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-ka="rename">Rename</button><button class="sm del" data-ka="del">Delete</button></div></td>
+    </tr>`).join("") || '<tr><td colspan="4">No categories yet. Pick a company above and add its first category.</td></tr>';
+  // categories that products already use but that are not saved here yet
+  const have = new Set(categoryList.map(k => cLower(k.brand) + "|" + cLower(k.name))), miss = [];
+  productCache.forEach(p => {
+    const b = String(p.brand || "").trim(), c = String(p.category || "").trim(), key = cLower(b) + "|" + cLower(c);
+    if (b && c && !have.has(key)) { have.add(key); miss.push({ brand: b, name: c }); }
+  });
+  $("kdef").hidden = !miss.length; $("kdef").dataset.missing = JSON.stringify(miss);
+  fillCategoryList();
+}
+$("kf").addEventListener("submit", async e => {
+  e.preventDefault();
+  const brandN = $("kbrand").value;
+  if (!brandN) { kshow("Pick a company first.", "err"); return; }
+  const names = [...new Set($("kname").value.split(",").map(x => x.trim().replace(/\s+/g, " ")).filter(Boolean))]
+    .filter(n => !categoryList.some(k => cLower(k.brand) === cLower(brandN) && cLower(k.name) === cLower(n)));
+  if (!names.length) { kshow(brandN + " already has that category.", "err"); return; }
+  try {
+    const bt = writeBatch(db);
+    names.forEach(n => bt.set(doc(collection(db, "categories")), { brand: brandN, name: n, createdAt: serverTimestamp() }));
+    await bt.commit();
+    $("kname").value = ""; kshow(names.length + " categor" + (names.length > 1 ? "ies" : "y") + " added to " + brandN + ".", "ok"); loadCategories();
+  } catch (err) { kshow("Could not save. Publish the new Firestore rules first.", "err"); }
+});
+$("kdef").addEventListener("click", async () => {
+  try {
+    const miss = JSON.parse($("kdef").dataset.missing || "[]");
+    for (let i = 0; i < miss.length; i += 400) {
+      const bt = writeBatch(db);
+      miss.slice(i, i + 400).forEach(m => bt.set(doc(collection(db, "categories")), { brand: m.brand, name: m.name, createdAt: serverTimestamp() }));
+      await bt.commit();
+    }
+    kshow(miss.length + " categories added.", "ok"); loadCategories();
+  } catch (err) { kshow("Could not save. Publish the new Firestore rules first.", "err"); }
+});
+$("klist").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-ka]"); if (!b) return;
+  const tr = b.closest("tr"), id = tr.dataset.id, name = tr.dataset.name, brandN = tr.dataset.brand, r = doc(db, "categories", id);
+  try {
+    if (b.dataset.ka === "del") {
+      const n = usedBy({ brand: brandN, name });
+      if (n) { kshow(brandN + " / " + name + " still has " + n + " product" + (n > 1 ? "s" : "") + ". Delete them or move them to another category first.", "err"); return; }
+      if (!confirm("Delete " + name + " from " + brandN + "?")) return;
+      await deleteDoc(r);
+    } else {
+      const v = prompt("New category name", name); if (v === null) return;
+      const nn = v.trim().replace(/\s+/g, " "); if (!nn || nn === name) return;
+      if (categoryList.some(k => k.id !== id && cLower(k.brand) === cLower(brandN) && cLower(k.name) === cLower(nn))) { kshow("That category already exists under " + brandN + ".", "err"); return; }
+      await updateDoc(r, { name: nn });
+      // keep the products of this category attached to it
+      const ps = await getDocs(collection(db, "products"));
+      const mine = ps.docs.filter(d => cLower(d.data().brand) === cLower(brandN) && cLower(d.data().category) === cLower(name));
+      for (let i = 0; i < mine.length; i += 400) {
+        const bt = writeBatch(db); mine.slice(i, i + 400).forEach(d => bt.update(d.ref, { category: nn })); await bt.commit();
+      }
+      loadProducts();
+    }
+    loadCompanies();
+  } catch (err) { kshow("Could not update. Check your admin login and Firestore rules.", "err"); }
+});
+
 $("pf").addEventListener("submit", async e => {
   e.preventDefault();
   if (!$("pbrand").value) { show("Pick a company first. Add one in the Companies section if it is missing.", "err"); return; }
+  if (!$("pcat").value) { show("Pick a category. Add one for this company in the Categories section if it is missing.", "err"); return; }
   const btn = e.target.querySelector("button.primary");
   btn.disabled = true;
   try {
@@ -522,7 +625,7 @@ $("impgo").addEventListener("click", async () => {
       await b.commit();
     }
     m.textContent = fresh.length + " products imported, " + (impList.length - fresh.length) + " skipped (already exist).";
-    m.className = "msg ok"; loadProducts();
+    m.className = "msg ok"; loadProducts(); loadCompanies();
   } catch (err) { m.textContent = "Import failed. Check you are logged in as admin and your Firestore rules are published."; m.className = "msg err"; $("impgo").disabled = false; }
 });
 
