@@ -33,9 +33,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
 #sf{flex:1;max-width:420px}
 #sf input{width:100%;padding:10px 16px;border:1.5px solid var(--line);border-radius:99px;font:inherit;font-size:14px}
 #sf input:focus{outline:3px solid rgba(11,107,214,.25);border-color:var(--blue)}
-nav{display:flex;align-items:center;gap:20px;font-weight:600;font-size:14px}
-nav a:hover{color:var(--blue)}
-.links{display:contents}
+.hr{display:flex;align-items:center;gap:14px;font-weight:600;font-size:14px}
 .btn{display:inline-block;padding:11px 20px;border-radius:6px;font-weight:700;font-size:14px;border:2px solid var(--blue);background:var(--blue);color:#fff;cursor:pointer;font-family:inherit;text-align:center}
 .btn.ghost{background:#fff;color:var(--blue)}
 .btn.sm{padding:8px 14px}
@@ -44,7 +42,7 @@ nav a:hover{color:var(--blue)}
 #account{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
 
 /* banner slider: products marked "Show in banner slider" in admin */
-.slider{position:relative;aspect-ratio:2/1;background:#111;overflow:hidden;width:100%}
+.slider{position:relative;aspect-ratio:2/1;background:#111;overflow:hidden;width:min(100%,940px);margin:16px auto 0;border-radius:10px}
 .slide{position:absolute;inset:0;opacity:0;transition:opacity .6s;display:block}
 .slide.on{opacity:1;z-index:1}
 a.slide{cursor:pointer}
@@ -61,9 +59,40 @@ a.slide{cursor:pointer}
 .ph h1{font-size:clamp(26px,5vw,56px);font-weight:800;line-height:1.1}
 .ph p{margin:10px 0 18px;color:#c9ced6}
 
-section{padding:36px 5vw}
-section:nth-of-type(even){background:var(--soft)}
+section{padding:34px 5vw}
+.alt{background:var(--soft)}
 h2{font-size:24px;font-weight:800;margin-bottom:18px}
+.mk h2,h2.mid{text-align:center}
+.mk .sub{max-width:640px;margin:-8px auto 22px;text-align:center;color:var(--muted);font-size:14px}
+body.browse .mk{display:none}
+.intro{text-align:center;padding:26px 5vw 8px}
+.intro h1{font-size:clamp(20px,3vw,28px);font-weight:800;color:var(--ink);max-width:760px;margin:0 auto 8px}
+.intro p{color:var(--muted);font-size:14px;max-width:620px;margin:0 auto 16px}
+.intro .btn{margin:4px}
+.sv{background:linear-gradient(160deg,#1d2733,#0c1016);color:#fff;border-radius:10px;padding:24px 18px;text-align:center;border-bottom:4px solid var(--c)}
+.sv svg{width:38px;height:38px;stroke:#fff;fill:none;stroke-width:1.6;margin-bottom:10px}
+.sv h3{font-size:16px;margin-bottom:6px}.sv p{font-size:13px;color:#b8bec8}
+.svg5{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;max-width:1100px;margin:0 auto}
+.pk{background:#fff;border:1px solid var(--line);border-top:5px solid var(--c);border-radius:10px;padding:22px 18px;text-align:center;display:block}
+.pk:hover{box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.pk h3{font-size:17px;color:var(--c);margin-bottom:6px}.pk p{font-size:13px;color:var(--muted)}
+.pk span{display:inline-block;margin-top:12px;font-weight:700;font-size:13px;color:var(--blue)}
+.cta{background:var(--ink);color:#fff;text-align:center}
+.cta p{color:#b8bec8;font-size:14px;max-width:560px;margin:-6px auto 16px}
+.cta .btn{margin:4px}.cta .btn.ghost{background:transparent;color:#fff;border-color:#fff}
+/* main menu */
+.mn{background:var(--ink);padding:0 5vw}
+.mn ul{display:flex;flex-wrap:wrap;list-style:none;padding:0;margin:0}
+.mn li{position:relative}
+.mn li>a,.mn li>button{display:block;padding:12px 14px;color:#fff;font:600 13px/1 'Montserrat',system-ui,sans-serif;background:none;border:0;cursor:pointer;white-space:nowrap}
+.mn li>a:hover,.mn li>button:hover,.mn li.open>button{background:var(--blue)}
+.mn .menu{display:none;position:absolute;top:100%;left:0;min-width:230px;max-height:70vh;overflow:auto;background:#fff;box-shadow:0 10px 26px rgba(0,0,0,.18);border-top:3px solid var(--blue);z-index:40}
+.mn li:hover>.menu,.mn li:focus-within>.menu,.mn li.open>.menu{display:block}
+.mn .menu a{display:block;padding:10px 16px;font-size:13px;font-weight:600;border-bottom:1px solid var(--line)}
+.mn .menu a:hover{background:var(--soft);color:var(--blue)}
+.mn .menu small{color:var(--muted);font-weight:600}
+.burger{display:none;background:none;border:2px solid var(--ink);border-radius:6px;padding:6px 10px;font-size:18px;line-height:1;cursor:pointer}
+
 .cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;padding:28px 5vw}
 .cat{padding:18px 14px;background:var(--soft);font-weight:700;border-top:5px solid var(--c);font-size:14px}
 .cat:hover{background:#eaeef3}
@@ -109,18 +138,25 @@ footer a:hover{color:var(--blue)}
 @media(max-width:760px){
   header{flex-wrap:wrap;gap:10px}
   #sf{order:3;max-width:none;flex-basis:100%}
-  .links{display:none}
+  .burger{display:block}
+  .hr{margin-left:auto}
+  .mn{display:none;padding:0}.mn.show{display:block}
+  .mn ul{display:block}.mn li>a,.mn li>button{width:100%;text-align:left;padding:13px 5vw}
+  .mn .menu{position:static;box-shadow:none;max-height:none;border-top:0}
+  .mn li:hover>.menu{display:none}.mn li.open>.menu{display:block}
+  .slider{width:100%;margin:0;border-radius:0}
   .ph::after,.ph::before{display:none}
   .ph-in{padding:0 6vw}
   #sf input{font-size:16px}
 }
 @media(max-width:520px){
-  nav{gap:8px}
+  .hr{gap:8px}
   #account span{display:none}
   .brand{font-size:17px}.brand img{height:34px}
   .btn.sm{padding:7px 10px}
   .cartlink{padding:6px 10px}
 }
+.foot3{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:24px}
 </style>
 </head>
 <body>
@@ -128,40 +164,63 @@ footer a:hover{color:var(--blue)}
 <header>
   <a class="brand" href="index.html"><img src="logo.png" alt="" onerror="this.style.display='none'">CCTV PITS</a>
   <form id="sf" role="search" onsubmit="return false"><input id="q" type="search" placeholder="Search products" autocomplete="off"></form>
-  <nav>
-    <span class="links"><a href="install.html">Book installation</a><a href="#rows">Shop</a><a href="dashboard.html#orders">Track order</a><a href="info.html#contact">Support</a></span>
+  <div class="hr">
     <a class="cartlink" href="cart.html">Cart (<span id="cc">0</span>)</a>
     <div id="account"><a class="btn ghost sm" href="login.html">Log in</a><a class="btn sm" href="register.html">Register</a></div>
-  </nav>
+    <button class="burger" id="bg" aria-label="Menu" aria-expanded="false">&#9776;</button>
+  </div>
 </header>
+<nav class="mn" id="mn" aria-label="Main">
+  <ul>
+    <li><a href="index.html" data-home="1">Home</a></li>
+    <li class="dd"><button type="button" aria-haspopup="true">Services &#9662;</button><div class="menu">
+      <a href="install.html">Home CCTV installation</a><a href="install.html">Shop and office CCTV</a><a href="install.html">Wi-Fi camera setup</a><a href="install.html">Locks and sensors</a><a href="install.html">Repair and upgrade</a><a href="install.html"><b>Book installation</b></a></div></li>
+    <li class="dd"><button type="button" aria-haspopup="true">Companies &#9662;</button><div class="menu" id="nb"></div></li>
+    <li class="dd"><button type="button" aria-haspopup="true">Categories &#9662;</button><div class="menu" id="nc"></div></li>
+    <li><a href="#packages">Packages</a></li>
+    <li><a href="#rows">Shop</a></li>
+    <li><a href="dashboard.html#orders">Track order</a></li>
+    <li><a href="info.html#contact">Support</a></li>
+  </ul>
+</nav>
 
-<div class="slider" id="slider">
+<div class="slider mk" id="slider">
   <a class="slide on" href="install.html"><img src="banner.jpg" alt="CCTV PITS - complete CCTV security solutions for homes and businesses, 4, 8, 16 and 32 camera packages" fetchpriority="high" decoding="async" width="1774" height="887"></a>
 </div>
-<div class="cats" id="cats"></div>
+<div class="intro mk">
+  <h1>CCTV cameras and installation for homes, shops and offices</h1>
+  <p>Buy cameras online or book our team. We set up recording, mobile viewing and night vision.</p>
+  <a class="btn" href="install.html">Book installation</a><a class="btn ghost" href="#rows">Shop products</a>
+</div>
+
+<section id="services" class="mk"><h2>Our services</h2>
+  <p class="sub">Professional installation and support for homes and businesses.</p>
+  <div class="svg5"><a class="sv" href="install.html" style="--c:var(--blue)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z"/><circle cx="12" cy="13" r="3"/></svg><h3>Home CCTV</h3><p>Indoor and outdoor cameras set up so you can watch live on your phone.</p></a><a class="sv" href="install.html" style="--c:var(--red)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13"/><path d="M8 7V4h8v3M3 12h18"/></svg><h3>Shop and office</h3><p>Multi-camera systems with recording, planned around your space.</p></a><a class="sv" href="install.html" style="--c:var(--yellow)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></svg><h3>Wi-Fi cameras</h3><p>Plug-in cameras with mobile alerts and cloud or card storage.</p></a><a class="sv" href="install.html" style="--c:var(--green)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><h3>Locks and sensors</h3><p>Smart locks, door sensors and alarms installed and connected.</p></a><a class="sv" href="install.html" style="--c:var(--blue)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 6a4 4 0 0 0 5 5l-9 9a2.5 2.5 0 0 1-4-4z"/></svg><h3>Repair and upgrade</h3><p>We fix and improve your existing camera system.</p></a></div></section>
+
+<section id="packages" class="mk alt"><h2>Popular CCTV packages</h2>
+  <p class="sub">Choose by camera type, then tell us how many cameras you need.</p>
+  <div class="svg5" style="max-width:900px"><a class="pk" href="install.html" style="--c:var(--blue)"><h3>Analogue / HD packages</h3><p>4, 8, 16 and 32 channel HD systems with recorder and storage.</p><span>Get a quote &rsaquo;</span></a><a class="pk" href="install.html" style="--c:var(--red)"><h3>IP / network packages</h3><p>Sharper IP cameras with PoE recorders for larger sites.</p><span>Get a quote &rsaquo;</span></a><a class="pk" href="install.html" style="--c:var(--green)"><h3>Wi-Fi packages</h3><p>Wireless cameras you set up fast and watch from your phone.</p><span>Get a quote &rsaquo;</span></a></div></section>
+
+<section class="mk"><h2>Shop by company</h2><div class="cats" id="cats" style="padding:0"></div></section>
+<section class="mk alt"><h2>Product categories</h2><div class="cats" id="catg" style="padding:0"></div></section>
 <div id="rows"></div>
 
-<section id="services">
-  <h2>Our installation services</h2>
-  <div class="svc">
-    <div style="--c:var(--blue)"><h3>Home CCTV</h3><p>Indoor and outdoor cameras set up so you can watch live on your phone.</p></div>
-    <div style="--c:var(--red)"><h3>Shop and office</h3><p>Multi-camera systems with recording, planned around your space.</p></div>
-    <div style="--c:var(--yellow)"><h3>Locks and sensors</h3><p>Smart locks, door sensors and alarms installed and connected.</p></div>
-    <div style="--c:var(--green)"><h3>Repair and upgrade</h3><p>We fix and improve your existing camera system.</p></div>
-  </div>
-  <p style="margin-top:20px"><a class="btn" href="install.html">Book installation</a></p>
-</section>
-
-<section class="perks">
+<section class="perks mk">
   <div style="--c:var(--blue)"><b>Live on your phone</b><span>Control from anywhere</span></div>
   <div style="--c:var(--red)"><b>Expert installation</b><span>Done by our team</span></div>
   <div style="--c:var(--yellow)"><b>Warranty</b><span>Genuine products</span></div>
   <div style="--c:var(--green)"><b>Fast delivery</b><span>Across Pakistan</span></div>
 </section>
 
+<section class="cta mk"><h2>Need a CCTV or security solution?</h2>
+  <p>Tell us about your property and we will recommend the right cameras and a clear quote.</p>
+  <a class="btn" href="install.html">Book installation</a><a class="btn ghost" href="info.html#contact">Contact us</a></section>
+
 <footer>
   <div class="fcols">
     <div><h3>CCTV PITS</h3><ul><li>Control from Anywhere</li><li><a href="install.html">Book installation</a></li><li><a href="info.html#contact">Contact us</a></li></ul></div>
+    <div><h3>Services</h3><ul><li><a href="install.html">Home CCTV</a></li><li><a href="install.html">Shop and office</a></li><li><a href="install.html">Wi-Fi cameras</a></li><li><a href="install.html">Locks and sensors</a></li></ul></div>
+    <div><h3>Companies</h3><ul><li><a href="?brand=Hikvision">Hikvision</a></li><li><a href="?brand=Dahua">Dahua</a></li><li><a href="?brand=EZVIZ">EZVIZ</a></li><li><a href="?brand=Imou">Imou</a></li></ul></div>
     <div><h3>Support</h3><ul><li><a href="dashboard.html#orders">Track order</a></li><li><a href="info.html#shipping">Shipping and delivery</a></li><li><a href="info.html#refund">Refund and returns</a></li><li><a href="info.html#privacy">Privacy policy</a></li></ul></div>
     <div><h3>Account</h3><ul><li><a href="login.html">Log in</a></li><li><a href="register.html">Register</a></li><li><a href="cart.html">Cart</a></li></ul></div>
   </div>
@@ -203,16 +262,19 @@ const brands = () => [...new Set(all.map(brandOf))].sort((x, y) => {
   return (i < 0 ? 99 : i) - (j < 0 ? 99 : j) || x.localeCompare(y);
 });
 const sp = new URLSearchParams(location.search);
-let brand = sp.get("brand") || "", type = sp.get("type") || "";
+let brand = sp.get("brand") || "", type = sp.get("type") || "", cat = sp.get("cat") || "";
+const catOf = p => p.category || "Other";
+const cats = () => [...new Set(all.map(catOf))].sort();
 const attr = s => esc(s).replace(/"/g, "&quot;");
 
 const sec = (title, list, id, b) => `<section id="${id}"><h2>${esc(title)}${b ? `<button class="vall" data-b="${attr(b)}">View all &rsaquo;</button>` : ""}</h2><div class="scroller">${list.map(card).join("")}</div></section>`;
 
-function setView(b, t, scroll) {
-  brand = b || ""; type = t || ""; term = ""; $("q").value = "";
+function setView(b, t, scroll, c) {
+  brand = b || ""; type = t || ""; cat = c || ""; term = ""; $("q").value = "";
   const u = new URL(location.href); u.searchParams.delete("q");
   brand ? u.searchParams.set("brand", brand) : u.searchParams.delete("brand");
   type ? u.searchParams.set("type", type) : u.searchParams.delete("type");
+  cat ? u.searchParams.set("cat", cat) : u.searchParams.delete("cat");
   try { history.replaceState(null, "", u); } catch (e) {}
   renderCats(); render();
   if (scroll) $("rows").scrollIntoView({ behavior: "smooth" });
@@ -220,6 +282,13 @@ function setView(b, t, scroll) {
 
 function render() {
   const rows = $("rows"), t = term.trim().toLowerCase();
+  if (cat && !cats().includes(cat)) cat = "";
+  document.body.classList.toggle("browse", !!(t || brand || cat));
+  if (cat && !t) {
+    const list = all.filter(p => catOf(p) === cat);
+    rows.innerHTML = `<section><div class="crumb"><a data-home="1">Home</a> &rsaquo; <b>${esc(cat)}</b></div><h2>${esc(cat)}</h2><div class="grid">${list.map(card).join("")}</div></section>`;
+    return;
+  }
   if (t) {
     const list = all.filter(p => (p.name + " " + brandOf(p) + " " + (p.category || "")).toLowerCase().includes(t));
     rows.innerHTML = `<section><h2>Results for "${esc(term)}" (${list.length})</h2><div class="grid">${list.map(card).join("") || "<p>No products found.</p>"}</div></section>`;
@@ -241,20 +310,38 @@ function render() {
   rows.innerHTML = h || "<section><p>No products yet.</p></section>";
 }
 function renderCats() {
-  const bs = brands();
-  $("cats").innerHTML = bs.length ? `<h2>Shop by brand</h2>` + bs.map((b, i) => `<a class="cat${b === brand ? " on" : ""}" style="--c:${colors[i % 4]}" href="?brand=${encodeURIComponent(b)}" data-b="${attr(b)}">${esc(b)}<small>${all.filter(p => brandOf(p) === b).length} products</small></a>`).join("") : "";
+  const bs = brands(), cs = cats();
+  $("catg").innerHTML = cs.map((c, i) => `<a class="cat${c === cat ? " on" : ""}" style="--c:${colors[i % 4]}" href="?cat=${encodeURIComponent(c)}" data-c="${attr(c)}">${esc(c)}<small>${all.filter(p => catOf(p) === c).length} products</small></a>`).join("");
+  const nl = (l, k) => l.map(x => `<a href="?${k}=${encodeURIComponent(x)}" data-${k === "brand" ? "b" : "c"}="${attr(x)}">${esc(x)}</a>`).join("");
+  $("nb").innerHTML = nl([...new Set([...ORDER.slice(0, 5), ...bs])], "brand");
+  $("nc").innerHTML = cs.length ? nl(cs, "cat") : "<a href=\"#rows\">All products</a>";
+  $("cats").innerHTML = bs.map((b, i) => `<a class="cat${b === brand ? " on" : ""}" style="--c:${colors[i % 4]}" href="?brand=${encodeURIComponent(b)}" data-b="${attr(b)}">${esc(b)}<small>${all.filter(p => brandOf(p) === b).length} products</small></a>`).join("");
 }
 $("cats").addEventListener("click", e => {
   const a = e.target.closest(".cat"); if (!a) return;
   e.preventDefault(); setView(a.dataset.b, "", true);
 });
+$("catg").addEventListener("click", e => {
+  const a = e.target.closest(".cat"); if (!a) return;
+  e.preventDefault(); setView("", "", true, a.dataset.c);
+});
+$("mn").addEventListener("click", e => {
+  const t = e.target;
+  if (t.matches(".dd>button")) { const li = t.parentElement, o = li.classList.contains("open"); document.querySelectorAll(".mn .open").forEach(x => x.classList.remove("open")); if (!o) li.classList.add("open"); return; }
+  const a = t.closest("a"); if (!a) return;
+  const d = a.dataset;
+  if (d.b || d.c || d.home) { e.preventDefault(); setView(d.b, "", false, d.c); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  document.querySelectorAll(".mn .open").forEach(x => x.classList.remove("open")); $("mn").classList.remove("show"); $("bg").setAttribute("aria-expanded", "false");
+});
+document.addEventListener("click", e => { if (!e.target.closest(".dd")) document.querySelectorAll(".mn .open").forEach(x => x.classList.remove("open")); });
+$("bg").onclick = () => { const o = $("mn").classList.toggle("show"); $("bg").setAttribute("aria-expanded", o); };
 $("rows").addEventListener("click", e => {
   const x = e.target.closest("[data-b],[data-t],[data-home]"); if (!x) return;
   if (x.dataset.home) setView("", "", true);
   else if (x.dataset.t !== undefined) setView(brand, x.dataset.t, false);
   else setView(x.dataset.b, "", true);
 });
-$("q").addEventListener("input", e => { term = e.target.value; render(); });
+$("q").addEventListener("input", e => { term = e.target.value; render(); if (term) $("rows").scrollIntoView({ behavior: "smooth" }); });
 const q0 = new URLSearchParams(location.search).get("q");
 if (q0) { term = q0; $("q").value = q0; }
 $("rows").addEventListener("click", e => {
@@ -290,6 +377,7 @@ try { const c = JSON.parse(localStorage.getItem(PK)); if (c && c.length) { all =
   }
 })();
 
+renderCats();
 const upd = () => $("cc").textContent = cartCount();
 upd(); window.addEventListener("cartchange", upd);
 
