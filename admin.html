@@ -21,7 +21,23 @@
 </header>
 <main class="wrap" id="main" hidden>
   <h1>Admin dashboard</h1>
-  <p class="sub">Add products and see who registered.</p>
+  <p class="sub">Manage services, products, orders and installation requests.</p>
+
+  <div class="box"><h2>Services (<span id="scount">0</span>)</h2>
+    <p class="sub">These show in the "Our services" section and the Services menu on the home page.</p>
+    <form id="sf2" class="wide">
+      <div class="row">
+        <div><label for="stitle">Service name</label><input id="stitle" required maxlength="60" placeholder="For example: Electric fencing"></div>
+        <div><label for="sorder">Position (1 is first)</label><input id="sorder" type="number" min="1" step="1" value="1"></div>
+      </div>
+      <label for="sdesc">Short description</label><input id="sdesc" maxlength="140" placeholder="One short sentence">
+      <label for="simg">Photo (optional)</label><input id="simg" type="file" accept="image/*">
+      <button class="primary" type="submit" style="max-width:200px;margin-top:10px">Add service</button>
+      <div id="smsg" class="msg" role="alert"></div>
+    </form>
+    <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Service</th><th>Position</th><th></th></tr></thead><tbody id="slist"></tbody></table></div>
+    <button class="sm" id="sdef" type="button" hidden>Add the 5 default services</button>
+  </div>
 
   <div class="box"><h2>Add product</h2>
     <form id="pf" class="wide">
@@ -177,6 +193,44 @@ async function loadProducts() {
     </tr>`; }).join("") || '<tr><td colspan="6">No products yet. Add your first one above.</td></tr>';
   updSel();
 }
+
+const DEF_SVC = [["Home CCTV", "Indoor and outdoor cameras set up so you can watch live on your phone."], ["Shop and office", "Multi-camera systems with recording, planned around your space."], ["Wi-Fi cameras", "Plug-in cameras with mobile alerts and cloud or card storage."], ["Locks and sensors", "Smart locks, door sensors and alarms installed and connected."], ["Repair and upgrade", "We fix and improve your existing camera system."]];
+const smsg = (t, c) => { $("smsg").textContent = t; $("smsg").className = "msg " + c; };
+async function loadServices() {
+  const snap = await getDocs(query(collection(db, "services"), orderBy("order")));
+  $("scount").textContent = snap.size; $("sdef").hidden = snap.size > 0;
+  $("slist").innerHTML = snap.docs.map(d => { const v = d.data(); return `<tr data-id="${d.id}"><td>${v.image ? `<img src="${esc(v.image)}" alt="">` : ""}</td><td><b>${esc(v.title)}</b><br>${esc(v.description || "")}</td><td>${v.order}</td><td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-sa="edit">Edit</button><button class="sm" data-sa="photo">Photo</button><button class="sm del" data-sa="del">Delete</button></div></td></tr>`; }).join("") || '<tr><td colspan="4">No services yet. The home page shows the 5 default services until you add your own.</td></tr>';
+}
+$("sf2").onsubmit = async e => {
+  e.preventDefault();
+  try {
+    const f = $("simg").files[0];
+    await addDoc(collection(db, "services"), { title: $("stitle").value.trim(), description: $("sdesc").value.trim(), order: Number($("sorder").value) || 1, image: f ? await shrink(f, 700) : "", createdAt: serverTimestamp() });
+    e.target.reset(); $("sorder").value = 1; smsg("Service added.", "ok"); loadServices();
+  } catch (err) { smsg("Could not save. Publish the new Firestore rules first.", "err"); }
+};
+$("sdef").onclick = async () => {
+  try { for (let i = 0; i < DEF_SVC.length; i++) await addDoc(collection(db, "services"), { title: DEF_SVC[i][0], description: DEF_SVC[i][1], order: i + 1, image: "", createdAt: serverTimestamp() }); loadServices(); }
+  catch (err) { smsg("Could not save. Publish the new Firestore rules first.", "err"); }
+};
+$("slist").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-sa]"); if (!b) return;
+  const id = b.closest("tr").dataset.id, r = doc(db, "services", id);
+  try {
+    if (b.dataset.sa === "del") { if (!confirm("Delete this service?")) return; await deleteDoc(r); }
+    else if (b.dataset.sa === "edit") {
+      const cur = (await getDoc(r)).data(), t = prompt("Service name", cur.title); if (t === null) return;
+      const d = prompt("Short description", cur.description || ""); if (d === null) return;
+      const o = prompt("Position (1 is first)", cur.order); if (o === null) return;
+      await updateDoc(r, { title: t.trim() || cur.title, description: d.trim(), order: Number(o) || cur.order });
+    } else {
+      const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+      inp.onchange = async () => { if (inp.files[0]) { await updateDoc(r, { image: await shrink(inp.files[0], 700) }); loadServices(); } };
+      inp.click(); return;
+    }
+    loadServices();
+  } catch (err) { smsg("Could not update. Check your admin login and Firestore rules.", "err"); }
+});
 
 async function loadUsers() {
   const snap = await getDocs(collection(db, "users"));
@@ -490,7 +544,7 @@ onAuthStateChanged(auth, async u => {
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   if (!admin) return location.replace("dashboard.html");
   $("main").hidden = false;
-  loadProducts(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
+  loadServices(); loadProducts(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
 });
 </script>
 </body>
