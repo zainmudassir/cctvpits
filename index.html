@@ -99,6 +99,7 @@ body.browse .mk{display:none}
 .cat{display:block}.cat small{display:block;font-weight:600;color:var(--muted);font-size:12px;margin-top:4px}
 .cat.on{background:#fff;box-shadow:0 0 0 2px var(--c) inset}
 .cats h2{grid-column:1/-1;margin-bottom:0}
+.cat .clogo{display:block;height:38px;max-width:100%;object-fit:contain;margin-bottom:8px}
 .crumb{font-size:14px;color:var(--muted);margin-bottom:10px}.crumb a{color:var(--blue);font-weight:700;cursor:pointer}
 .chips{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}
 .chip{padding:9px 16px;border-radius:999px;border:2px solid var(--line);background:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
@@ -178,7 +179,7 @@ footer a:hover{color:var(--blue)}
     <li class="dd"><button type="button" aria-haspopup="true">Companies &#9662;</button><div class="menu" id="nb"></div></li>
     <li class="dd"><button type="button" aria-haspopup="true">Categories &#9662;</button><div class="menu" id="nc"></div></li>
     <li><a href="#packages">Packages</a></li>
-    <li><a href="#shop">Brands</a></li>
+    <li><a href="#shop">Companies</a></li>
     <li><a href="dashboard.html#orders">Track order</a></li>
     <li><a href="info.html#contact">Support</a></li>
   </ul>
@@ -190,7 +191,7 @@ footer a:hover{color:var(--blue)}
 <div class="intro mk">
   <h1>CCTV cameras and installation for homes, shops and offices</h1>
   <p>Buy cameras online or book our team. We set up recording, mobile viewing and night vision.</p>
-  <a class="btn" href="install.html">Book installation</a><a class="btn ghost" href="#shop">Browse brands</a>
+  <a class="btn" href="install.html">Book installation</a><a class="btn ghost" href="#shop">Browse companies</a>
 </div>
 
 <section id="services" class="mk"><h2>Our services</h2>
@@ -201,7 +202,7 @@ footer a:hover{color:var(--blue)}
   <p class="sub">Choose by camera type, then tell us how many cameras you need.</p>
   <div class="svg5" style="max-width:900px"><a class="pk" href="install.html" style="--c:var(--blue)"><h3>Analogue / HD packages</h3><p>4, 8, 16 and 32 channel HD systems with recorder and storage.</p><span>Get a quote &rsaquo;</span></a><a class="pk" href="install.html" style="--c:var(--red)"><h3>IP / network packages</h3><p>Sharper IP cameras with PoE recorders for larger sites.</p><span>Get a quote &rsaquo;</span></a><a class="pk" href="install.html" style="--c:var(--green)"><h3>Wi-Fi packages</h3><p>Wireless cameras you set up fast and watch from your phone.</p><span>Get a quote &rsaquo;</span></a></div></section>
 
-<section class="mk" id="shop"><h2>Brands we work with</h2><div class="cats" id="cats" style="padding:0"></div></section>
+<section class="mk" id="shop"><h2>Shop by company</h2><p class="sub">Pick a company, then a category, then your product.</p><div class="cats" id="cats" style="padding:0"></div></section>
 <section class="mk alt"><h2>Equipment categories</h2><div class="cats" id="catg" style="padding:0"></div></section>
 <div id="rows"></div>
 
@@ -240,7 +241,8 @@ const fallback = [
 ];
 const icon = '<svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><path d="M3 6l13 4-2 6L3 12zM16 10l5-1v6l-5-1M8 16l-2 4h5"/></svg>';
 const colors = ["var(--blue)", "var(--red)", "var(--yellow)", "var(--green)"];
-let all = [], term = "";
+let all = [], term = "", logos = {};
+const CK = "cctvpits_companies";
 const $ = id => document.getElementById(id);
 
 function card(p) {
@@ -286,7 +288,9 @@ function render() {
   document.body.classList.toggle("browse", !!(t || brand || cat));
   if (cat && !t) {
     const list = all.filter(p => catOf(p) === cat);
-    rows.innerHTML = `<section><div class="crumb"><a data-home="1">Home</a> &rsaquo; <b>${esc(cat)}</b></div><h2>${esc(cat)}</h2><div class="grid">${list.map(card).join("")}</div></section>`;
+    const cos = [...new Set(list.map(brandOf))].sort();
+    const cchips = cos.length > 1 ? `<div class="chips">${cos.map(b => `<button class="chip" data-b="${attr(b)}" data-t="${attr(cat)}">${esc(b)} (${list.filter(p => brandOf(p) === b).length})</button>`).join("")}</div>` : "";
+    rows.innerHTML = `<section><div class="crumb"><a data-home="1">Home</a> &rsaquo; <b>${esc(cat)}</b></div><h2>${esc(cat)}</h2>${cchips}<div class="grid">${list.map(card).join("")}</div></section>`;
     return;
   }
   if (t) {
@@ -298,10 +302,22 @@ function render() {
   if (brand) {
     const list = all.filter(p => brandOf(p) === brand);
     const types = [...new Set(list.map(typeOf).filter(Boolean))].sort();
-    if (type && !types.includes(type)) type = "";
-    const shown = type ? list.filter(p => typeOf(p) === type) : list;
-    const chips = types.length > 1 ? `<div class="chips"><button class="chip${type ? "" : " on"}" data-t="">All (${list.length})</button>${types.map(x => `<button class="chip${x === type ? " on" : ""}" data-t="${attr(x)}">${esc(x)} (${list.filter(p => typeOf(p) === x).length})</button>`).join("")}</div>` : "";
-    rows.innerHTML = `<section><div class="crumb"><a data-home="1">All brands</a> &rsaquo; ${type ? `<a data-b="${attr(brand)}">${esc(brand)}</a> &rsaquo; <b>${esc(type)}</b>` : `<b>${esc(brand)}</b>`}</div><h2>${esc(type ? brand + " " + type : brand)}</h2>${chips}<div class="grid">${shown.map(card).join("") || "<p>No products here yet.</p>"}</div></section>`;
+    if (type && type !== "*" && !types.includes(type)) type = "";
+    const n = x => list.filter(p => typeOf(p) === x).length;
+    const home = '<a data-home="1">All companies</a> &rsaquo; ';
+    // level 2: the company's categories
+    if (!type && types.length > 1) {
+      const tiles = types.map((x, i) => `<a class="cat" style="--c:${colors[i % 4]}" href="?brand=${encodeURIComponent(brand)}&type=${encodeURIComponent(x)}" data-t="${attr(x)}">${esc(x)}<small>${n(x)} products</small></a>`).join("")
+        + `<a class="cat" style="--c:var(--blue)" href="?brand=${encodeURIComponent(brand)}&type=*" data-t="*">All products<small>${list.length} products</small></a>`;
+      rows.innerHTML = `<section><div class="crumb">${home}<b>${esc(brand)}</b></div><h2>${esc(brand)}</h2><p class="sub">Choose a category.</p><div class="cats" style="padding:0">${tiles}</div></section>`;
+      return;
+    }
+    // level 3: products
+    const all_ = type === "*" || !type;
+    const shown = all_ ? list : list.filter(p => typeOf(p) === type);
+    const chips = types.length > 1 ? `<div class="chips"><button class="chip${all_ ? " on" : ""}" data-t="*">All (${list.length})</button>${types.map(x => `<button class="chip${x === type ? " on" : ""}" data-t="${attr(x)}">${esc(x)} (${n(x)})</button>`).join("")}</div>` : "";
+    const crumb = all_ ? (types.length > 1 ? `<a data-b="${attr(brand)}">${esc(brand)}</a> &rsaquo; <b>All products</b>` : `<b>${esc(brand)}</b>`) : `<a data-b="${attr(brand)}">${esc(brand)}</a> &rsaquo; <b>${esc(type)}</b>`;
+    rows.innerHTML = `<section><div class="crumb">${home}${crumb}</div><h2>${esc(all_ ? brand : brand + " " + type)}</h2>${chips}<div class="grid">${shown.map(card).join("") || "<p>No products here yet.</p>"}</div></section>`;
     return;
   }
   rows.innerHTML = "";
@@ -310,9 +326,9 @@ function renderCats() {
   const bs = brands(), cs = cats();
   $("catg").innerHTML = cs.map((c, i) => `<a class="cat${c === cat ? " on" : ""}" style="--c:${colors[i % 4]}" href="?cat=${encodeURIComponent(c)}" data-c="${attr(c)}">${esc(c)}<small>${all.filter(p => catOf(p) === c).length} products</small></a>`).join("");
   const nl = (l, k) => l.map(x => `<a href="?${k}=${encodeURIComponent(x)}" data-${k === "brand" ? "b" : "c"}="${attr(x)}">${esc(x)}</a>`).join("");
-  $("nb").innerHTML = nl([...new Set([...ORDER.slice(0, 5), ...bs])], "brand");
+  $("nb").innerHTML = bs.length ? nl(bs, "brand") : "<a href=\"#shop\">All companies</a>";
   $("nc").innerHTML = cs.length ? nl(cs, "cat") : "<a href=\"#rows\">All products</a>";
-  $("cats").innerHTML = bs.map((b, i) => `<a class="cat${b === brand ? " on" : ""}" style="--c:${colors[i % 4]}" href="?brand=${encodeURIComponent(b)}" data-b="${attr(b)}">${esc(b)}<small>${all.filter(p => brandOf(p) === b).length} products</small></a>`).join("");
+  $("cats").innerHTML = bs.map((b, i) => `<a class="cat${b === brand ? " on" : ""}" style="--c:${colors[i % 4]}" href="?brand=${encodeURIComponent(b)}" data-b="${attr(b)}">${logos[b] ? `<img class="clogo" src="${attr(logos[b])}" alt="" loading="lazy" onerror="this.remove()">` : ""}${esc(b)}<small>${all.filter(p => brandOf(p) === b).length} products</small></a>`).join("");
 }
 $("cats").addEventListener("click", e => {
   const a = e.target.closest(".cat"); if (!a) return;
@@ -334,9 +350,12 @@ document.addEventListener("click", e => { if (!e.target.closest(".dd")) document
 $("bg").onclick = () => { const o = $("mn").classList.toggle("show"); $("bg").setAttribute("aria-expanded", o); };
 $("rows").addEventListener("click", e => {
   const x = e.target.closest("[data-b],[data-t],[data-home]"); if (!x) return;
-  if (x.dataset.home) setView("", "", true);
-  else if (x.dataset.t !== undefined) setView(brand, x.dataset.t, false);
-  else setView(x.dataset.b, "", true);
+  if (x.matches("a[href]")) e.preventDefault();
+  const d = x.dataset;
+  if (d.home) setView("", "", true);
+  else if (d.b !== undefined && d.t !== undefined) setView(d.b, d.t, true);
+  else if (d.t !== undefined) setView(brand, d.t, true);
+  else setView(d.b, "", true);
 });
 $("q").addEventListener("input", e => { term = e.target.value; render(); if (term) $("rows").scrollIntoView({ behavior: "smooth" }); });
 const q0 = new URLSearchParams(location.search).get("q");
@@ -388,6 +407,17 @@ try { renderServices(JSON.parse(localStorage.getItem(SK))); } catch (e) {}
     const list = snap.docs.map(d => d.data()).filter(v => v.title);
     renderServices(list);
     try { list.length ? localStorage.setItem(SK, JSON.stringify(list.map(v => ({ ...v, image: v.image && !v.image.startsWith("data:") ? v.image : "" })))) : localStorage.removeItem(SK); } catch (e) {}
+  } catch (e) {}
+})();
+
+const setLogos = list => { logos = {}; (list || []).forEach(c => { if (c && c.name && c.image) logos[c.name] = c.image; }); };
+try { setLogos(JSON.parse(localStorage.getItem(CK))); renderCats(); } catch (e) {}
+(async () => {
+  try {
+    const snap = await getDocs(collection(db, "companies"));
+    const list = snap.docs.map(d => d.data()).filter(c => c.name);
+    setLogos(list); renderCats();
+    try { localStorage.setItem(CK, JSON.stringify(list.map(c => ({ name: c.name, image: c.image && !c.image.startsWith("data:") ? c.image : "" })))); } catch (e) {}
   } catch (e) {}
 })();
 

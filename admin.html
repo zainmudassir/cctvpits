@@ -39,6 +39,20 @@
     <button class="sm" id="sdef" type="button" hidden>Add the 5 default services</button>
   </div>
 
+  <div class="box"><h2>Companies (<span id="ccount">0</span>)</h2>
+    <p class="sub">Products are organised as Company, then Category, then Product. Add a company here, then pick it when you add a product.</p>
+    <form id="cf" class="wide">
+      <div class="row">
+        <div><label for="cname">Company name</label><input id="cname" required maxlength="40" placeholder="For example: Hikvision"></div>
+        <div><label for="cimg">Logo (optional)</label><input id="cimg" type="file" accept="image/*"></div>
+      </div>
+      <button class="primary" type="submit" style="max-width:200px;margin-top:10px">Add company</button>
+      <div id="cmsg" class="msg" role="alert"></div>
+    </form>
+    <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Company</th><th>Products</th><th></th></tr></thead><tbody id="clist"></tbody></table></div>
+    <button class="sm" id="cdef" type="button" hidden>Add default and existing companies</button>
+  </div>
+
   <div class="box"><h2>Add product</h2>
     <form id="pf" class="wide">
       <div class="row">
@@ -46,10 +60,10 @@
         <div><label for="pprice">Price (Rs.)</label><input id="pprice" type="number" min="0" step="1" required></div>
       </div>
       <div class="row">
-        <div><label for="pbrand">Brand</label>
-          <input id="pbrand" list="brands" required placeholder="Pick or type a brand"><datalist id="brands"><option>Hikvision</option><option>Dahua</option><option>EZVIZ</option><option>Imou</option><option>Uniview (UNV)</option><option>HiLook</option><option>TP-Link Tapo</option><option>Reolink</option></datalist></div>
+        <div><label for="pbrand">Company</label>
+          <select id="pbrand" required><option value="">Select a company</option></select></div>
         <div><label for="pcat">Category</label>
-          <input id="pcat" list="cats" required placeholder="Pick or type a category"><datalist id="cats"><option>Indoor Camera</option><option>Outdoor Camera</option><option>Battery Camera</option><option>Doorbell</option><option>DVR / NVR</option><option>Accessory</option></datalist></div>
+          <input id="pcat" list="cats" required placeholder="Pick or type a category (shown under the company)"><datalist id="cats"></datalist></div>
       </div>
       <div class="row">
         <div><label for="pimg">Photo</label><input id="pimg" type="file" accept="image/*"></div>
@@ -121,7 +135,7 @@
       <button class="sm del" id="delsel" type="button" disabled>Delete selected (0)</button>
       <span id="selmsg" class="sub" style="margin:0"></span>
     </div>
-    <div class="scroll"><table class="tbl"><thead><tr><th><input type="checkbox" id="selhead" aria-label="Select all products"></th><th></th><th>Name</th><th>Brand / Category</th><th>Price</th><th></th></tr></thead><tbody id="plist"></tbody></table></div>
+    <div class="scroll"><table class="tbl"><thead><tr><th><input type="checkbox" id="selhead" aria-label="Select all products"></th><th></th><th>Name</th><th>Company / Category</th><th>Price</th><th></th></tr></thead><tbody id="plist"></tbody></table></div>
   </div>
 
   <div class="box"><h2>Registered users (<span id="ucount">0</span>)</h2>
@@ -182,12 +196,13 @@ async function loadProducts() {
       <td><input type="checkbox" class="pk" aria-label="Select product"></td>
       <td>${p.image ? `<img src="${esc(p.image)}" alt="">` : ""}</td>
       <td>${esc(p.name)}<br>${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span> ' : ""}${p.stock === 0 ? '<span class="pill">Out of stock</span>' : ""}</td>
-      <td>${p.brand ? esc(p.brand) + "<br>" : ""}${esc(p.category)}</td>
+      <td>${p.brand ? esc(p.brand) : '<span class="pill pending">No company</span>'}<br>${esc(p.category)}</td>
       <td>${sale ? "<s>" + rs(p.comparePrice) + "</s><br>" : ""}${rs(p.price)}</td>
       <td style="min-width:230px"><div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="sm" data-act="photo">Photo</button>
         <button class="sm" data-act="path">Image path</button>
         <button class="sm" data-act="new">${p.isNew ? "Unmark New" : "Mark New"}</button>
+        <button class="sm" data-act="company">Company / category</button>
         <button class="sm" data-act="price">Edit price</button>
         <button class="sm del" data-act="del">Delete</button></div></td>
     </tr>`; }).join("") || '<tr><td colspan="6">No products yet. Add your first one above.</td></tr>';
@@ -282,6 +297,16 @@ $("plist").addEventListener("click", async e => {
       await updateDoc(ref, { image: v.trim() });
     }
     else if (act === "new") await updateDoc(ref, { isNew: tr.dataset.new !== "true" });
+    else if (act === "company") {
+      const cur = (await getDoc(ref)).data(), names = companyList.map(c => c.name);
+      if (!names.length) { alert("Add a company first."); return; }
+      const c = prompt("Company for this product. Choose one of:\n" + names.join(", "), cur.brand || "");
+      if (c === null) return;
+      const match = names.find(n => n.toLowerCase() === c.trim().toLowerCase());
+      if (!match) { alert("That company does not exist. Add it in the Companies section first."); return; }
+      const k = prompt("Category", cur.category || ""); if (k === null) return;
+      await updateDoc(ref, { brand: match, category: k.trim() || cur.category || "Other" });
+    }
     else if (act === "price") {
       const v = prompt("New price (Rs.)");
       if (v === null || v.trim() === "" || isNaN(Number(v))) return;
@@ -294,8 +319,100 @@ $("plist").addEventListener("click", async e => {
   } catch (err) { alert("Action failed. Check your Firestore rules."); }
 });
 
+
+// ---------- companies (Company > Category > Product) ----------
+const DEF_COMPANIES = ["Hikvision", "Dahua", "EZVIZ", "Imou", "Uniview (UNV)", "HiLook", "TP-Link Tapo", "Reolink"];
+const DEF_CATS = ["Indoor Camera", "Outdoor Camera", "Battery Camera", "Doorbell", "DVR / NVR", "Accessory"];
+let companyList = [], productCache = [];
+const cshow = (t, c) => { $("cmsg").textContent = t; $("cmsg").className = "msg " + c; };
+const cLower = s => String(s || "").trim().toLowerCase();
+
+async function loadCompanies() {
+  let snap, psnap;
+  try { snap = await getDocs(query(collection(db, "companies"), orderBy("name"))); }
+  catch (err) { cshow("Could not load companies. Publish the new Firestore rules first.", "err"); return; }
+  try { psnap = await getDocs(collection(db, "products")); productCache = psnap.docs.map(d => d.data()); } catch (err) {}
+  companyList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  $("ccount").textContent = companyList.length;
+  const count = n => productCache.filter(p => cLower(p.brand) === cLower(n)).length;
+  $("clist").innerHTML = companyList.map(c => `
+    <tr data-id="${c.id}" data-name="${esc(c.name)}">
+      <td>${c.image ? `<img src="${esc(c.image)}" alt="">` : ""}</td>
+      <td><b>${esc(c.name)}</b></td><td>${count(c.name)}</td>
+      <td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-ca="rename">Rename</button><button class="sm" data-ca="logo">Logo</button><button class="sm del" data-ca="del">Delete</button></div></td>
+    </tr>`).join("") || '<tr><td colspan="4">No companies yet. Add your first one above.</td></tr>';
+  const known = new Set(companyList.map(c => cLower(c.name)));
+  const missing = [...new Set([...DEF_COMPANIES, ...productCache.map(p => String(p.brand || "").trim()).filter(Boolean)])].filter(n => !known.has(cLower(n)));
+  $("cdef").hidden = !missing.length; $("cdef").dataset.missing = JSON.stringify(missing);
+  fillCompanySelect(); fillCategoryList();
+}
+function fillCompanySelect() {
+  const sel = $("pbrand"), cur = sel.value;
+  sel.innerHTML = '<option value="">Select a company</option>' + companyList.map(c => `<option>${esc(c.name)}</option>`).join("");
+  if (cur && companyList.some(c => c.name === cur)) sel.value = cur;
+}
+// suggest the categories already used under the chosen company, plus the usual ones
+function fillCategoryList() {
+  const co = $("pbrand").value;
+  const used = productCache.filter(p => !co || cLower(p.brand) === cLower(co)).map(p => String(p.category || "").trim()).filter(Boolean);
+  $("cats").innerHTML = [...new Set([...used, ...DEF_CATS])].map(c => `<option>${esc(c)}</option>`).join("");
+}
+$("pbrand").addEventListener("change", fillCategoryList);
+
+$("cf").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("cname").value.trim().replace(/\s+/g, " ");
+  if (companyList.some(c => cLower(c.name) === cLower(name))) { cshow("That company already exists.", "err"); return; }
+  try {
+    const f = $("cimg").files[0];
+    await addDoc(collection(db, "companies"), { name, image: f ? await shrink(f, 300) : "", createdAt: serverTimestamp() });
+    e.target.reset(); cshow("Company added. You can now pick it when adding a product.", "ok"); loadCompanies();
+  } catch (err) { cshow("Could not save. Publish the new Firestore rules first.", "err"); }
+});
+$("cdef").addEventListener("click", async () => {
+  try {
+    const missing = JSON.parse($("cdef").dataset.missing || "[]");
+    for (let i = 0; i < missing.length; i += 400) {
+      const b = writeBatch(db);
+      missing.slice(i, i + 400).forEach(n => b.set(doc(collection(db, "companies")), { name: n, image: "", createdAt: serverTimestamp() }));
+      await b.commit();
+    }
+    cshow(missing.length + " companies added.", "ok"); loadCompanies();
+  } catch (err) { cshow("Could not save. Publish the new Firestore rules first.", "err"); }
+});
+$("clist").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-ca]"); if (!b) return;
+  const tr = b.closest("tr"), id = tr.dataset.id, name = tr.dataset.name, r = doc(db, "companies", id);
+  try {
+    if (b.dataset.ca === "del") {
+      const n = productCache.filter(p => cLower(p.brand) === cLower(name)).length;
+      if (n) { cshow(name + " still has " + n + " product" + (n > 1 ? "s" : "") + ". Delete them or move them to another company first.", "err"); return; }
+      if (!confirm("Delete " + name + "?")) return;
+      await deleteDoc(r);
+    } else if (b.dataset.ca === "rename") {
+      const v = prompt("New company name", name); if (v === null) return;
+      const nn = v.trim().replace(/\s+/g, " "); if (!nn || nn === name) return;
+      if (companyList.some(c => c.id !== id && cLower(c.name) === cLower(nn))) { cshow("That company already exists.", "err"); return; }
+      await updateDoc(r, { name: nn });
+      // keep the company's products attached to it
+      const ps = await getDocs(collection(db, "products"));
+      const mine = ps.docs.filter(d => cLower(d.data().brand) === cLower(name));
+      for (let i = 0; i < mine.length; i += 400) {
+        const bt = writeBatch(db); mine.slice(i, i + 400).forEach(d => bt.update(d.ref, { brand: nn })); await bt.commit();
+      }
+      loadProducts();
+    } else {
+      const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+      inp.onchange = async () => { if (inp.files[0]) { await updateDoc(r, { image: await shrink(inp.files[0], 300) }); loadCompanies(); } };
+      inp.click(); return;
+    }
+    loadCompanies();
+  } catch (err) { cshow("Could not update. Check your admin login and Firestore rules.", "err"); }
+});
+
 $("pf").addEventListener("submit", async e => {
   e.preventDefault();
+  if (!$("pbrand").value) { show("Pick a company first. Add one in the Companies section if it is missing.", "err"); return; }
   const btn = e.target.querySelector("button.primary");
   btn.disabled = true;
   try {
@@ -314,7 +431,7 @@ $("pf").addEventListener("submit", async e => {
     });
     e.target.reset(); imageData = ""; $("preview").style.display = "none";
     show("Product added. It is now live on the store.", "ok");
-    loadProducts();
+    loadProducts(); loadCompanies();
   } catch (err) {
     show("Could not add product. Make sure the photo is small and your admin access is set up.", "err");
   }
@@ -544,7 +661,7 @@ onAuthStateChanged(auth, async u => {
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   if (!admin) return location.replace("dashboard.html");
   $("main").hidden = false;
-  loadServices(); loadProducts(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
+  loadServices(); loadProducts(); loadCompanies(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
 });
 </script>
 </body>
