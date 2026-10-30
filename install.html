@@ -84,11 +84,11 @@ const MAXQ = 100;
 
 function renderList() {
   const t = $("psearch").value.trim().toLowerCase();
-  const list = products.filter(p => !t || (p.name + " " + (p.category || "")).toLowerCase().includes(t));
+  const list = products.filter(p => !t || (p.name + " " + (p.brand || "") + " " + (p.category || "")).toLowerCase().includes(t));
   $("plist").innerHTML = list.map(p => { const q = qtys[p.id] || 0; return `
     <div class="pi${q ? " on" : ""}" data-id="${esc(p.id)}">
       ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" onerror="this.remove()">` : ""}
-      <div class="t"><b>${esc(p.name)}</b><span>${esc(p.category || "")}${p.category ? " &middot; " : ""}${rs(p.price)}</span></div>
+      <div class="t"><b>${esc(p.name)}</b><span>${esc([p.brand, p.category].filter(Boolean).join(" · "))}${(p.brand || p.category) ? " &middot; " : ""}${rs(p.price)}</span></div>
       <div class="qty"><button type="button" data-d="-1" aria-label="Less">-</button><input type="number" min="0" max="${MAXQ}" value="${q}" aria-label="Quantity"><button type="button" data-d="1" aria-label="More">+</button></div>
     </div>`; }).join("") || "<p class='sub' style='padding:12px'>No products found.</p>";
 }

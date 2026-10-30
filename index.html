@@ -67,6 +67,14 @@ h2{font-size:24px;font-weight:800;margin-bottom:18px}
 .cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;padding:28px 5vw}
 .cat{padding:18px 14px;background:var(--soft);font-weight:700;border-top:5px solid var(--c);font-size:14px}
 .cat:hover{background:#eaeef3}
+.cat{display:block}.cat small{display:block;font-weight:600;color:var(--muted);font-size:12px;margin-top:4px}
+.cat.on{background:#fff;box-shadow:0 0 0 2px var(--c) inset}
+.cats h2{grid-column:1/-1;margin-bottom:0}
+.crumb{font-size:14px;color:var(--muted);margin-bottom:10px}.crumb a{color:var(--blue);font-weight:700;cursor:pointer}
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}
+.chip{padding:9px 16px;border-radius:999px;border:2px solid var(--line);background:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
+.chip:hover{border-color:var(--blue)}.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.vall{background:none;border:0;color:var(--blue);font-weight:700;cursor:pointer;font-size:14px;font-family:inherit;margin-left:12px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
 .scroller{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:12px}
 .scroller .card{flex:0 0 220px;scroll-snap-align:start}
@@ -188,28 +196,64 @@ function card(p) {
     ${out ? '<button class="btn sm" disabled>Out of stock</button>' : `<button class="btn sm" data-id="${esc(p.id)}">Add to cart</button>`}</div>
   </article>`;
 }
-const sec = (title, list, id) => `<section id="${id}"><h2>${esc(title)}</h2><div class="scroller">${list.map(card).join("")}</div></section>`;
-const cats = () => [...new Set(all.map(p => p.category).filter(Boolean))];
+const brandOf = p => p.brand || p.category || "Other";
+const typeOf = p => p.brand ? (p.category || "Other") : "";
+const ORDER = ["Hikvision", "Dahua", "EZVIZ", "Imou", "Uniview (UNV)", "HiLook", "TP-Link Tapo", "Reolink"];
+const brands = () => [...new Set(all.map(brandOf))].sort((x, y) => {
+  const i = ORDER.indexOf(x), j = ORDER.indexOf(y);
+  return (i < 0 ? 99 : i) - (j < 0 ? 99 : j) || x.localeCompare(y);
+});
+const sp = new URLSearchParams(location.search);
+let brand = sp.get("brand") || "", type = sp.get("type") || "";
+const attr = s => esc(s).replace(/"/g, "&quot;");
+
+const sec = (title, list, id, b) => `<section id="${id}"><h2>${esc(title)}${b ? `<button class="vall" data-b="${attr(b)}">View all &rsaquo;</button>` : ""}</h2><div class="scroller">${list.map(card).join("")}</div></section>`;
+
+function setView(b, t, scroll) {
+  brand = b || ""; type = t || ""; term = ""; $("q").value = "";
+  const u = new URL(location.href); u.searchParams.delete("q");
+  brand ? u.searchParams.set("brand", brand) : u.searchParams.delete("brand");
+  type ? u.searchParams.set("type", type) : u.searchParams.delete("type");
+  try { history.replaceState(null, "", u); } catch (e) {}
+  renderCats(); render();
+  if (scroll) $("rows").scrollIntoView({ behavior: "smooth" });
+}
 
 function render() {
   const rows = $("rows"), t = term.trim().toLowerCase();
   if (t) {
-    const list = all.filter(p => (p.name + " " + (p.category || "")).toLowerCase().includes(t));
+    const list = all.filter(p => (p.name + " " + brandOf(p) + " " + (p.category || "")).toLowerCase().includes(t));
     rows.innerHTML = `<section><h2>Results for "${esc(term)}" (${list.length})</h2><div class="grid">${list.map(card).join("") || "<p>No products found.</p>"}</div></section>`;
+    return;
+  }
+  if (brand && !brands().includes(brand)) { brand = ""; type = ""; }
+  if (brand) {
+    const list = all.filter(p => brandOf(p) === brand);
+    const types = [...new Set(list.map(typeOf).filter(Boolean))].sort();
+    if (type && !types.includes(type)) type = "";
+    const shown = type ? list.filter(p => typeOf(p) === type) : list;
+    const chips = types.length > 1 ? `<div class="chips"><button class="chip${type ? "" : " on"}" data-t="">All (${list.length})</button>${types.map(x => `<button class="chip${x === type ? " on" : ""}" data-t="${attr(x)}">${esc(x)} (${list.filter(p => typeOf(p) === x).length})</button>`).join("")}</div>` : "";
+    rows.innerHTML = `<section><div class="crumb"><a data-home="1">All brands</a> &rsaquo; ${type ? `<a data-b="${attr(brand)}">${esc(brand)}</a> &rsaquo; <b>${esc(type)}</b>` : `<b>${esc(brand)}</b>`}</div><h2>${esc(type ? brand + " " + type : brand)}</h2>${chips}<div class="grid">${shown.map(card).join("") || "<p>No products here yet.</p>"}</div></section>`;
     return;
   }
   const nw = all.filter(p => p.isNew).slice(0, 12);
   let h = nw.length ? sec("New arrivals", nw, "new") : "";
-  cats().forEach((c, i) => h += sec(c, all.filter(p => p.category === c), "cat-" + i));
+  brands().forEach((b, i) => h += sec(b, all.filter(p => brandOf(p) === b).slice(0, 12), "brand-" + i, b));
   rows.innerHTML = h || "<section><p>No products yet.</p></section>";
 }
 function renderCats() {
-  $("cats").innerHTML = cats().map((c, i) => `<a class="cat" style="--c:${colors[i % 4]}" href="#cat-${i}">${esc(c)}</a>`).join("");
+  const bs = brands();
+  $("cats").innerHTML = bs.length ? `<h2>Shop by brand</h2>` + bs.map((b, i) => `<a class="cat${b === brand ? " on" : ""}" style="--c:${colors[i % 4]}" href="?brand=${encodeURIComponent(b)}" data-b="${attr(b)}">${esc(b)}<small>${all.filter(p => brandOf(p) === b).length} products</small></a>`).join("") : "";
 }
 $("cats").addEventListener("click", e => {
   const a = e.target.closest(".cat"); if (!a) return;
-  e.preventDefault(); term = ""; $("q").value = ""; render();
-  document.getElementById(a.getAttribute("href").slice(1))?.scrollIntoView({ behavior: "smooth" });
+  e.preventDefault(); setView(a.dataset.b, "", true);
+});
+$("rows").addEventListener("click", e => {
+  const x = e.target.closest("[data-b],[data-t],[data-home]"); if (!x) return;
+  if (x.dataset.home) setView("", "", true);
+  else if (x.dataset.t !== undefined) setView(brand, x.dataset.t, false);
+  else setView(x.dataset.b, "", true);
 });
 $("q").addEventListener("input", e => { term = e.target.value; render(); });
 const q0 = new URLSearchParams(location.search).get("q");
@@ -240,7 +284,7 @@ try { const c = JSON.parse(localStorage.getItem(PK)); if (c && c.length) { all =
     const ld = document.createElement("script");
     ld.type = "application/ld+json";
     ld.textContent = JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", itemListElement: all.slice(0, 30).map((p, i) => ({
-      "@type": "ListItem", position: i + 1, item: { "@type": "Product", name: p.name, category: p.category || undefined,
+      "@type": "ListItem", position: i + 1, item: { "@type": "Product", name: p.name, category: p.category || undefined, brand: p.brand ? { "@type": "Brand", name: p.brand } : undefined,
         description: p.description || undefined, image: p.image && !p.image.startsWith("data:") ? p.image : undefined,
         offers: { "@type": "Offer", priceCurrency: "PKR", price: String(p.price), availability: p.stock === 0 ? "https://schema.org/OutOfStock" : "https://schema.org/InStock" } } })) });
     document.head.appendChild(ld);

@@ -30,8 +30,12 @@
         <div><label for="pprice">Price (Rs.)</label><input id="pprice" type="number" min="0" step="1" required></div>
       </div>
       <div class="row">
+        <div><label for="pbrand">Brand</label>
+          <input id="pbrand" list="brands" required placeholder="Pick or type a brand"><datalist id="brands"><option>Hikvision</option><option>Dahua</option><option>EZVIZ</option><option>Imou</option><option>Uniview (UNV)</option><option>HiLook</option><option>TP-Link Tapo</option><option>Reolink</option></datalist></div>
         <div><label for="pcat">Category</label>
-          <input id="pcat" list="cats" required placeholder="Pick or type a category"><datalist id="cats"><option>Indoor Camera</option><option>Outdoor Camera</option><option>Battery Camera</option><option>Accessory</option><option>Sensor</option><option>Smart Lock</option><option>Cleaning</option></datalist></div>
+          <input id="pcat" list="cats" required placeholder="Pick or type a category"><datalist id="cats"><option>Indoor Camera</option><option>Outdoor Camera</option><option>Battery Camera</option><option>Doorbell</option><option>DVR / NVR</option><option>Accessory</option></datalist></div>
+      </div>
+      <div class="row">
         <div><label for="pimg">Photo</label><input id="pimg" type="file" accept="image/*"></div>
       </div>
       <div class="row"><div><label for="pstock">Stock</label><input id="pstock" type="number" min="0" value="10"></div>
@@ -96,7 +100,12 @@
   </div>
 
   <div class="box"><h2>Products (<span id="pcount">0</span>)</h2>
-    <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th></th></tr></thead><tbody id="plist"></tbody></table></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <button class="sm" id="selall" type="button">Select all</button>
+      <button class="sm del" id="delsel" type="button" disabled>Delete selected (0)</button>
+      <span id="selmsg" class="sub" style="margin:0"></span>
+    </div>
+    <div class="scroll"><table class="tbl"><thead><tr><th><input type="checkbox" id="selhead" aria-label="Select all products"></th><th></th><th>Name</th><th>Brand / Category</th><th>Price</th><th></th></tr></thead><tbody id="plist"></tbody></table></div>
   </div>
 
   <div class="box"><h2>Registered users (<span id="ucount">0</span>)</h2>
@@ -154,9 +163,10 @@ async function loadProducts() {
   $("pcount").textContent = snap.size;
   $("plist").innerHTML = snap.docs.map(d => { const p = d.data(), sale = Number(p.comparePrice) > Number(p.price); return `
     <tr data-id="${d.id}" data-new="${!!p.isNew}">
+      <td><input type="checkbox" class="pk" aria-label="Select product"></td>
       <td>${p.image ? `<img src="${esc(p.image)}" alt="">` : ""}</td>
       <td>${esc(p.name)}<br>${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span> ' : ""}${p.stock === 0 ? '<span class="pill">Out of stock</span>' : ""}</td>
-      <td>${esc(p.category)}</td>
+      <td>${p.brand ? esc(p.brand) + "<br>" : ""}${esc(p.category)}</td>
       <td>${sale ? "<s>" + rs(p.comparePrice) + "</s><br>" : ""}${rs(p.price)}</td>
       <td style="min-width:230px"><div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="sm" data-act="photo">Photo</button>
@@ -164,7 +174,8 @@ async function loadProducts() {
         <button class="sm" data-act="new">${p.isNew ? "Unmark New" : "Mark New"}</button>
         <button class="sm" data-act="price">Edit price</button>
         <button class="sm del" data-act="del">Delete</button></div></td>
-    </tr>`; }).join("") || '<tr><td colspan="5">No products yet. Add your first one above.</td></tr>';
+    </tr>`; }).join("") || '<tr><td colspan="6">No products yet. Add your first one above.</td></tr>';
+  updSel();
 }
 
 async function loadUsers() {
@@ -174,6 +185,36 @@ async function loadUsers() {
     <tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.phone)}</td>
     <td>${u.createdAt ? u.createdAt.toDate().toLocaleDateString() : "-"}</td></tr>`; }).join("");
 }
+
+// ---------- select all / delete selected ----------
+const boxes = () => [...document.querySelectorAll("#plist input.pk")];
+function updSel() {
+  const b = boxes(), n = b.filter(x => x.checked).length;
+  $("delsel").disabled = !n; $("delsel").textContent = "Delete selected (" + n + ")";
+  $("selall").textContent = b.length && n === b.length ? "Deselect all" : "Select all";
+  $("selhead").checked = !!b.length && n === b.length;
+  $("selhead").indeterminate = n > 0 && n < b.length;
+}
+function toggleAll(on) { boxes().forEach(x => x.checked = on); updSel(); }
+$("selall").addEventListener("click", () => toggleAll(boxes().some(x => !x.checked)));
+$("selhead").addEventListener("change", e => toggleAll(e.target.checked));
+$("plist").addEventListener("change", e => { if (e.target.classList.contains("pk")) updSel(); });
+$("delsel").addEventListener("click", async () => {
+  const ids = boxes().filter(x => x.checked).map(x => x.closest("tr").dataset.id);
+  if (!ids.length) return;
+  if (!confirm("Delete " + ids.length + " product" + (ids.length > 1 ? "s" : "") + "? This cannot be undone.")) return;
+  const m = $("selmsg"); $("delsel").disabled = true; $("selall").disabled = true; m.textContent = "Deleting...";
+  try {
+    for (let i = 0; i < ids.length; i += 400) {
+      const b = writeBatch(db);
+      ids.slice(i, i + 400).forEach(id => b.delete(doc(db, "products", id)));
+      await b.commit();
+    }
+    m.textContent = ids.length + " deleted.";
+  } catch (err) { m.textContent = "Delete failed. Check you are logged in as admin and your Firestore rules are published."; }
+  $("selall").disabled = false;
+  await loadProducts();
+});
 
 $("plist").addEventListener("click", async e => {
   const b = e.target.closest("button"); if (!b) return;
@@ -207,6 +248,7 @@ $("pf").addEventListener("submit", async e => {
     await addDoc(collection(db, "products"), {
       name: $("pname").value.trim(),
       price: Number($("pprice").value),
+      brand: $("pbrand").value.trim(),
       category: $("pcat").value.trim(),
       stock: Number($("pstock").value),
       comparePrice: Number($("pcmp").value) || 0,
@@ -300,7 +342,7 @@ $("impgo").addEventListener("click", async () => {
     for (let i = 0; i < fresh.length; i += 400) {
       const b = writeBatch(db);
       fresh.slice(i, i + 400).forEach(p => b.set(doc(collection(db, "products")), {
-        name: String(p.name).trim(), category: p.category || "Other", price: Number(p.price),
+        name: String(p.name).trim(), brand: String(p.brand || "").trim(), category: p.category || "Other", price: Number(p.price),
         stock: p.stock === undefined ? 10 : Number(p.stock),
         description: String(p.desc || p.description || "").slice(0, 200), image: p.image || "",
         comparePrice: Number(p.comparePrice || 0), isNew: !!p.isNew,
