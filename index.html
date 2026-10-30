@@ -44,7 +44,7 @@ nav a:hover{color:var(--blue)}
 #account{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
 
 /* banner slider: products marked "Show in banner slider" in admin */
-.slider{position:relative;aspect-ratio:2.4/1;min-height:170px;max-height:620px;background:#111;overflow:hidden;width:100%}
+.slider{position:relative;aspect-ratio:2/1;background:#111;overflow:hidden;width:100%}
 .slide{position:absolute;inset:0;opacity:0;transition:opacity .6s;display:block}
 .slide.on{opacity:1;z-index:1}
 a.slide{cursor:pointer}
@@ -112,7 +112,6 @@ footer a:hover{color:var(--blue)}
   .links{display:none}
   .ph::after,.ph::before{display:none}
   .ph-in{padding:0 6vw}
-  .slider{aspect-ratio:auto;height:280px}
   #sf input{font-size:16px}
 }
 @media(max-width:520px){
@@ -137,7 +136,7 @@ footer a:hover{color:var(--blue)}
 </header>
 
 <div class="slider" id="slider">
-  <div class="slide on ph"><div class="ph-in"><h1>Control from Anywhere</h1><p>Professional CCTV installation for homes, shops and offices.</p><a class="btn" href="install.html">Book installation</a> <a class="btn ghost" href="#rows">Shop cameras</a></div></div>
+  <a class="slide on" href="install.html"><img src="banner.jpg" alt="CCTV PITS - complete CCTV security solutions for homes and businesses, 4, 8, 16 and 32 camera packages" fetchpriority="high" decoding="async" width="1774" height="887"></a>
 </div>
 <div class="cats" id="cats"></div>
 <div id="rows"></div>
