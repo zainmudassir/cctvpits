@@ -6,9 +6,9 @@ export const SITE = {
   domain: "https://cctvpits.store",
   freeDeliveryAbove: 10000,        // shows in the top bar; set 0 to hide the bar
 
-  phone: "",                       // e.g. "0300 1234567"
-  whatsapp: "",                    // digits with country code, e.g. "923001234567"
-  email: "",                       // e.g. "info@cctvpits.store"
+  phone: "+92 305 3871991",
+  whatsapp: "923053871991",       // digits with country code
+  email: "support@cctvpits.store",
   address: "",                     // shop address
   hours: "",                       // e.g. "10am to 6pm, Monday to Saturday"
   facebook: "",                    // full page link
