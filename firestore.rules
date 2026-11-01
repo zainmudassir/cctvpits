@@ -29,6 +29,22 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Brands, categories and services: shown on the public shop, edited by admin only.
+    match /companies/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /services/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /paymentAccounts/{id} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
