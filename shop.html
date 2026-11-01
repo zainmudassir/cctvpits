@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b6bd6">
+<title>Shop CCTV Cameras | CCTV PITS</title>
+<meta name="description" content="Browse CCTV cameras, recorders and security products by company and category at CCTV PITS.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="canonical" href="https://cctvpits.store/shop.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CCTV PITS">
+<meta property="og:title" content="Shop CCTV Cameras | CCTV PITS">
+<meta property="og:description" content="Browse CCTV cameras, recorders and security products by company and category at CCTV PITS.">
+<meta property="og:url" content="https://cctvpits.store/shop.html">
+<meta property="og:image" content="https://cctvpits.store/logo.png">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+</head>
+<body class="pg" data-page="shop">
+<div id="site-head"></div>
+
+<div class="pagehead"><h1 id="ph">Shop</h1><p id="pp">Choose a company, then a category, then your product.</p></div>
+<section class="pg-sec"><div id="out"></div></section>
+
+<div id="site-foot"></div>
+<script type="module" src="site.js"></script>
+<script type="module">
+import { cachedCatalog, loadCatalog, buildTree, brandOf, typeOf, productCard, bindCart, esc, q } from "./store.js";
+const colors = ["var(--blue)", "var(--red)", "var(--yellow)", "var(--green)"], $ = id => document.getElementById(id), enc = encodeURIComponent;
+const brand = q.get("brand") || "", type = q.get("type") || "", term = (q.get("q") || "").trim();
+let all = [], shown = 0;
+const LIMIT = 48;
+function grid(list) {
+  if (!list.length) return '<p class="empty">No products here yet.</p>';
+  return `<div class="grid" id="g">${list.slice(0, LIMIT).map(productCard).join("")}</div>${list.length > LIMIT ? `<p class="mid" style="margin-top:20px"><button class="btn ghost" id="more">Show more (${list.length - LIMIT} left)</button></p>` : ""}`;
+}
+function tiles(t) {
+  return `<div class="cats">${t.brands.map((b, i) => `<a class="cat" style="--c:${colors[i % 4]}" href="shop.html?brand=${enc(b.name)}">${b.image ? `<img class="clogo" src="${esc(b.image)}" alt="" loading="lazy" onerror="this.remove()">` : ""}${esc(b.name)}<small>${b.count} product${b.count > 1 ? "s" : ""}</small></a>`).join("")}</div>`;
+}
+function draw(cat) {
+  all = cat.products;
+  const t = buildTree(all, cat.companies), out = $("out");
+  let list = [], html = "", title = "Shop", sub = "Choose a company, then a category, then your product.", doc = "Shop CCTV Cameras | CCTV PITS";
+  if (!all.length) { out.innerHTML = '<p class="empty">Our product catalog is coming soon. Please check back, or <a href="install.html" style="color:var(--blue);font-weight:700">book an installation</a>.</p>'; return; }
+  let full = all;
+  if (term) {
+    const w = term.toLowerCase().split(/\s+/);
+    list = all.filter(p => { const s = (p.name + " " + brandOf(p) + " " + typeOf(p) + " " + (p.description || "")).toLowerCase(); return w.every(x => s.includes(x)); });
+    title = `Results for "${term}"`; sub = list.length + " product" + (list.length === 1 ? "" : "s") + " found."; doc = title + " | CCTV PITS";
+    full = list; html = grid(list);
+  } else if (brand) {
+    const b = t.brands.find(x => x.name.toLowerCase() === brand.toLowerCase());
+    if (!b) { title = brand; sub = "We do not have products from this company yet."; html = `<div class="crumb"><a href="shop.html">All companies</a></div><p class="empty">No products found. <a href="shop.html" style="color:var(--blue);font-weight:700">See all companies</a></p>`; }
+    else {
+      const ty = type && type !== "*" ? b.types.find(x => x.name.toLowerCase() === type.toLowerCase()) : null;
+      list = all.filter(p => brandOf(p) === b.name && (!ty || typeOf(p) === ty.name));
+      const crumb = `<div class="crumb"><a href="shop.html">All companies</a> &rsaquo; ${ty ? `<a href="shop.html?brand=${enc(b.name)}">${esc(b.name)}</a> &rsaquo; <b>${esc(ty.name)}</b>` : `<b>${esc(b.name)}</b>`}</div>`;
+      title = ty ? b.name + " " + ty.name : b.name; sub = list.length + " product" + (list.length === 1 ? "" : "s"); doc = title + " | CCTV PITS";
+      if (!ty && type !== "*" && b.types.length > 1) {
+        sub = "Choose a category.";
+        html = crumb + `<div class="cats">${b.types.map((x, i) => `<a class="cat" style="--c:${colors[i % 4]}" href="shop.html?brand=${enc(b.name)}&type=${enc(x.name)}">${esc(x.name)}<small>${x.count} product${x.count > 1 ? "s" : ""}</small></a>`).join("")}<a class="cat" style="--c:var(--blue)" href="shop.html?brand=${enc(b.name)}&type=*">All products<small>${b.count} products</small></a></div>`;
+      } else {
+        const chips = b.types.length > 1 ? `<div class="chips"><a class="chip${ty ? "" : " on"}" href="shop.html?brand=${enc(b.name)}&type=*">All (${b.count})</a>${b.types.map(x => `<a class="chip${ty && ty.name === x.name ? " on" : ""}" href="shop.html?brand=${enc(b.name)}&type=${enc(x.name)}">${esc(x.name)} (${x.count})</a>`).join("")}</div>` : "";
+        full = list; html = crumb + chips + grid(list);
+      }
+    }
+  } else {
+    html = `<h2 class="mid" style="margin-bottom:14px">Shop by company</h2>${tiles(t)}<h2 style="margin:34px 0 14px">All products</h2>${grid(all)}`;
+  }
+  $("ph").textContent = title; $("pp").textContent = sub; document.title = doc;
+  out.innerHTML = html;
+  const more = $("more");
+  if (more) more.onclick = () => { $("g").innerHTML = full.map(productCard).join(""); more.parentElement.remove(); };
+}
+bindCart($("out"), () => all);
+draw(cachedCatalog()); loadCatalog().then(draw);
+</script>
+</body>
+</html>

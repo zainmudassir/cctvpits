@@ -127,7 +127,7 @@
   </div>
 
   <div class="box"><h2>Import products</h2>
-    <p class="sub" style="margin-top:0">Upload <b>products.json</b> to add many products at once. Products with a name that already exists are skipped, so it is safe to run twice.</p>
+    <p class="sub" style="margin-top:0">Upload your catalog <b>.json</b> to add companies, categories and products at once. Anything that already exists is skipped, so it is safe to run twice.</p>
     <input id="impfile" type="file" accept=".json,application/json">
     <button class="primary" id="impgo" type="button" style="max-width:220px" disabled>Import products</button>
     <div id="impmsg" class="msg" role="alert"></div>
@@ -598,35 +598,59 @@ $("olist").addEventListener("click", async e => {
   catch (err) { alert("Could not update order."); }
 });
 
-let impList = [];
+let impList = [], impCos = [];
+const okP = p => p && !p._skip && p.name && !isNaN(Number(p.price));
 $("impfile").addEventListener("change", async e => {
-  const m = $("impmsg"); impList = []; $("impgo").disabled = true;
+  const m = $("impmsg"); impList = []; impCos = []; $("impgo").disabled = true;
   try {
     const d = JSON.parse(await e.target.files[0].text());
-    impList = (Array.isArray(d) ? d : d.products || []).filter(p => p && p.name && !isNaN(Number(p.price)));
-    m.textContent = impList.length + " products found. Tap Import to add them."; m.className = "msg ok";
-    $("impgo").disabled = !impList.length;
+    impList = (Array.isArray(d) ? d : d.products || []).filter(okP);
+    impCos = Array.isArray(d) ? [] : (d.companies || []).filter(c => c && c.name);
+    const nb = new Set([...impCos.map(c => c.name), ...impList.map(p => p.brand).filter(Boolean)].map(x => String(x).trim().toLowerCase())).size;
+    m.textContent = impList.length + " products and " + nb + " companies found. Companies and categories are created automatically. Tap Import.";
+    m.className = "msg ok";
+    $("impgo").disabled = !(impList.length || impCos.length);
   } catch (err) { m.textContent = "That is not a valid products.json file."; m.className = "msg err"; }
 });
 $("impgo").addEventListener("click", async () => {
   const m = $("impmsg"); $("impgo").disabled = true;
   try {
-    const have = new Set((await getDocs(collection(db, "products"))).docs.map(d => String(d.data().name).trim().toLowerCase()));
-    const fresh = impList.filter(p => !have.has(String(p.name).trim().toLowerCase()));
-    for (let i = 0; i < fresh.length; i += 400) {
-      const b = writeBatch(db);
-      fresh.slice(i, i + 400).forEach(p => b.set(doc(collection(db, "products")), {
+    const low = x => String(x || "").trim().toLowerCase();
+    // 1. companies (from the "companies" list and from each product's brand)
+    const haveCo = new Set((await getDocs(collection(db, "companies"))).docs.map(d => low(d.data().name)));
+    const coNames = new Map();
+    impCos.forEach(c => coNames.set(low(c.name), { name: String(c.name).trim(), image: c.image || "" }));
+    impList.forEach(p => { if (p.brand && !coNames.has(low(p.brand))) coNames.set(low(p.brand), { name: String(p.brand).trim(), image: "" }); });
+    const newCos = [...coNames.entries()].filter(([k]) => !haveCo.has(k)).map(([, v]) => v);
+    // 2. categories (from each company's "categories" list and from each product's category)
+    const haveK = new Set((await getDocs(collection(db, "categories"))).docs.map(d => low(d.data().brand) + "|" + low(d.data().name)));
+    const kMap = new Map();
+    const addK = (b, n) => { if (b && n) { const key = low(b) + "|" + low(n); if (!haveK.has(key) && !kMap.has(key)) kMap.set(key, { brand: String(b).trim(), name: String(n).trim() }); } };
+    impCos.forEach(c => (c.categories || []).forEach(n => addK(c.name, n)));
+    impList.forEach(p => addK(p.brand, p.category));
+    const newKs = [...kMap.values()];
+    // 3. products (a name that already exists is skipped)
+    const have = new Set((await getDocs(collection(db, "products"))).docs.map(d => low(d.data().name)));
+    const fresh = impList.filter(p => !have.has(low(p.name)));
+    const ops = [
+      ...newCos.map(c => [doc(collection(db, "companies")), { name: c.name, image: c.image, createdAt: serverTimestamp() }]),
+      ...newKs.map(k => [doc(collection(db, "categories")), { brand: k.brand, name: k.name, createdAt: serverTimestamp() }]),
+      ...fresh.map(p => [doc(collection(db, "products")), {
         name: String(p.name).trim(), brand: String(p.brand || "").trim(), category: p.category || "Other", price: Number(p.price),
         stock: p.stock === undefined ? 10 : Number(p.stock),
         description: String(p.desc || p.description || "").slice(0, 200), image: p.image || "",
         comparePrice: Number(p.comparePrice || 0), isNew: !!p.isNew,
         createdAt: serverTimestamp(), createdBy: auth.currentUser.uid
-      }));
+      }])
+    ];
+    for (let i = 0; i < ops.length; i += 400) {
+      const b = writeBatch(db);
+      ops.slice(i, i + 400).forEach(([r, d]) => b.set(r, d));
       await b.commit();
     }
-    m.textContent = fresh.length + " products imported, " + (impList.length - fresh.length) + " skipped (already exist).";
+    m.textContent = fresh.length + " products imported (" + (impList.length - fresh.length) + " skipped, already exist). " + newCos.length + " companies and " + newKs.length + " categories created.";
     m.className = "msg ok"; loadProducts(); loadCompanies();
-  } catch (err) { m.textContent = "Import failed. Check you are logged in as admin and your Firestore rules are published."; m.className = "msg err"; $("impgo").disabled = false; }
+  } catch (err) { m.textContent = "Import failed (" + (err.code || err.message) + "). Check you are logged in as admin and your Firestore rules are published."; m.className = "msg err"; $("impgo").disabled = false; }
 });
 
 // Add or change a product photo from the product list

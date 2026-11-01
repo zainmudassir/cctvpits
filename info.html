@@ -3,38 +3,51 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Support | CCTV PITS</title>
+<meta name="theme-color" content="#0b6bd6">
+<title>Support and Contact | CCTV PITS</title>
+<meta name="description" content="Contact CCTV PITS, and read our shipping, refund and privacy information.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="canonical" href="https://cctvpits.store/info.html">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="auth.css">
-<link rel="stylesheet" href="dash.css">
-<style>html{scroll-behavior:smooth}.wrap section{margin-bottom:40px;scroll-margin-top:90px}.wrap h2{font-size:22px;font-weight:800;margin-bottom:10px}.wrap p{margin-bottom:10px;color:#333;max-width:70ch}</style>
+<link rel="stylesheet" href="site.css">
 </head>
-<body>
-<header class="topbar">
-  <a class="brand" href="index.html"><img src="logo.png" alt="" onerror="this.style.display='none'">CCTV PITS</a>
-  <nav><a href="index.html">Store</a><a href="#contact">Contact</a><a href="#shipping">Shipping</a><a href="#refund">Refunds</a></nav>
-</header>
-<main class="wrap">
-  <!-- EDIT: replace everything in [square brackets] with your real details. -->
-  <section id="contact"><h1>Contact us</h1>
-    <p>Address: [your shop address]</p>
-    <p>Phone / WhatsApp: [your number]</p>
-    <p>Email: [your email]</p>
-    <p>Hours: [for example, 10am to 6pm, Monday to Saturday]</p>
-  </section>
-  <section id="shipping"><h2>Shipping and delivery</h2>
-    <p>We deliver across Pakistan. Orders are processed after we confirm your payment.</p>
-    <p>Delivery time: [for example, 3 to 5 working days]. Delivery charges: [your charges, or free above a certain amount].</p>
-  </section>
-  <section id="refund"><h2>Refund and returns</h2>
-    <p>Warranty: [warranty period and what it covers].</p>
-    <p>Returns: [your return window and conditions, for example unopened items within 7 days].</p>
-    <p>To raise a claim, contact us with your order number from your account page.</p>
-  </section>
-  <section id="privacy"><h2>Privacy policy</h2>
+<body class="pg" data-page="info">
+<div id="site-head"></div>
+<div class="pagehead"><h1>Support</h1><p>Contact us, delivery, returns and privacy.</p></div>
+<section class="pg-sec"><div class="narrow prose">
+  <div id="contact" style="scroll-margin-top:110px"><h2>Contact us</h2><div id="clines"></div></div>
+  <div id="shipping" style="scroll-margin-top:110px;margin-top:30px"><h2>Shipping and delivery</h2><div id="slines"></div></div>
+  <div id="refund" style="scroll-margin-top:110px;margin-top:30px"><h2>Refund and returns</h2><div id="rlines"></div></div>
+  <div id="privacy" style="scroll-margin-top:110px;margin-top:30px"><h2>Privacy policy</h2>
     <p>We collect your name, phone number, email and delivery address only to process your orders and support you. We do not sell your information.</p>
-    <p>Questions about your data: [your email].</p>
-  </section>
-</main>
+    <p>Questions about your data? Use the contact details above.</p></div>
+</div></section>
+<div id="site-foot"></div>
+<script type="module" src="site.js"></script>
+<script type="module">
+import { SITE } from "./config.js";
+import { esc } from "./store.js";
+const set = (id, rows, fallback) => { document.getElementById(id).innerHTML = rows.filter(Boolean).map(r => "<p>" + r + "</p>").join("") || "<p>" + fallback + "</p>"; };
+const wa = String(SITE.whatsapp || "").replace(/\D/g, "");
+set("clines", [
+  SITE.address && "Address: " + esc(SITE.address),
+  SITE.phone && "Phone: " + esc(SITE.phone),
+  wa && 'WhatsApp: <a href="https://wa.me/' + wa + '" style="color:var(--blue);font-weight:700">Chat with us</a>',
+  SITE.email && 'Email: <a href="mailto:' + esc(SITE.email) + '" style="color:var(--blue);font-weight:700">' + esc(SITE.email) + "</a>",
+  SITE.hours && "Hours: " + esc(SITE.hours)
+], "Contact details are coming soon. In the meantime, <a href='install.html' style='color:var(--blue);font-weight:700'>send an installation request</a> and we will get back to you.");
+set("slines", [
+  "We deliver across Pakistan. Orders are processed after we confirm your payment.",
+  SITE.deliveryTime && "Delivery time: " + esc(SITE.deliveryTime) + ".",
+  SITE.deliveryCharges && "Delivery charges: " + esc(SITE.deliveryCharges) + ".",
+  SITE.freeDeliveryAbove && "Free delivery on orders above Rs. " + Number(SITE.freeDeliveryAbove).toLocaleString() + "."
+], "");
+set("rlines", [
+  SITE.warranty && "Warranty: " + esc(SITE.warranty) + ".",
+  SITE.returns && "Returns: " + esc(SITE.returns) + ".",
+  "To raise a claim, contact us with your order number from your account page."
+], "");
+if (location.hash) { const el = document.getElementById(location.hash.slice(1)); if (el) el.scrollIntoView(); }
+</script>
 </body>
 </html>
