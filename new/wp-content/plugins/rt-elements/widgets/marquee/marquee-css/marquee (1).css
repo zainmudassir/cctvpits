@@ -1,0 +1,97 @@
+.rt-marquee .Marquee {
+  box-sizing: border-box;
+  padding: 1em;
+  color: #fff;
+  font-weight: 200;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  -o-box-align: center;
+  align-items: center;
+  overflow: hidden;
+}
+.rt-marquee .Marquee-content {
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  animation: marquee 50s linear infinite running;
+}
+.rt-marquee .Marquee-content:hover {
+  animation-play-state: paused;
+}
+.rt-marquee .Marquee-tag {
+  width: 1350px;
+  margin: 0 0.5em;
+  padding: 0.5em;
+  display: -ms-inline-flexbox;
+  display: inline-box;
+  display: inline-flex;
+  display: flex;
+  -o-box-align: center;
+  align-items: center;
+  -o-box-pack: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.rt-marquee .Marquee-tag h3 {
+  font-size: 60px;
+  font-weight: 600;
+  color: #cdcdcd;
+}
+.rt-marquee .Marquee-tag:hover {
+  cursor: pointer;
+}
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translate(-50%);
+  }
+}
+
+.de-marquee-list {
+  white-space: nowrap;
+  animation: marquee 20s linear infinite running;
+}
+.de-marquee-list .d-item {
+  display: flex;
+  align-items: center;
+}
+.de-marquee-list .d-item-txt {
+  font-size: 100px;
+  line-height: 100px;
+  padding-right: 8px;
+  font-style: normal;
+  font-weight: bold;
+  font-family: var(--heading-font);
+  color: #ffffff;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  text-transform: uppercase;
+}
+.de-marquee-list .d-item-block {
+  width: 30px;
+  height: 30px;
+  margin: 0px 20px;
+  margin-right: 40px;
+  padding: 0px;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--e-global-color-accent);
+  border-radius: 30px;
+  -moz-border-radius: 30px;
+  -webkit-border-radius: 30px;
+}
+
+.animated_image {
+  opacity: 1;
+  transform: translateX(100px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animated_image.visible {
+  opacity: 1;
+  transform: translateX(0);
+} /*# sourceMappingURL=marquee.css.map */

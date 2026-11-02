@@ -1,0 +1,42 @@
+:root {
+    --e-global-color-secondary: #010A1A;
+    --e-global-color-primary: #1A2331;
+    --e-global-color-text: #FFFFFF99;
+    --e-global-color-accent: #ED1D24;
+    --e-global-color-8fd3bd3: #FFFFFF;
+    --e-global-color-white: var(--e-global-color-8fd3bd3);
+    --e-global-typography-primary-font-family: "Public Sans";
+    --e-global-typography-primary-font-size: 16px;
+    --e-global-typography-primary-font-weight: 500;
+    --e-global-typography-secondary-font-family: "Orbitron";
+    --e-global-typography-secondary-font-weight: 700;
+    --bg-dark-1-rgb: 1, 10, 26;
+    --rt-primary-color: var(--e-global-color-accent);
+    --primary-color-rgb: 35, 73, 130;
+    --color-secondary: var(--e-global-color-secondary);
+    --color-secondary-rgb: 103, 143, 213;
+    --tertiary-color: #F4F7FB;
+    --tertiary-color-rgb: 244, 247, 251;
+    --rounded-1: 12px;
+    --transition: all 0.5s ease;
+
+    --heading-font: var(--e-global-typography-secondary-font-family);  
+    --heading-font-weight: bold;
+    --body-font: var(--e-global-typography-primary-font-family);
+    --body-font-size: 16px;
+    --body-font-color: #404040;
+    --body-font-color-dark: rgba(255, 255, 255, .6);
+    --bg-dark-1: #19272B;
+
+    --bg-dark-2: #223035;
+    --bg-dark-3: #303030;
+    --bg-grey: #d8e1e1;
+    --bg-gradient-1: 0deg, rgba(var(--primary-color-rgb), .1) 0%, rgba(var(--secondary-color-rgb), .2) 100%;
+    --swiper-theme-color: var(--secondary-color);
+    --rounded-1: 15px;
+    --button-rounded: 30px;
+    --border-color:#bbbbbb;
+    --container-max-width:1240px;
+    --mainmenu-font-weight:600;
+    --bs-border-radius-sm: 15px;
+}

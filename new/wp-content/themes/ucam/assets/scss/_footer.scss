@@ -1,0 +1,84 @@
+/* ---------------------------
+    Footer Css 
+------------------------------*/
+.reactheme-footer {
+    .navbar-menu{
+        ul{
+            list-style: none;
+            margin:0;
+            padding: 0;
+        }
+    }
+}
+.reactheme-footer {
+    background: #F6F8F9;
+    font-size: 16px;
+    position: relative;
+    ul {
+        padding: 0;
+        margin: 0;
+        list-style: none;
+
+        li {
+            &:last-child {
+                padding-bottom: 0;
+            }
+        }
+    }
+    
+}
+.error404 {
+    .reactheme-footer {
+        margin: 0
+    }
+}
+.footer-bottom {    
+    background:#283243;
+    color: #FFFFFF99;
+    .copyright_border {
+        padding: 20px 0;
+        text-align: center;    
+        .copyright{
+            text-align: center;          
+        }
+    }
+    .copyright {
+        p{
+            margin: 0;
+            line-height: 35px;
+        }
+        a{
+            color: #FFFFFF99;
+            font-weight: 700;
+            &:hover{
+                color: var(--color-accent);
+            }
+        }
+    }
+}
+#top-to-bottom {
+    text-align: center;
+    bottom: 0;
+    cursor: pointer;
+    position: fixed;
+    right: 28px;
+    z-index: 10;
+    display: none;
+    text-align: center;
+    transform: translateY(20px);
+    transition: all 0.5s ease 0s;
+    opacity: 0;
+    width: 46px;
+    height: 46px;
+    line-height: 46px;
+    background: var(--e-global-color-accent);
+    border-radius: 0;
+    i {
+        
+        color:#fff;
+    }
+}
+.scroll_visible {   
+    transform: translateY(-35px) !important;
+    opacity: 1 !important;
+}
