@@ -2,10 +2,13 @@
 // the list comes from the Firestore REST API (no Firebase SDK download), logos load in parallel and are cached in the browser.
 // If the backend is unreachable or has no companies yet, the original logos in the page are left untouched.
 const API = "https://firestore.googleapis.com/v1/projects/cctv-pits/databases/(default)/documents/companies", KEY = "AIzaSyBI8ye784CeFUEhpnZ-azZGGYn6xO0QH5w";
-const LIST = API + "?pageSize=100&orderBy=name&mask.fieldPaths=name&key=" + KEY, LS = "brands:list";
+const LIST = API + "?pageSize=100&orderBy=name&mask.fieldPaths=name&mask.fieldPaths=padY&mask.fieldPaths=padX&key=" + KEY, LS = "brands:list";
 const grid = document.querySelector(".elementor-element-9fa091b");
 const sv = f => f && f.stringValue !== undefined ? f.stringValue : "";
-const parse = d => ({ id: d.name.split("/").pop(), t: d.updateTime || "", name: sv((d.fields || {}).name).trim() });
+const num = f => f && (f.integerValue !== undefined ? Number(f.integerValue) : f.doubleValue !== undefined ? Number(f.doubleValue) : null);
+// padY (px) and padX (%) are optional, set per company in Admin > Companies; when missing the CSS default (36px 14%) applies
+const parse = d => { const f = d.fields || {}; return { id: d.name.split("/").pop(), t: d.updateTime || "", name: sv(f.name).trim(), padY: num(f.padY), padX: num(f.padX) }; };
+const pad = v => (v.padY == null && v.padX == null) ? "" : (v.padY == null ? 36 : v.padY) + "px " + (v.padX == null ? 14 : v.padX) + "%";
 const reveal = () => { const h = document.getElementById("brand-hide"); if (h) h.remove(); };
 if (grid) main(); else reveal();
 
@@ -39,7 +42,7 @@ async function main() {
       slot.title = v.name; box.appendChild(slot); w.appendChild(box); grid.appendChild(w);
       getImage(v).then(src => {
         if (!src) return nameTile(slot, v.name);
-        const img = new Image(); img.alt = v.name; img.decoding = "async";
+        const img = new Image(); img.alt = v.name; img.decoding = "async"; if (pad(v)) img.style.padding = pad(v);
         img.onload = () => { img.style.opacity = 1; }; img.onerror = () => nameTile(slot, v.name);
         slot.appendChild(img); img.src = src;
       });
@@ -54,7 +57,7 @@ async function main() {
   if (fresh === null) {            // REST blocked or offline: fall back to the Firebase SDK
     try {
       const { db } = await import("/firebase-lite.js"), { collection, getDocs, query, orderBy } = await import("https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js");
-      fresh = (await getDocs(query(collection(db, "companies"), orderBy("name")))).docs.map(d => ({ id: d.id, t: "", image: d.data().image || "", name: String(d.data().name || "").trim() })).filter(v => v.name); fromSdk = true;
+      fresh = (await getDocs(query(collection(db, "companies"), orderBy("name")))).docs.map(d => ({ id: d.id, t: "", image: d.data().image || "", name: String(d.data().name || "").trim(), padY: d.data().padY ?? null, padX: d.data().padX ?? null })).filter(v => v.name); fromSdk = true;
     } catch (e) {}
   }
   if (fresh === null) { reveal(); return; }                       // keep whatever is on screen

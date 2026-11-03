@@ -48,6 +48,11 @@
         <div><label for="cname">Company name</label><input id="cname" required maxlength="40" placeholder="For example: Hikvision"></div>
         <div><label for="cimg">Logo (optional)</label><input id="cimg" type="file" accept="image/*"></div>
       </div>
+      <div class="row">
+        <div><label for="cpy">Logo padding, top and bottom in px (optional)</label><input id="cpy" type="number" min="0" max="120" step="1" placeholder="Default: 36"></div>
+        <div><label for="cpx">Logo padding, left and right in % (optional)</label><input id="cpx" type="number" min="0" max="45" step="1" placeholder="Default: 14"></div>
+      </div>
+      <p class="sub" style="margin:6px 0 0">Smaller padding makes the logo bigger inside its box. Leave both empty to use the default.</p>
       <button class="primary" type="submit" style="max-width:200px;margin-top:10px">Add company</button>
       <div id="cmsg" class="msg" role="alert"></div>
     </form>
@@ -353,6 +358,10 @@ const DEF_COMPANIES = ["Hikvision", "Dahua", "EZVIZ", "Imou", "Uniview (UNV)", "
 let companyList = [], productCache = [], categoryList = [];
 const cshow = (t, c) => { $("cmsg").textContent = t; $("cmsg").className = "msg " + c; };
 const cLower = s => String(s || "").trim().toLowerCase();
+// optional logo padding for the public Brands page: padY in px (0-120), padX in % (0-45); empty = use the page default (36px / 14%)
+const clampPad = (v, max) => { if (v === "" || v === null || v === undefined || isNaN(Number(v))) return null; return Math.min(max, Math.max(0, Math.round(Number(v)))); };
+const readPad = (y, x) => { const o = {}, a = clampPad(y, 120), b = clampPad(x, 45); if (a !== null) o.padY = a; if (b !== null) o.padX = b; return o; };
+const padText = c => (c.padY === undefined && c.padX === undefined) ? "Default padding" : "Padding: " + (c.padY ?? 36) + "px / " + (c.padX ?? 14) + "%";
 
 async function loadCompanies() {
   let snap, psnap;
@@ -365,8 +374,8 @@ async function loadCompanies() {
   $("clist").innerHTML = companyList.map(c => `
     <tr data-id="${c.id}" data-name="${esc(c.name)}">
       <td>${c.image ? `<img src="${esc(c.image)}" alt="">` : ""}</td>
-      <td><b>${esc(c.name)}</b></td><td>${count(c.name)}</td>
-      <td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-ca="rename">Rename</button><button class="sm" data-ca="logo">Logo</button><button class="sm del" data-ca="del">Delete</button></div></td>
+      <td><b>${esc(c.name)}</b><br><span class="sub" style="font-size:12px">${padText(c)}</span></td><td>${count(c.name)}</td>
+      <td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-ca="rename">Rename</button><button class="sm" data-ca="logo">Logo</button><button class="sm" data-ca="pad">Padding</button><button class="sm del" data-ca="del">Delete</button></div></td>
     </tr>`).join("") || '<tr><td colspan="4">No companies yet. Add your first one above.</td></tr>';
   const known = new Set(companyList.map(c => cLower(c.name)));
   const missing = [...new Set([...DEF_COMPANIES, ...productCache.map(p => String(p.brand || "").trim()).filter(Boolean)])].filter(n => !known.has(cLower(n)));
@@ -398,7 +407,8 @@ $("cf").addEventListener("submit", async e => {
   if (companyList.some(c => cLower(c.name) === cLower(name))) { cshow("That company already exists.", "err"); return; }
   try {
     const f = $("cimg").files[0];
-    await addDoc(collection(db, "companies"), { name, image: f ? await shrink(f, 300) : "", createdAt: serverTimestamp() });
+    const pad = readPad($("cpy").value, $("cpx").value);
+    await addDoc(collection(db, "companies"), { name, image: f ? await shrink(f, 300) : "", ...pad, createdAt: serverTimestamp() });
     e.target.reset(); cshow("Company added. You can now pick it when adding a product.", "ok"); loadCompanies();
   } catch (err) { cshow("Could not save. Publish the new Firestore rules first.", "err"); }
 });
@@ -438,6 +448,15 @@ $("clist").addEventListener("click", async e => {
       const myk = categoryList.filter(k => cLower(k.brand) === cLower(name));
       if (myk.length) { const bt = writeBatch(db); myk.forEach(k => bt.update(doc(db, "categories", k.id), { brand: nn })); await bt.commit(); }
       loadProducts();
+    } else if (b.dataset.ca === "pad") {
+      const c = companyList.find(x => x.id === id) || {};
+      const cur = (c.padY ?? "") + (c.padX !== undefined || c.padY !== undefined ? ", " + (c.padX ?? "") : "");
+      const v = prompt("Logo padding for " + name + " on the Brands page.\nType: top and bottom in px, then left and right in %. Example: 36, 14\nSmaller numbers make the logo bigger. Leave empty to reset to the default (36, 14).", cur);
+      if (v === null) return;
+      const [y, x] = v.split(/[,\s/]+/).filter(Boolean), pad = readPad(y ?? "", x ?? "");
+      if (v.trim() && !Object.keys(pad).length) { cshow("Enter numbers, for example 36, 14.", "err"); return; }
+      await updateDoc(r, { padY: pad.padY !== undefined ? pad.padY : deleteField(), padX: pad.padX !== undefined ? pad.padX : deleteField() });
+      cshow("Padding saved for " + name + ".", "ok");
     } else {
       const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
       inp.onchange = async () => { if (inp.files[0]) { await updateDoc(r, { image: await shrink(inp.files[0], 300) }); loadCompanies(); } };
