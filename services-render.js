@@ -1,5 +1,5 @@
 // Builds the service tabs on service-page from Firestore (collection "services").
-// If Firestore has no services yet, the built-in tabs stay as they are.
+// The page markup is only a template: tabs show only what is saved in Firestore.
 import { db } from "/firebase.js";
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
@@ -9,7 +9,7 @@ const menuUl = document.querySelector(".service__menu ul.menu"), tpl = document.
 async function build() {
   let list = [];
   try { list = (await getDocs(query(collection(db, "services"), orderBy("order")))).docs.map(d => d.data()).filter(v => v.title); } catch (e) {}
-  if (!list.length) return;
+  if (!list.length) return false;
   const liT = menuUl.querySelector("li").cloneNode(true), pT = tpl.cloneNode(true), inner = tpl.parentNode;
   const anchor = [...inner.children].filter(c => !c.classList.contains("service-tab-panel")).pop();
   inner.querySelectorAll(".service-tab-panel").forEach(p => p.remove()); menuUl.innerHTML = "";
@@ -29,6 +29,7 @@ async function build() {
     if (!pts.length) { h6.closest(".elementor-widget").hidden = true; ul.closest(".elementor-widget").hidden = true; }
     inner.insertBefore(p, anchor);
   });
+  return true;
 }
 function tabs() {
   const links = [...document.querySelectorAll(".service__menu a[data-tab]")], panels = [...document.querySelectorAll(".service-tab-panel")];
@@ -42,4 +43,13 @@ function tabs() {
   addEventListener("hashchange", () => show(location.hash.slice(1)));
   show(location.hash.slice(1));
 }
-(async () => { if (menuUl && tpl) { await build(); tabs(); } })();
+(async () => {
+  if (!(menuUl && tpl)) return;
+  const inner = tpl.parentNode, ok = await build();
+  if (ok) { const h = document.getElementById("svc-hide"); if (h) h.remove(); tabs(); return; }
+  document.title = "Services | CCTV PITS";   // nothing in Firestore yet: show a message, not sample content
+  const m = document.createElement("p");
+  m.style.cssText = "grid-column:1/-1;text-align:center;color:#c9d1dc;padding:70px 0;font-size:18px";
+  m.innerHTML = 'Our services are being updated. Please check back soon or <a href="/contact/" style="color:#ed1d24;font-weight:700">contact us</a>.';
+  inner.insertBefore(m, inner.firstChild);
+})();
