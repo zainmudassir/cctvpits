@@ -726,6 +726,7 @@ async function loadInstalls() {
       <div>${esc(r.placeType)} &middot; ${esc(r.cameras)} item${r.cameras > 1 ? "s" : ""}${r.preferredDate ? " &middot; preferred " + esc(r.preferredDate) : ""}</div>
       ${(r.items || []).map(i => `<div>&bull; ${esc(i.quantity)} x ${esc(i.name)}</div>`).join("")}
       <div>${esc(r.address)}, ${esc(r.city)}</div>
+      ${r.siteType ? `<div>Site: ${esc(r.siteType)}, ${esc(r.areaValue)} ${esc(r.areaUnit)}${/^https?:\/\//.test(r.locationUrl || "") ? ` &middot; <a href="${esc(r.locationUrl)}" target="_blank" rel="noopener">Open map</a>` : ""}</div>` : ""}
       ${r.notes ? `<div>Notes: ${esc(r.notes)}</div>` : ""}
       <div><button class="sm" data-st="contacted">Contacted</button> <button class="sm" data-st="scheduled">Scheduled</button> <button class="sm" data-st="done">Done</button> <button class="sm del" data-st="cancelled">Cancel</button> <button class="sm" data-inv="open">${r.invoiceId ? "Invoice" : "Create invoice"}</button></div>
       ${r.invoiceId ? `<div>Invoice ${esc(r.invoiceNumber)}: ${money(r.invoiceAmount)}${r.invoiceSentAt ? " &middot; sent on WhatsApp" : ""}</div>` : ""}
@@ -748,6 +749,7 @@ async function buildInvoice(card, id) {
     number: r.invoiceNumber || ("INV-" + d.toISOString().slice(0, 10).replace(/-/g, "") + "-" + id.slice(0, 4).toUpperCase()),
     date: r.invoiceDate || d.toLocaleDateString("en-GB"),
     customer: { name: r.name, phone: r.phone, email: r.email || "", address: r.address, city: r.city },
+    site: r.siteType ? { type: r.siteType, areaValue: r.areaValue, areaUnit: r.areaUnit } : null,
     items: (r.items || []).map(i => ({ name: i.name, quantity: i.quantity })),
     installationPrice: price, notes: card.querySelector(".in").value.trim(),
     requestId: id, userId: r.userId

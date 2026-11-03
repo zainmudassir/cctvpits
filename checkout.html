@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1a2331">
+<link rel="icon" type="image/png" href="assets/images/favicon.png">
+<meta name="robots" content="noindex, nofollow">
+<title>Checkout | CCTV PITS</title>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="dash.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+.co{display:grid;grid-template-columns:1.5fr 1fr;gap:28px;align-items:start}
+.co form{max-width:none}
+.co h1{font-family:var(--head);font-size:26px;color:var(--navy)}
+.step{font-weight:800;font-size:16px;color:var(--navy);margin:26px 0 4px;padding-left:12px;border-left:5px solid var(--accent)}
+.step:first-of-type{margin-top:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips input{position:absolute;opacity:0;pointer-events:none}
+.chips label{margin:0;padding:11px 18px;border:1.5px solid var(--line);border-radius:4px;cursor:pointer;font-weight:700;font-size:14px;background:#fff;color:var(--navy)}
+.chips input:checked+label{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:inset 0 -3px 0 var(--accent)}
+.chips input:focus-visible+label{outline:3px solid rgba(237,29,36,.35)}
+.area{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.hint{font-size:13px;color:var(--muted);margin-top:6px}
+.loc{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.loc .sm{background:var(--soft)}
+.sum{position:sticky;top:90px;border:0;padding:0;overflow:hidden}
+.sum .hd{background:var(--navy);color:#fff;padding:20px 22px 24px;clip-path:polygon(0 0,100% 0,100% 82%,88% 100%,0 100%);border-top:4px solid var(--accent)}
+.sum .hd small{color:#c3cad4;font-size:13px}
+.sum .hd b{display:block;font-family:var(--head);font-size:20px;margin-top:4px}
+.sum .bd{padding:14px 22px 20px;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px}
+.sum .line:last-child{border:0}
+.sum .line span:last-child{font-weight:700;text-align:right}
+.done{text-align:center;padding:34px 22px}
+.done h2{font-family:var(--head);font-size:22px;color:var(--navy)}
+.done .acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.btn{display:inline-block;padding:13px 20px;border-radius:3px;background:var(--accent);color:#fff;font-family:var(--head);font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;text-decoration:none;border:0;cursor:pointer}
+.btn.dark{background:var(--navy)}
+.btn:hover{filter:brightness(.9)}
+@media(max-width:820px){.co{grid-template-columns:1fr}.sum{position:static;order:-1}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html"><img src="assets/images/logo.png" alt="CCTV PITS" onerror="this.style.display='none'"></a>
+  <nav><a href="index.html">Home</a><a href="packages/">Packages</a><a href="dashboard.html">My account</a><a href="contact/">Contact</a></nav>
+</header>
+<main class="wrap">
+  <div class="co" id="co" hidden>
+    <div>
+      <div class="box" id="formbox">
+        <h1>Tell us about your place</h1>
+        <p class="sub">We use this to plan the job and prepare your invoice.</p>
+        <form id="f" class="wide" novalidate>
+          <h2 class="step">Where will the cameras go?</h2>
+          <div class="chips" id="types" role="radiogroup" aria-label="Type of place">
+            <input type="radio" name="type" id="t1" value="House" checked><label for="t1">House</label>
+            <input type="radio" name="type" id="t2" value="Shop"><label for="t2">Shop</label>
+            <input type="radio" name="type" id="t3" value="Factory"><label for="t3">Factory</label>
+            <input type="radio" name="type" id="t4" value="Office"><label for="t4">Office</label>
+            <input type="radio" name="type" id="t5" value="Other"><label for="t5">Other</label>
+          </div>
+
+          <h2 class="step">How big is it?</h2>
+          <div class="area">
+            <div><label for="area" style="margin-top:0">Size</label><input id="area" type="number" min="0.5" step="0.5" inputmode="decimal" placeholder="e.g. 10" required></div>
+            <div class="chips" style="padding-top:22px" role="radiogroup" aria-label="Unit">
+              <input type="radio" name="unit" id="u1" value="Marla" checked><label for="u1">Marla</label>
+              <input type="radio" name="unit" id="u2" value="Kanal"><label for="u2">Kanal</label>
+            </div>
+          </div>
+          <p class="hint">1 Kanal = 20 Marla.</p>
+
+          <h2 class="step">Where is it?</h2>
+          <div class="row">
+            <div><label for="name">Full name</label><input id="name" required autocomplete="name"></div>
+            <div><label for="phone">WhatsApp number</label><input id="phone" type="tel" required autocomplete="tel" placeholder="0300 1234567"></div>
+          </div>
+          <label for="addr">Street address</label><input id="addr" required autocomplete="street-address" placeholder="House or shop number, street, area">
+          <div class="row">
+            <div><label for="city">City</label><input id="city" required autocomplete="address-level2" value="Gujranwala"></div>
+            <div><label for="date">Preferred visit date (optional)</label><input id="date" type="date"></div>
+          </div>
+          <label for="map">Map location</label>
+          <input id="map" placeholder="Paste a Google Maps link, or use your current location">
+          <div class="loc"><button type="button" class="sm" id="gps">Use my current location</button><span class="hint" id="gpsmsg" style="margin:0"></span></div>
+          <label for="notes">Anything else we should know? (optional)</label>
+          <textarea id="notes" maxlength="300" placeholder="Floors, gate timing, existing wiring..."></textarea>
+
+          <button class="primary" type="submit" id="go">Place request and get invoice</button>
+          <div id="msg" class="msg" role="alert"></div>
+        </form>
+      </div>
+      <div class="box done" id="donebox" hidden>
+        <h2>Request received</h2>
+        <p class="sub" id="donesub" style="margin-bottom:0"></p>
+        <div class="acts"><button class="btn" id="dl" type="button">Download invoice PDF</button><a class="btn dark" id="wa" href="#" target="_blank" rel="noopener">Message us on WhatsApp</a></div>
+        <div id="sendmsg" class="msg" role="status"></div>
+        <p class="alt"><a href="dashboard.html">Go to my account</a></p>
+      </div>
+    </div>
+    <aside class="box sum" aria-label="Order summary">
+      <div class="hd"><small>Your package</small><b id="pname"></b></div>
+      <div class="bd" id="psum"></div>
+    </aside>
+  </div>
+  <div id="bad" class="box" hidden><h2>Choose a package first</h2><p class="sub">Pick one of our camera packages and press "Get this package".</p><a class="btn" href="packages/">View packages</a></div>
+</main>
+<script type="module">
+import { auth, db, storage } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+import { collection, addDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+import { ref as sref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-storage.js";
+import { makePdf, money } from "./invoice.js";
+import { PACKAGES, WORKER_URL, BUSINESS_WA } from "./packages-data.js";
+
+const $ = id => document.getElementById(id);
+const say = (el, t, c) => { el.textContent = t; el.className = "msg " + c; };
+const key = new URLSearchParams(location.search).get("pkg");
+const pkg = PACKAGES[key];
+const normPhone = p => { let n = String(p || "").replace(/\D/g, ""); if (n.startsWith("00")) n = n.slice(2); else if (n.startsWith("0")) n = "92" + n.slice(1); return n; };
+const val = n => document.querySelector('input[name="' + n + '"]:checked').value;
+
+if (!pkg) { $("bad").hidden = false; }
+else {
+  $("pname").textContent = pkg.name;
+  const drawSummary = () => {
+    $("psum").innerHTML = [["Cameras", pkg.cameras], ["Place", val("type")], ["Size", ($("area").value || "-") + " " + val("unit")],
+      ["Price", pkg.price > 0 ? money(pkg.price) : "Confirmed after site details"]]
+      .map(r => `<div class="line"><span>${r[0]}</span><span>${String(r[1]).replace(/[<>&]/g, "")}</span></div>`).join("");
+  };
+  document.addEventListener("input", drawSummary); drawSummary();
+
+  let user, inv, pdfDoc;
+  onAuthStateChanged(auth, async u => {
+    if (!u) return location.replace("login.html?next=" + encodeURIComponent("checkout.html?pkg=" + key));
+    user = u; $("co").hidden = false;
+    let d = {}; try { d = (await getDoc(doc(db, "users", u.uid))).data() || {}; } catch (e) {}
+    $("name").value = d.name || u.displayName || ""; $("phone").value = d.phone || "";
+  });
+
+  let lat = null, lng = null;
+  $("gps").onclick = () => {
+    if (!navigator.geolocation) return say($("gpsmsg"), "Location is not available on this device.", "");
+    $("gpsmsg").textContent = "Finding you...";
+    navigator.geolocation.getCurrentPosition(p => {
+      lat = +p.coords.latitude.toFixed(6); lng = +p.coords.longitude.toFixed(6);
+      $("map").value = "https://maps.google.com/?q=" + lat + "," + lng; $("gpsmsg").textContent = "Location added.";
+    }, () => { $("gpsmsg").textContent = "Could not get your location. Paste a map link instead."; }, { enableHighAccuracy: true, timeout: 10000 });
+  };
+
+  $("f").addEventListener("submit", async e => {
+    e.preventDefault(); $("msg").className = "msg";
+    const area = Number($("area").value), name = $("name").value.trim(), phone = $("phone").value.trim(), addr = $("addr").value.trim(), city = $("city").value.trim();
+    if (!(area > 0)) return say($("msg"), "Enter the size of your place.", "err");
+    if (!name || !addr || !city) return say($("msg"), "Fill in your name, address and city.", "err");
+    if (normPhone(phone).length < 10) return say($("msg"), "Enter a valid WhatsApp number.", "err");
+    $("go").disabled = true;
+    try {
+      const type = val("type"), unit = val("unit"), mapUrl = $("map").value.trim();
+      const base = {
+        userId: user.uid, name, phone, email: user.email || "", placeType: type, siteType: type, areaValue: area, areaUnit: unit,
+        cameras: pkg.cameras, package: pkg.name, items: [{ name: pkg.name, quantity: 1 }], address: addr, city,
+        locationUrl: mapUrl, lat, lng, preferredDate: $("date").value, notes: $("notes").value.trim(), status: "new", createdAt: serverTimestamp()
+      };
+      const ref = await addDoc(collection(db, "installRequests"), base);
+      const now = new Date();
+      inv = {
+        number: "INV-" + now.toISOString().slice(0, 10).replace(/-/g, "") + "-" + ref.id.slice(0, 4).toUpperCase(),
+        date: now.toLocaleDateString("en-GB"), notes: "",
+        customer: { name, phone, email: user.email || "", address: addr, city },
+        site: { type, areaValue: area, areaUnit: unit },
+        items: [{ name: pkg.name, desc: pkg.desc, quantity: 1, unitPrice: pkg.price }],
+        installationPrice: pkg.price
+      };
+      pdfDoc = await makePdf(inv);
+      $("formbox").hidden = true; $("donebox").hidden = false; window.scrollTo(0, 0);
+      $("donesub").textContent = "Invoice " + inv.number + " is ready. We will confirm the final equipment and price with you before any work starts.";
+      $("dl").onclick = () => pdfDoc.save(inv.number + ".pdf");
+      $("wa").href = "https://wa.me/" + BUSINESS_WA + "?text=" + encodeURIComponent("Hello CCTV PITS, I placed a request for the " + pkg.name + ". Invoice " + inv.number + ".");
+      sendWhatsApp(ref.id, phone);
+    } catch (err) {
+      console.error(err); say($("msg"), "Could not place your request. Check your connection and try again.", "err"); $("go").disabled = false;
+    }
+  });
+
+  async function sendWhatsApp(reqId, phone) {
+    const box = $("sendmsg");
+    if (!WORKER_URL) return say(box, "Download your invoice above. Our team will also send it to your WhatsApp.", "ok");
+    say(box, "Sending the invoice to your WhatsApp...", "ok");
+    try {
+      const f = sref(storage, "invoices/" + reqId + ".pdf");
+      await uploadBytes(f, pdfDoc.output("blob"), { contentType: "application/pdf" });
+      const pdfUrl = await getDownloadURL(f);
+      const body = { to: normPhone(phone), message: "Hello " + inv.customer.name + ", thank you for choosing CCTV PITS. Your invoice " + inv.number + " for the " + pkg.name + " is attached. We will contact you to confirm the final price.",
+        media_url: pdfUrl, media_type: "document", filename: inv.number + ".pdf" };
+      const res = await fetch(WORKER_URL, { method: "POST", headers: { Authorization: "Bearer " + await user.getIdToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || !out.ok) throw new Error(out.error || res.status);
+      say(box, "Invoice sent to your WhatsApp.", "ok");
+    } catch (err) {
+      console.warn("WhatsApp send failed", err);
+      say(box, "We could not send it automatically. Download the invoice above; our team will also send it to your WhatsApp.", "err");
+    }
+  }
+}
+</script>
+</body>
+</html>
