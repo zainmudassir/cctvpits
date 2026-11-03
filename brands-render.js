@@ -11,7 +11,7 @@ if (grid) main(); else reveal();
 
 async function main() {
   const css = document.createElement("style");
-  css.textContent = `.brand-co .brand-slot{display:flex;align-items:center;justify-content:center;width:100%;height:152px;box-sizing:border-box;background:#010a1a;overflow:hidden}
+  css.textContent = `.brand-co .brand-slot{display:flex;align-items:center;justify-content:center;width:100%;height:152px;box-sizing:border-box;background:#000;overflow:hidden}
 .brand-co .brand-slot img{display:block;width:100%;height:100%;box-sizing:border-box;padding:36px 14%;object-fit:contain;opacity:0;transition:opacity .35s}
 .brand-co .brand-slot span{font:700 20px/1.2 Orbitron,'Public Sans',sans-serif;letter-spacing:.5px;color:#fff;text-align:center;padding:0 14px}`;
   document.head.appendChild(css);
