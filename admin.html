@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1a2331">
+<link rel="icon" type="image/png" href="assets/images/favicon.png">
+<link rel="apple-touch-icon" href="assets/images/favicon.png">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin | CCTV PITS</title>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="dash.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>.inv{border-top:1px dashed var(--line);margin-top:8px;padding-top:10px}.inv .row{margin-bottom:6px}</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html"><img src="assets/images/logo.png" alt="" onerror="this.style.display='none'">CCTV PITS <span class="pill admin">Admin</span></a>
+  <nav><a href="index.html">View store</a><a href="#" id="out">Log out</a></nav>
+</header>
+<main class="wrap" id="main" hidden>
+  <h1>Admin dashboard</h1>
+  <p class="sub">Manage services, products, orders and installation requests.</p>
+
+  <div class="box"><h2>Services (<span id="scount">0</span>)</h2>
+    <p class="sub">These show in the "Our services" section and the Services menu on the home page.</p>
+    <form id="sf2" class="wide">
+      <div class="row">
+        <div><label for="stitle">Service name</label><input id="stitle" required maxlength="60" placeholder="For example: Electric fencing"></div>
+        <div><label for="sorder">Position (1 is first)</label><input id="sorder" type="number" min="1" step="1" value="1"></div>
+      </div>
+      <label for="sdesc">Short description</label><input id="sdesc" maxlength="140" placeholder="One short sentence">
+      <label for="simg">Photo (optional)</label><input id="simg" type="file" accept="image/*">
+      <button class="primary" type="submit" style="max-width:200px;margin-top:10px">Add service</button>
+      <div id="smsg" class="msg" role="alert"></div>
+    </form>
+    <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Service</th><th>Position</th><th></th></tr></thead><tbody id="slist"></tbody></table></div>
+    <button class="sm" id="sdef" type="button" hidden>Add the 5 default services</button>
+  </div>
+
+  <div class="box"><h2>Companies (<span id="ccount">0</span>)</h2>
+    <p class="sub">Products are organised as Company, then Category, then Product. Add a company here, add its categories in the Categories section below, then pick both when you add a product.</p>
+    <form id="cf" class="wide">
+      <div class="row">
+        <div><label for="cname">Company name</label><input id="cname" required maxlength="40" placeholder="For example: Hikvision"></div>
+        <div><label for="cimg">Logo (optional)</label><input id="cimg" type="file" accept="image/*"></div>
+      </div>
+      <button class="primary" type="submit" style="max-width:200px;margin-top:10px">Add company</button>
+      <div id="cmsg" class="msg" role="alert"></div>
+    </form>
+    <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Company</th><th>Products</th><th></th></tr></thead><tbody id="clist"></tbody></table></div>
+    <button class="sm" id="cdef" type="button" hidden>Add default and existing companies</button>
+  </div>
+
+  <div class="box"><h2>Categories (<span id="kcount">0</span>)</h2>
+    <p class="sub">Every company has its own categories. Add them here, then choose the company and category when you add a product.</p>
+    <form id="kf" class="wide">
+      <div class="row">
+        <div><label for="kbrand">Company</label><select id="kbrand" required><option value="">Select a company</option></select></div>
+        <div><label for="kname">Category name</label><input id="kname" required maxlength="120" placeholder="For example: Turbo HD Cameras (separate with commas to add several)"></div>
+      </div>
+      <button class="primary" type="submit" style="max-width:200px;margin-top:10px">Add category</button>
+      <div id="kmsg" class="msg" role="alert"></div>
+    </form>
+    <div class="scroll"><table class="tbl"><thead><tr><th>Company</th><th>Category</th><th>Products</th><th></th></tr></thead><tbody id="klist"></tbody></table></div>
+    <button class="sm" id="kdef" type="button" hidden>Add categories from existing products</button>
+  </div>
+
+  <div class="box"><h2>Add product</h2>
+    <form id="pf" class="wide">
+      <div class="row">
+        <div><label for="pname">Product name</label><input id="pname" required></div>
+        <div><label for="pprice">Price (Rs.)</label><input id="pprice" type="number" min="0" step="1" required></div>
+      </div>
+      <div class="row">
+        <div><label for="pbrand">Company</label>
+          <select id="pbrand" required><option value="">Select a company</option></select></div>
+        <div><label for="pcat">Category</label>
+          <select id="pcat" required><option value="">Select a company first</option></select></div>
+      </div>
+      <div class="row">
+        <div><label for="pimg">Photo</label><input id="pimg" type="file" accept="image/*"></div>
+      </div>
+      <div class="row"><div><label for="pstock">Stock</label><input id="pstock" type="number" min="0" value="10"></div>
+      <div><label for="pcmp">Old price (optional, shows Sale)</label><input id="pcmp" type="number" min="0"></div></div>
+      <label style="display:flex;align-items:center;font-weight:600"><input id="pnew" type="checkbox"> Mark as New</label>
+      <img id="preview" alt="">
+      <label for="pdesc">Short description</label>
+      <textarea id="pdesc" maxlength="200"></textarea>
+      <button class="primary" type="submit" style="max-width:220px">Add product</button>
+      <div id="pmsg" class="msg" role="alert"></div>
+    </form>
+  </div>
+
+  <div class="box"><h2>WhatsApp settings (wasms.net)</h2>
+    <p class="sub" style="margin-top:0">Used to send installation invoices. Sending goes through your Cloudflare Worker. The API key is saved privately in your database and only admins can read it.</p>
+    <div class="row"><div><label for="wkey">API key (wasms_...)</label><input id="wkey" type="password" autocomplete="off" placeholder="Leave empty to keep the saved key"></div>
+    <div><label for="wcc">Default country code</label><input id="wcc" value="92"></div></div>
+    <label for="wurl">Worker URL</label><input id="wurl" placeholder="https://cctvpits-wa.yourname.workers.dev">
+    <label for="wid">WhatsApp account ID (optional)</label><input id="wid" placeholder="Leave empty to use the first connected number">
+    <button class="primary" id="wsave" type="button" style="max-width:200px;margin-top:12px">Save settings</button>
+    <div id="wmsg" class="msg" role="alert"></div>
+  </div>
+
+  <div class="box"><h2>Installation requests (<span id="icount">0</span>, <span id="inew">0</span> new)</h2><div id="ilist">Loading...</div></div>
+
+  <div class="box"><h2>Orders (<span id="ocount">0</span>, <span id="opend">0</span> pending)</h2>
+    <div id="olist">Loading...</div>
+  </div>
+
+  <div class="box"><h2>Payment settings</h2>
+    <p class="sub" style="margin-top:0">Customers choose one of these accounts at checkout and send payment there.</p>
+    <form id="af" class="wide">
+      <div class="row">
+        <div><label for="abank">Bank name</label><input id="abank" required></div>
+        <div><label for="atitle">Account title</label><input id="atitle" required></div>
+      </div>
+      <div class="row">
+        <div><label for="anum">Account number</label><input id="anum" required></div>
+        <div><label for="anote">Note (optional)</label><input id="anote" placeholder="e.g. IBAN or branch"></div>
+      </div>
+      <button class="primary" type="submit" style="max-width:220px">Add account</button>
+      <div id="amsg" class="msg" role="alert"></div>
+    </form>
+    <div class="scroll" style="margin-top:18px"><table class="tbl"><thead><tr><th>Bank</th><th>Title</th><th>Number</th><th>Status</th><th></th></tr></thead><tbody id="alist"></tbody></table></div>
+  </div>
+
+  <div class="box"><h2>Import products</h2>
+    <p class="sub" style="margin-top:0">Upload your catalog <b>.json</b> to add companies, categories and products at once. Anything that already exists is skipped, so it is safe to run twice.</p>
+    <input id="impfile" type="file" accept=".json,application/json">
+    <button class="primary" id="impgo" type="button" style="max-width:220px" disabled>Import products</button>
+    <div id="impmsg" class="msg" role="alert"></div>
+  </div>
+
+  <div class="box"><h2>Product photos (fast loading)</h2>
+    <p class="sub" style="margin-top:0">Upload photos to a <b>products</b> folder in your GitHub repo, named as shown below, then tap Link. Use .jpg files about 600 px wide and under 100 KB.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="sm" id="pnames" type="button">Show file names</button>
+      <button class="sm" id="plink" type="button">Link photos by name</button>
+    </div>
+    <textarea id="pnamebox" readonly style="display:none;margin-top:12px;min-height:200px;font-family:monospace;font-size:13px"></textarea>
+    <div id="plmsg" class="msg" role="alert"></div>
+  </div>
+
+  <div class="box"><h2>Products (<span id="pcount">0</span>)</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <button class="sm" id="selall" type="button">Select all</button>
+      <button class="sm del" id="delsel" type="button" disabled>Delete selected (0)</button>
+      <span id="selmsg" class="sub" style="margin:0"></span>
+    </div>
+    <div class="scroll"><table class="tbl"><thead><tr><th><input type="checkbox" id="selhead" aria-label="Select all products"></th><th></th><th>Name</th><th>Company / Category</th><th>Price</th><th></th></tr></thead><tbody id="plist"></tbody></table></div>
+  </div>
+
+  <div class="box"><h2>Registered users (<span id="ucount">0</span>)</h2>
+    <div class="scroll"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th></tr></thead><tbody id="ulist"></tbody></table></div>
+  </div>
+</main>
+<div class="lb" id="lb" hidden><img alt=""></div>
+
+<script type="module">
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+import { setDoc, deleteField, writeBatch, doc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+import { storage } from "./firebase.js";
+import { ref as sref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-storage.js";
+import { makePdf, money } from "./invoice.js";
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const show = (t, c) => { $("pmsg").textContent = t; $("pmsg").className = "msg " + c; };
+$("out").onclick = e => { e.preventDefault(); signOut(auth); };
+
+let imageData = "";
+
+// Shrinks the photo in the browser so it fits in Firestore (no Storage plan needed)
+function shrink(file, max = 700, q = 0.78) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL("image/jpeg", q));
+    };
+    img.onerror = rej; img.src = url;
+  });
+}
+$("pimg").addEventListener("change", async e => {
+  const f = e.target.files[0];
+  if (!f) { imageData = ""; $("preview").style.display = "none"; return; }
+  try {
+    imageData = await shrink(f);
+    $("preview").src = imageData; $("preview").style.display = "block";
+  } catch (err) { show("That file is not a valid image.", "err"); }
+});
+
+async function loadProducts() {
+  const snap = await getDocs(query(collection(db, "products"), orderBy("createdAt", "desc")));
+  // one-time tidy: banners now live in their own section, so remove old banner data from products
+  snap.docs.filter(d => d.data().bannerImage !== undefined || d.data().showInBanner !== undefined)
+    .forEach(d => updateDoc(d.ref, { bannerImage: deleteField(), showInBanner: deleteField() }).catch(() => {}));
+  $("pcount").textContent = snap.size;
+  $("plist").innerHTML = snap.docs.map(d => { const p = d.data(), sale = Number(p.comparePrice) > Number(p.price); return `
+    <tr data-id="${d.id}" data-new="${!!p.isNew}">
+      <td><input type="checkbox" class="pk" aria-label="Select product"></td>
+      <td>${p.image ? `<img src="${esc(p.image)}" alt="">` : ""}</td>
+      <td>${esc(p.name)}<br>${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span> ' : ""}${p.stock === 0 ? '<span class="pill">Out of stock</span>' : ""}</td>
+      <td>${p.brand ? esc(p.brand) : '<span class="pill pending">No company</span>'}<br>${esc(p.category)}</td>
+      <td>${sale ? "<s>" + rs(p.comparePrice) + "</s><br>" : ""}${rs(p.price)}</td>
+      <td style="min-width:230px"><div style="display:flex;flex-wrap:wrap;gap:6px">
+        <button class="sm" data-act="photo">Photo</button>
+        <button class="sm" data-act="path">Image path</button>
+        <button class="sm" data-act="new">${p.isNew ? "Unmark New" : "Mark New"}</button>
+        <button class="sm" data-act="company">Company / category</button>
+        <button class="sm" data-act="price">Edit price</button>
+        <button class="sm del" data-act="del">Delete</button></div></td>
+    </tr>`; }).join("") || '<tr><td colspan="6">No products yet. Add your first one above.</td></tr>';
+  updSel();
+}
+
+const DEF_SVC = [["Home CCTV", "Indoor and outdoor cameras set up so you can watch live on your phone."], ["Shop and office", "Multi-camera systems with recording, planned around your space."], ["Wi-Fi cameras", "Plug-in cameras with mobile alerts and cloud or card storage."], ["Locks and sensors", "Smart locks, door sensors and alarms installed and connected."], ["Repair and upgrade", "We fix and improve your existing camera system."]];
+const smsg = (t, c) => { $("smsg").textContent = t; $("smsg").className = "msg " + c; };
+async function loadServices() {
+  const snap = await getDocs(query(collection(db, "services"), orderBy("order")));
+  $("scount").textContent = snap.size; $("sdef").hidden = snap.size > 0;
+  $("slist").innerHTML = snap.docs.map(d => { const v = d.data(); return `<tr data-id="${d.id}"><td>${v.image ? `<img src="${esc(v.image)}" alt="">` : ""}</td><td><b>${esc(v.title)}</b><br>${esc(v.description || "")}</td><td>${v.order}</td><td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-sa="edit">Edit</button><button class="sm" data-sa="photo">Photo</button><button class="sm del" data-sa="del">Delete</button></div></td></tr>`; }).join("") || '<tr><td colspan="4">No services yet. The home page shows the 5 default services until you add your own.</td></tr>';
+}
+$("sf2").onsubmit = async e => {
+  e.preventDefault();
+  try {
+    const f = $("simg").files[0];
+    await addDoc(collection(db, "services"), { title: $("stitle").value.trim(), description: $("sdesc").value.trim(), order: Number($("sorder").value) || 1, image: f ? await shrink(f, 700) : "", createdAt: serverTimestamp() });
+    e.target.reset(); $("sorder").value = 1; smsg("Service added.", "ok"); loadServices();
+  } catch (err) { smsg("Could not save. Publish the new Firestore rules first.", "err"); }
+};
+$("sdef").onclick = async () => {
+  try { for (let i = 0; i < DEF_SVC.length; i++) await addDoc(collection(db, "services"), { title: DEF_SVC[i][0], description: DEF_SVC[i][1], order: i + 1, image: "", createdAt: serverTimestamp() }); loadServices(); }
+  catch (err) { smsg("Could not save. Publish the new Firestore rules first.", "err"); }
+};
+$("slist").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-sa]"); if (!b) return;
+  const id = b.closest("tr").dataset.id, r = doc(db, "services", id);
+  try {
+    if (b.dataset.sa === "del") { if (!confirm("Delete this service?")) return; await deleteDoc(r); }
+    else if (b.dataset.sa === "edit") {
+      const cur = (await getDoc(r)).data(), t = prompt("Service name", cur.title); if (t === null) return;
+      const d = prompt("Short description", cur.description || ""); if (d === null) return;
+      const o = prompt("Position (1 is first)", cur.order); if (o === null) return;
+      await updateDoc(r, { title: t.trim() || cur.title, description: d.trim(), order: Number(o) || cur.order });
+    } else {
+      const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+      inp.onchange = async () => { if (inp.files[0]) { await updateDoc(r, { image: await shrink(inp.files[0], 700) }); loadServices(); } };
+      inp.click(); return;
+    }
+    loadServices();
+  } catch (err) { smsg("Could not update. Check your admin login and Firestore rules.", "err"); }
+});
+
+async function loadUsers() {
+  const snap = await getDocs(collection(db, "users"));
+  $("ucount").textContent = snap.size;
+  $("ulist").innerHTML = snap.docs.map(d => { const u = d.data(); return `
+    <tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.phone)}</td>
+    <td>${u.createdAt ? u.createdAt.toDate().toLocaleDateString() : "-"}</td></tr>`; }).join("");
+}
+
+// ---------- select all / delete selected ----------
+const boxes = () => [...document.querySelectorAll("#plist input.pk")];
+function updSel() {
+  const b = boxes(), n = b.filter(x => x.checked).length;
+  $("delsel").disabled = !n; $("delsel").textContent = "Delete selected (" + n + ")";
+  $("selall").textContent = b.length && n === b.length ? "Deselect all" : "Select all";
+  $("selhead").checked = !!b.length && n === b.length;
+  $("selhead").indeterminate = n > 0 && n < b.length;
+}
+function toggleAll(on) { boxes().forEach(x => x.checked = on); updSel(); }
+$("selall").addEventListener("click", () => toggleAll(boxes().some(x => !x.checked)));
+$("selhead").addEventListener("change", e => toggleAll(e.target.checked));
+$("plist").addEventListener("change", e => { if (e.target.classList.contains("pk")) updSel(); });
+$("delsel").addEventListener("click", async () => {
+  const ids = boxes().filter(x => x.checked).map(x => x.closest("tr").dataset.id);
+  if (!ids.length) return;
+  if (!confirm("Delete " + ids.length + " product" + (ids.length > 1 ? "s" : "") + "? This cannot be undone.")) return;
+  const m = $("selmsg"); $("delsel").disabled = true; $("selall").disabled = true; m.textContent = "Deleting...";
+  try {
+    for (let i = 0; i < ids.length; i += 400) {
+      const b = writeBatch(db);
+      ids.slice(i, i + 400).forEach(id => b.delete(doc(db, "products", id)));
+      await b.commit();
+    }
+    m.textContent = ids.length + " deleted.";
+  } catch (err) { m.textContent = "Delete failed. Check you are logged in as admin and your Firestore rules are published."; }
+  $("selall").disabled = false;
+  await loadProducts();
+});
+
+$("plist").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const tr = b.closest("tr"), id = tr.dataset.id, ref = doc(db, "products", id), act = b.dataset.act;
+  try {
+    if (act === "del") { if (!confirm("Delete this product?")) return; await deleteDoc(ref); }
+    else if (act === "photo") { rowId = id; rowimg.click(); return; }
+    else if (act === "path") {
+      const v = prompt("Image path or link, for example products/h6c.jpg");
+      if (v === null) return;
+      await updateDoc(ref, { image: v.trim() });
+    }
+    else if (act === "new") await updateDoc(ref, { isNew: tr.dataset.new !== "true" });
+    else if (act === "company") {
+      const cur = (await getDoc(ref)).data(), names = companyList.map(c => c.name);
+      if (!names.length) { alert("Add a company first."); return; }
+      const c = prompt("Company for this product. Choose one of:\n" + names.join(", "), cur.brand || "");
+      if (c === null) return;
+      const match = names.find(n => n.toLowerCase() === c.trim().toLowerCase());
+      if (!match) { alert("That company does not exist. Add it in the Companies section first."); return; }
+      const ks = categoryList.filter(x => cLower(x.brand) === cLower(match)).map(x => x.name);
+      if (!ks.length) { alert(match + " has no categories yet. Add them in the Categories section first."); return; }
+      const k = prompt("Category under " + match + ". Choose one of:\n" + ks.join(", "), cur.category || ""); if (k === null) return;
+      const km = ks.find(n => cLower(n) === cLower(k));
+      if (!km) { alert("That category does not exist under " + match + ". Add it in the Categories section first."); return; }
+      await updateDoc(ref, { brand: match, category: km });
+    }
+    else if (act === "price") {
+      const v = prompt("New price (Rs.)");
+      if (v === null || v.trim() === "" || isNaN(Number(v))) return;
+      const o = prompt("Old price to show as Sale (blank = keep as is, 0 = remove sale)");
+      const upd = { price: Number(v) };
+      if (o !== null && o.trim() !== "" && !isNaN(Number(o))) upd.comparePrice = Number(o);
+      await updateDoc(ref, upd);
+    }
+    loadProducts();
+  } catch (err) { alert("Action failed. Check your Firestore rules."); }
+});
+
+
+// ---------- companies (Company > Category > Product) ----------
+const DEF_COMPANIES = ["Hikvision", "Dahua", "EZVIZ", "Imou", "Uniview (UNV)", "HiLook", "TP-Link Tapo", "Reolink"];
+let companyList = [], productCache = [], categoryList = [];
+const cshow = (t, c) => { $("cmsg").textContent = t; $("cmsg").className = "msg " + c; };
+const cLower = s => String(s || "").trim().toLowerCase();
+
+async function loadCompanies() {
+  let snap, psnap;
+  try { snap = await getDocs(query(collection(db, "companies"), orderBy("name"))); }
+  catch (err) { cshow("Could not load companies (" + (err.code || err.message) + "). Publish the Firestore rules in the Firebase console first.", "err"); return; }
+  try { psnap = await getDocs(collection(db, "products")); productCache = psnap.docs.map(d => d.data()); } catch (err) {}
+  companyList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  $("ccount").textContent = companyList.length;
+  const count = n => productCache.filter(p => cLower(p.brand) === cLower(n)).length;
+  $("clist").innerHTML = companyList.map(c => `
+    <tr data-id="${c.id}" data-name="${esc(c.name)}">
+      <td>${c.image ? `<img src="${esc(c.image)}" alt="">` : ""}</td>
+      <td><b>${esc(c.name)}</b></td><td>${count(c.name)}</td>
+      <td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-ca="rename">Rename</button><button class="sm" data-ca="logo">Logo</button><button class="sm del" data-ca="del">Delete</button></div></td>
+    </tr>`).join("") || '<tr><td colspan="4">No companies yet. Add your first one above.</td></tr>';
+  const known = new Set(companyList.map(c => cLower(c.name)));
+  const missing = [...new Set([...DEF_COMPANIES, ...productCache.map(p => String(p.brand || "").trim()).filter(Boolean)])].filter(n => !known.has(cLower(n)));
+  $("cdef").hidden = !missing.length; $("cdef").dataset.missing = JSON.stringify(missing);
+  fillCompanySelect(); fillCategoryList();
+  await loadCategories();
+}
+function fillCompanySelect() {
+  const opts = companyList.map(c => `<option>${esc(c.name)}</option>`).join("");
+  [["pbrand", "Select a company"], ["kbrand", "Select a company"]].forEach(([id, label]) => {
+    const sel = $(id), cur = sel.value;
+    sel.innerHTML = `<option value="">${label}</option>` + opts;
+    if (cur && companyList.some(c => c.name === cur)) sel.value = cur;
+  });
+}
+// the category list of the product form only shows the categories of the chosen company
+function fillCategoryList() {
+  const co = $("pbrand").value, sel = $("pcat"), cur = sel.value;
+  const list = categoryList.filter(k => cLower(k.brand) === cLower(co));
+  sel.innerHTML = (!co ? '<option value="">Select a company first</option>' : list.length ? '<option value="">Select a category</option>' : '<option value="">No categories for this company yet - add one in Categories</option>')
+    + list.map(k => `<option>${esc(k.name)}</option>`).join("");
+  if (cur && list.some(k => k.name === cur)) sel.value = cur;
+}
+$("pbrand").addEventListener("change", fillCategoryList);
+
+$("cf").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("cname").value.trim().replace(/\s+/g, " ");
+  if (companyList.some(c => cLower(c.name) === cLower(name))) { cshow("That company already exists.", "err"); return; }
+  try {
+    const f = $("cimg").files[0];
+    await addDoc(collection(db, "companies"), { name, image: f ? await shrink(f, 300) : "", createdAt: serverTimestamp() });
+    e.target.reset(); cshow("Company added. You can now pick it when adding a product.", "ok"); loadCompanies();
+  } catch (err) { cshow("Could not save. Publish the new Firestore rules first.", "err"); }
+});
+$("cdef").addEventListener("click", async () => {
+  try {
+    const missing = JSON.parse($("cdef").dataset.missing || "[]");
+    for (let i = 0; i < missing.length; i += 400) {
+      const b = writeBatch(db);
+      missing.slice(i, i + 400).forEach(n => b.set(doc(collection(db, "companies")), { name: n, image: "", createdAt: serverTimestamp() }));
+      await b.commit();
+    }
+    cshow(missing.length + " companies added.", "ok"); loadCompanies();
+  } catch (err) { cshow("Could not save. Publish the new Firestore rules first.", "err"); }
+});
+$("clist").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-ca]"); if (!b) return;
+  const tr = b.closest("tr"), id = tr.dataset.id, name = tr.dataset.name, r = doc(db, "companies", id);
+  try {
+    if (b.dataset.ca === "del") {
+      const n = productCache.filter(p => cLower(p.brand) === cLower(name)).length;
+      if (n) { cshow(name + " still has " + n + " product" + (n > 1 ? "s" : "") + ". Delete them or move them to another company first.", "err"); return; }
+      const ks = categoryList.filter(k => cLower(k.brand) === cLower(name));
+      if (!confirm("Delete " + name + (ks.length ? " and its " + ks.length + " categor" + (ks.length > 1 ? "ies" : "y") : "") + "?")) return;
+      if (ks.length) { const bt = writeBatch(db); ks.forEach(k => bt.delete(doc(db, "categories", k.id))); await bt.commit(); }
+      await deleteDoc(r);
+    } else if (b.dataset.ca === "rename") {
+      const v = prompt("New company name", name); if (v === null) return;
+      const nn = v.trim().replace(/\s+/g, " "); if (!nn || nn === name) return;
+      if (companyList.some(c => c.id !== id && cLower(c.name) === cLower(nn))) { cshow("That company already exists.", "err"); return; }
+      await updateDoc(r, { name: nn });
+      // keep the company's products attached to it
+      const ps = await getDocs(collection(db, "products"));
+      const mine = ps.docs.filter(d => cLower(d.data().brand) === cLower(name));
+      for (let i = 0; i < mine.length; i += 400) {
+        const bt = writeBatch(db); mine.slice(i, i + 400).forEach(d => bt.update(d.ref, { brand: nn })); await bt.commit();
+      }
+      const myk = categoryList.filter(k => cLower(k.brand) === cLower(name));
+      if (myk.length) { const bt = writeBatch(db); myk.forEach(k => bt.update(doc(db, "categories", k.id), { brand: nn })); await bt.commit(); }
+      loadProducts();
+    } else {
+      const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+      inp.onchange = async () => { if (inp.files[0]) { await updateDoc(r, { image: await shrink(inp.files[0], 300) }); loadCompanies(); } };
+      inp.click(); return;
+    }
+    loadCompanies();
+  } catch (err) { cshow("Could not update. Check your admin login and Firestore rules.", "err"); }
+});
+
+// ---------- categories (each belongs to one company) ----------
+const kshow = (t, c) => { $("kmsg").textContent = t; $("kmsg").className = "msg " + c; };
+const usedBy = k => productCache.filter(p => cLower(p.brand) === cLower(k.brand) && cLower(p.category) === cLower(k.name)).length;
+async function loadCategories() {
+  let snap;
+  try { snap = await getDocs(collection(db, "categories")); }
+  catch (err) { kshow("Could not load categories (" + (err.code || err.message) + "). Publish the Firestore rules in the Firebase console first.", "err"); return; }
+  categoryList = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(k => k.name && k.brand)
+    .sort((x, y) => x.brand.localeCompare(y.brand) || x.name.localeCompare(y.name));
+  $("kcount").textContent = categoryList.length;
+  $("klist").innerHTML = categoryList.map(k => `
+    <tr data-id="${k.id}" data-name="${esc(k.name)}" data-brand="${esc(k.brand)}">
+      <td><b>${esc(k.brand)}</b></td><td>${esc(k.name)}</td><td>${usedBy(k)}</td>
+      <td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-ka="rename">Rename</button><button class="sm del" data-ka="del">Delete</button></div></td>
+    </tr>`).join("") || '<tr><td colspan="4">No categories yet. Pick a company above and add its first category.</td></tr>';
+  // categories that products already use but that are not saved here yet
+  const have = new Set(categoryList.map(k => cLower(k.brand) + "|" + cLower(k.name))), miss = [];
+  productCache.forEach(p => {
+    const b = String(p.brand || "").trim(), c = String(p.category || "").trim(), key = cLower(b) + "|" + cLower(c);
+    if (b && c && !have.has(key)) { have.add(key); miss.push({ brand: b, name: c }); }
+  });
+  $("kdef").hidden = !miss.length; $("kdef").dataset.missing = JSON.stringify(miss);
+  fillCategoryList();
+}
+$("kf").addEventListener("submit", async e => {
+  e.preventDefault();
+  const brandN = $("kbrand").value;
+  if (!brandN) { kshow("Pick a company first.", "err"); return; }
+  const names = [...new Set($("kname").value.split(",").map(x => x.trim().replace(/\s+/g, " ")).filter(Boolean))]
+    .filter(n => !categoryList.some(k => cLower(k.brand) === cLower(brandN) && cLower(k.name) === cLower(n)));
+  if (!names.length) { kshow(brandN + " already has that category.", "err"); return; }
+  try {
+    const bt = writeBatch(db);
+    names.forEach(n => bt.set(doc(collection(db, "categories")), { brand: brandN, name: n, createdAt: serverTimestamp() }));
+    await bt.commit();
+    $("kname").value = ""; kshow(names.length + " categor" + (names.length > 1 ? "ies" : "y") + " added to " + brandN + ".", "ok"); loadCategories();
+  } catch (err) { kshow("Could not save. Publish the new Firestore rules first.", "err"); }
+});
+$("kdef").addEventListener("click", async () => {
+  try {
+    const miss = JSON.parse($("kdef").dataset.missing || "[]");
+    for (let i = 0; i < miss.length; i += 400) {
+      const bt = writeBatch(db);
+      miss.slice(i, i + 400).forEach(m => bt.set(doc(collection(db, "categories")), { brand: m.brand, name: m.name, createdAt: serverTimestamp() }));
+      await bt.commit();
+    }
+    kshow(miss.length + " categories added.", "ok"); loadCategories();
+  } catch (err) { kshow("Could not save. Publish the new Firestore rules first.", "err"); }
+});
+$("klist").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-ka]"); if (!b) return;
+  const tr = b.closest("tr"), id = tr.dataset.id, name = tr.dataset.name, brandN = tr.dataset.brand, r = doc(db, "categories", id);
+  try {
+    if (b.dataset.ka === "del") {
+      const n = usedBy({ brand: brandN, name });
+      if (n) { kshow(brandN + " / " + name + " still has " + n + " product" + (n > 1 ? "s" : "") + ". Delete them or move them to another category first.", "err"); return; }
+      if (!confirm("Delete " + name + " from " + brandN + "?")) return;
+      await deleteDoc(r);
+    } else {
+      const v = prompt("New category name", name); if (v === null) return;
+      const nn = v.trim().replace(/\s+/g, " "); if (!nn || nn === name) return;
+      if (categoryList.some(k => k.id !== id && cLower(k.brand) === cLower(brandN) && cLower(k.name) === cLower(nn))) { kshow("That category already exists under " + brandN + ".", "err"); return; }
+      await updateDoc(r, { name: nn });
+      // keep the products of this category attached to it
+      const ps = await getDocs(collection(db, "products"));
+      const mine = ps.docs.filter(d => cLower(d.data().brand) === cLower(brandN) && cLower(d.data().category) === cLower(name));
+      for (let i = 0; i < mine.length; i += 400) {
+        const bt = writeBatch(db); mine.slice(i, i + 400).forEach(d => bt.update(d.ref, { category: nn })); await bt.commit();
+      }
+      loadProducts();
+    }
+    loadCompanies();
+  } catch (err) { kshow("Could not update. Check your admin login and Firestore rules.", "err"); }
+});
+
+$("pf").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!$("pbrand").value) { show("Pick a company first. Add one in the Companies section if it is missing.", "err"); return; }
+  if (!$("pcat").value) { show("Pick a category. Add one for this company in the Categories section if it is missing.", "err"); return; }
+  const btn = e.target.querySelector("button.primary");
+  btn.disabled = true;
+  try {
+    await addDoc(collection(db, "products"), {
+      name: $("pname").value.trim(),
+      price: Number($("pprice").value),
+      brand: $("pbrand").value.trim(),
+      category: $("pcat").value.trim(),
+      stock: Number($("pstock").value),
+      comparePrice: Number($("pcmp").value) || 0,
+      isNew: $("pnew").checked,
+      description: $("pdesc").value.trim(),
+      image: imageData,
+      createdAt: serverTimestamp(),
+      createdBy: auth.currentUser.uid
+    });
+    e.target.reset(); imageData = ""; $("preview").style.display = "none";
+    show("Product added. It is now live on the store.", "ok");
+    loadProducts(); loadCompanies();
+  } catch (err) {
+    show("Could not add product. Make sure the photo is small and your admin access is set up.", "err");
+  }
+  btn.disabled = false;
+});
+
+const rs = n => "Rs. " + Number(n).toLocaleString();
+const lb = $("lb");
+lb.addEventListener("click", () => lb.hidden = true);
+
+async function loadAccounts() {
+  const snap = await getDocs(collection(db, "paymentAccounts"));
+  $("alist").innerHTML = snap.docs.map(d => { const a = d.data(), on = a.active !== false; return `
+    <tr data-id="${d.id}" data-on="${on}"><td>${esc(a.bankName)}</td><td>${esc(a.accountTitle)}</td><td>${esc(a.accountNumber)}</td>
+    <td><span class="pill ${on ? "confirmed" : ""}">${on ? "Active" : "Hidden"}</span></td>
+    <td style="white-space:nowrap"><button class="sm" data-act="toggle">${on ? "Hide" : "Show"}</button> <button class="sm del" data-act="del">Delete</button></td></tr>`; }).join("")
+    || '<tr><td colspan="5">No accounts yet. Add one above.</td></tr>';
+}
+$("alist").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const tr = b.closest("tr"), ref = doc(db, "paymentAccounts", tr.dataset.id);
+  try {
+    if (b.dataset.act === "del") { if (!confirm("Delete this account?")) return; await deleteDoc(ref); }
+    else await updateDoc(ref, { active: tr.dataset.on !== "true" });
+    loadAccounts();
+  } catch (err) { alert("Action failed. Check your Firestore rules."); }
+});
+$("af").addEventListener("submit", async e => {
+  e.preventDefault();
+  const m = $("amsg");
+  try {
+    await addDoc(collection(db, "paymentAccounts"), {
+      bankName: $("abank").value.trim(), accountTitle: $("atitle").value.trim(),
+      accountNumber: $("anum").value.trim(), note: $("anote").value.trim(),
+      active: true, createdAt: serverTimestamp()
+    });
+    e.target.reset(); m.textContent = "Account added."; m.className = "msg ok"; loadAccounts();
+  } catch (err) { m.textContent = "Could not add account. Check your Firestore rules."; m.className = "msg err"; }
+});
+
+async function loadOrders() {
+  const snap = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc")));
+  $("ocount").textContent = snap.size;
+  $("opend").textContent = snap.docs.filter(d => d.data().status === "pending").length;
+  $("olist").innerHTML = snap.docs.map(d => { const o = d.data(), c = o.customer || {}, p = o.payment || {}; return `
+    <div class="order" data-id="${d.id}">
+      <div class="oh"><b>#${d.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(o.status)}">${esc(o.status)}</span>${o.installation ? '<span class="pill new">Installation requested</span>' : ""}<span>${o.createdAt ? o.createdAt.toDate().toLocaleString() : ""}</span></div>
+      <div><b>${esc(c.name)}</b> &middot; ${esc(c.phone)} &middot; ${esc(o.email)}</div>
+      <div>${esc(c.address)}, ${esc(c.city)}${c.note ? " (" + esc(c.note) + ")" : ""}</div>
+      <div>${(o.items || []).map(i => esc(i.name) + " x " + i.qty).join(", ")}</div>
+      <div><b>${rs(o.total)}</b> &middot; Paid to ${esc(p.bankName)} ${esc(p.accountNumber)} &middot; Trx ID: <b>${esc(o.trxId)}</b></div>
+      ${o.screenshot ? `<img class="thumb" src="${esc(o.screenshot)}" alt="Payment screenshot">` : ""}
+      <div><button class="sm" data-st="confirmed">Confirm payment</button> <button class="sm del" data-st="rejected">Reject</button> <button class="sm" data-st="delivered">Mark delivered</button></div>
+    </div>`; }).join("") || "<p>No orders yet.</p>";
+}
+$("olist").addEventListener("click", async e => {
+  const img = e.target.closest("img.thumb");
+  if (img) { lb.querySelector("img").src = img.src; lb.hidden = false; return; }
+  const b = e.target.closest("button[data-st]"); if (!b) return;
+  try { await updateDoc(doc(db, "orders", b.closest(".order").dataset.id), { status: b.dataset.st }); loadOrders(); }
+  catch (err) { alert("Could not update order."); }
+});
+
+let impList = [], impCos = [];
+const okP = p => p && !p._skip && p.name && !isNaN(Number(p.price));
+$("impfile").addEventListener("change", async e => {
+  const m = $("impmsg"); impList = []; impCos = []; $("impgo").disabled = true;
+  try {
+    const d = JSON.parse(await e.target.files[0].text());
+    impList = (Array.isArray(d) ? d : d.products || []).filter(okP);
+    impCos = Array.isArray(d) ? [] : (d.companies || []).filter(c => c && c.name);
+    const nb = new Set([...impCos.map(c => c.name), ...impList.map(p => p.brand).filter(Boolean)].map(x => String(x).trim().toLowerCase())).size;
+    m.textContent = impList.length + " products and " + nb + " companies found. Companies and categories are created automatically. Tap Import.";
+    m.className = "msg ok";
+    $("impgo").disabled = !(impList.length || impCos.length);
+  } catch (err) { m.textContent = "That is not a valid products.json file."; m.className = "msg err"; }
+});
+$("impgo").addEventListener("click", async () => {
+  const m = $("impmsg"); $("impgo").disabled = true;
+  try {
+    const low = x => String(x || "").trim().toLowerCase();
+    // 1. companies (from the "companies" list and from each product's brand)
+    const haveCo = new Set((await getDocs(collection(db, "companies"))).docs.map(d => low(d.data().name)));
+    const coNames = new Map();
+    impCos.forEach(c => coNames.set(low(c.name), { name: String(c.name).trim(), image: c.image || "" }));
+    impList.forEach(p => { if (p.brand && !coNames.has(low(p.brand))) coNames.set(low(p.brand), { name: String(p.brand).trim(), image: "" }); });
+    const newCos = [...coNames.entries()].filter(([k]) => !haveCo.has(k)).map(([, v]) => v);
+    // 2. categories (from each company's "categories" list and from each product's category)
+    const haveK = new Set((await getDocs(collection(db, "categories"))).docs.map(d => low(d.data().brand) + "|" + low(d.data().name)));
+    const kMap = new Map();
+    const addK = (b, n) => { if (b && n) { const key = low(b) + "|" + low(n); if (!haveK.has(key) && !kMap.has(key)) kMap.set(key, { brand: String(b).trim(), name: String(n).trim() }); } };
+    impCos.forEach(c => (c.categories || []).forEach(n => addK(c.name, n)));
+    impList.forEach(p => addK(p.brand, p.category));
+    const newKs = [...kMap.values()];
+    // 3. products (a name that already exists is skipped)
+    const have = new Set((await getDocs(collection(db, "products"))).docs.map(d => low(d.data().name)));
+    const fresh = impList.filter(p => !have.has(low(p.name)));
+    const ops = [
+      ...newCos.map(c => [doc(collection(db, "companies")), { name: c.name, image: c.image, createdAt: serverTimestamp() }]),
+      ...newKs.map(k => [doc(collection(db, "categories")), { brand: k.brand, name: k.name, createdAt: serverTimestamp() }]),
+      ...fresh.map(p => [doc(collection(db, "products")), {
+        name: String(p.name).trim(), brand: String(p.brand || "").trim(), category: p.category || "Other", price: Number(p.price),
+        stock: p.stock === undefined ? 10 : Number(p.stock),
+        description: String(p.desc || p.description || "").slice(0, 200), image: p.image || "",
+        comparePrice: Number(p.comparePrice || 0), isNew: !!p.isNew,
+        createdAt: serverTimestamp(), createdBy: auth.currentUser.uid
+      }])
+    ];
+    for (let i = 0; i < ops.length; i += 400) {
+      const b = writeBatch(db);
+      ops.slice(i, i + 400).forEach(([r, d]) => b.set(r, d));
+      await b.commit();
+    }
+    m.textContent = fresh.length + " products imported (" + (impList.length - fresh.length) + " skipped, already exist). " + newCos.length + " companies and " + newKs.length + " categories created.";
+    m.className = "msg ok"; loadProducts(); loadCompanies();
+  } catch (err) { m.textContent = "Import failed (" + (err.code || err.message) + "). Check you are logged in as admin and your Firestore rules are published."; m.className = "msg err"; $("impgo").disabled = false; }
+});
+
+// Add or change a product photo from the product list
+let rowId = null;
+const rowimg = document.createElement("input"); rowimg.type = "file"; rowimg.accept = "image/*"; rowimg.hidden = true; document.body.appendChild(rowimg);
+rowimg.addEventListener("change", async () => {
+  const f = rowimg.files[0]; rowimg.value = ""; if (!f || !rowId) return;
+  try { await updateDoc(doc(db, "products", rowId), { image: await shrink(f) }); loadProducts(); }
+  catch (err) { alert("Could not save the photo."); }
+});
+
+const slug = n => String(n).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const plshow = (t, c) => { $("plmsg").textContent = t; $("plmsg").className = "msg " + c; };
+$("pnames").addEventListener("click", async () => {
+  const snap = await getDocs(collection(db, "products"));
+  const box = $("pnamebox");
+  box.value = snap.docs.map(d => slug(d.data().name) + ".jpg").sort().join("\n");
+  box.style.display = "block"; box.select();
+});
+$("plink").addEventListener("click", async () => {
+  try {
+    const snap = await getDocs(collection(db, "products"));
+    const todo = snap.docs.filter(d => !d.data().image);
+    for (let i = 0; i < todo.length; i += 400) {
+      const b = writeBatch(db);
+      todo.slice(i, i + 400).forEach(d => b.update(d.ref, { image: "products/" + slug(d.data().name) + ".jpg" }));
+      await b.commit();
+    }
+    plshow(todo.length + " products linked to products/<name>.jpg. Products that already had a photo were left alone.", "ok");
+    loadProducts();
+  } catch (err) { plshow("Could not link photos. Check you are admin and your rules are published.", "err"); }
+});
+
+let reqs = {};
+async function loadInstalls() {
+  const snap = await getDocs(query(collection(db, "installRequests"), orderBy("createdAt", "desc")));
+  $("icount").textContent = snap.size;
+  $("inew").textContent = snap.docs.filter(d => d.data().status === "new").length;
+  reqs = {}; snap.docs.forEach(d => reqs[d.id] = d.data());
+  $("ilist").innerHTML = snap.docs.map(d => { const r = d.data(); return `
+    <div class="order" data-id="${d.id}">
+      <div class="oh"><b>#${d.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(r.status)}">${esc(r.status)}</span><span>${r.createdAt ? r.createdAt.toDate().toLocaleString() : ""}</span></div>
+      <div><b>${esc(r.name)}</b> &middot; ${esc(r.phone)} &middot; ${esc(r.email)}</div>
+      <div>${esc(r.placeType)} &middot; ${esc(r.cameras)} item${r.cameras > 1 ? "s" : ""}${r.preferredDate ? " &middot; preferred " + esc(r.preferredDate) : ""}</div>
+      ${(r.items || []).map(i => `<div>&bull; ${esc(i.quantity)} x ${esc(i.name)}</div>`).join("")}
+      <div>${esc(r.address)}, ${esc(r.city)}</div>
+      ${r.notes ? `<div>Notes: ${esc(r.notes)}</div>` : ""}
+      <div><button class="sm" data-st="contacted">Contacted</button> <button class="sm" data-st="scheduled">Scheduled</button> <button class="sm" data-st="done">Done</button> <button class="sm del" data-st="cancelled">Cancel</button> <button class="sm" data-inv="open">${r.invoiceId ? "Invoice" : "Create invoice"}</button></div>
+      ${r.invoiceId ? `<div>Invoice ${esc(r.invoiceNumber)}: ${money(r.invoiceAmount)}${r.invoiceSentAt ? " &middot; sent on WhatsApp" : ""}</div>` : ""}
+      <div class="inv" hidden>
+        <div class="row"><div><label>Installation price (Rs.)</label><input type="number" min="1" step="1" class="ip" value="${esc(r.invoiceAmount || "")}"></div>
+        <div><label>Send to WhatsApp number</label><input class="iw" value="${esc(r.phone)}"></div></div>
+        <label>Invoice note (optional)</label><input class="in" maxlength="200" value="${esc(r.invoiceNotes || "")}">
+        <div style="margin-top:10px"><button class="sm" data-inv="send">Generate PDF &amp; send on WhatsApp</button> <button class="sm" data-inv="dl">Download PDF only</button></div>
+        <div class="msg im" role="alert"></div>
+      </div>
+    </div>`; }).join("") || "<p>No requests yet.</p>";
+}
+// ---------- invoices ----------
+const normPhone = (p, cc) => { let n = String(p || "").replace(/\D/g, ""); if (n.startsWith("00")) n = n.slice(2); else if (n.startsWith("0")) n = (cc || "92") + n.slice(1); return n; };
+async function buildInvoice(card, id) {
+  const r = reqs[id], price = Number(card.querySelector(".ip").value);
+  if (!(price > 0)) throw new Error("Enter the installation price.");
+  const d = new Date();
+  const inv = {
+    number: r.invoiceNumber || ("INV-" + d.toISOString().slice(0, 10).replace(/-/g, "") + "-" + id.slice(0, 4).toUpperCase()),
+    date: r.invoiceDate || d.toLocaleDateString("en-GB"),
+    customer: { name: r.name, phone: r.phone, email: r.email || "", address: r.address, city: r.city },
+    items: (r.items || []).map(i => ({ name: i.name, quantity: i.quantity })),
+    installationPrice: price, notes: card.querySelector(".in").value.trim(),
+    requestId: id, userId: r.userId
+  };
+  if (!inv.items.length) inv.items = [{ name: "CCTV installation (" + (r.cameras || 1) + " item" + (r.cameras > 1 ? "s" : "") + ")", quantity: r.cameras || 1 }];
+  return inv;
+}
+async function saveInvoice(id, inv) {
+  const r = reqs[id];
+  let invId = r.invoiceId;
+  if (invId) await setDoc(doc(db, "invoices", invId), { ...inv, createdAt: serverTimestamp() });
+  else { const ref = await addDoc(collection(db, "invoices"), { ...inv, createdAt: serverTimestamp() }); invId = ref.id; }
+  return invId;
+}
+$("ilist").addEventListener("click", async e => {
+  const ib = e.target.closest("button[data-inv]");
+  if (ib) {
+    const card = ib.closest(".order"), id = card.dataset.id, box = card.querySelector(".inv"), m = card.querySelector(".im");
+    const say = (t, c) => { m.textContent = t; m.className = "msg im " + c; };
+    if (ib.dataset.inv === "open") { box.hidden = !box.hidden; return; }
+    ib.disabled = true;
+    try {
+      const inv = await buildInvoice(card, id);
+      if (ib.dataset.inv === "dl") { (await makePdf(inv)).save(inv.number + ".pdf"); say("PDF downloaded.", "ok"); ib.disabled = false; return; }
+      say("Preparing invoice...", "ok");
+      const set = (await getDoc(doc(db, "secrets", "wasms"))).data() || {};
+      if (!set.apiKey || !set.workerUrl) throw new Error("Save your wasms.net API key and Worker URL in WhatsApp settings first.");
+      const to = normPhone(card.querySelector(".iw").value, set.countryCode);
+      if (to.length < 10) throw new Error("Enter a valid WhatsApp number with country code.");
+      const invId = await saveInvoice(id, inv);
+      const link = location.origin + "/invoice.html?id=" + invId;
+      // upload the PDF so it can be sent as a document (needs Firebase Storage); otherwise send the link only
+      let pdfUrl = "";
+      try {
+        const pdf = await makePdf(inv);
+        const f = sref(storage, "invoices/" + invId + ".pdf");
+        await uploadBytes(f, pdf.output("blob"), { contentType: "application/pdf" });
+        pdfUrl = await getDownloadURL(f);
+      } catch (err) { console.warn("PDF upload failed", err); }
+      const text = "Hello " + r.name + ", your CCTV PITS installation invoice " + inv.number + " is ready.\nInstallation charges: " + money(inv.installationPrice) + (inv.notes ? "\n" + inv.notes : "") + "\nView or download: " + link + "\nThank you!";
+      const body = { to, message: text };
+      if (pdfUrl) Object.assign(body, { media_url: pdfUrl, media_type: "document", filename: inv.number + ".pdf" });
+      const res = await fetch(set.workerUrl, { method: "POST", headers: { Authorization: "Bearer " + await auth.currentUser.getIdToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || !out.ok) throw new Error("WhatsApp: " + (out.error || res.status));
+      await updateDoc(doc(db, "installRequests", id), { invoiceId: invId, invoiceNumber: inv.number, invoiceDate: inv.date, invoiceAmount: inv.installationPrice, invoiceNotes: inv.notes, invoiceSentAt: serverTimestamp() });
+      say(pdfUrl ? "Invoice PDF sent on WhatsApp." : "Invoice link sent on WhatsApp (PDF file upload needs Firebase Storage).", "ok");
+      setTimeout(loadInstalls, 1500);
+    } catch (err) { say(err.message || "Could not send the invoice.", "err"); }
+    ib.disabled = false; return;
+  }
+  const b = e.target.closest("button[data-st]"); if (!b) return;
+  try { await updateDoc(doc(db, "installRequests", b.closest(".order").dataset.id), { status: b.dataset.st }); loadInstalls(); }
+  catch (err) { alert("Could not update request."); }
+});
+
+async function loadWa() { try { const s = (await getDoc(doc(db, "secrets", "wasms"))).data() || {}; $("wcc").value = s.countryCode || "92"; $("wid").value = s.accountId || ""; $("wurl").value = s.workerUrl || ""; if (s.apiKey) $("wkey").placeholder = "Saved. Type a new key to replace it"; } catch (e) {} }
+$("wsave").onclick = async () => {
+  const m = $("wmsg"), data = { countryCode: $("wcc").value.replace(/\D/g, "") || "92", accountId: $("wid").value.trim(), workerUrl: $("wurl").value.trim().replace(/\/+$/, "") };
+  if ($("wkey").value.trim()) data.apiKey = $("wkey").value.trim();
+  try { await setDoc(doc(db, "secrets", "wasms"), data, { merge: true }); $("wkey").value = ""; m.textContent = "Saved."; m.className = "msg ok"; loadWa(); }
+  catch (e) { m.textContent = "Could not save. Publish the new Firestore rules first."; m.className = "msg err"; }
+};
+onAuthStateChanged(auth, async u => {
+  if (!u) return location.replace("login.html");
+  let admin = false;
+  try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
+  if (!admin) return location.replace("dashboard.html");
+  $("main").hidden = false;
+  loadServices(); loadProducts(); loadCompanies(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
+});
+</script>
+</body>
+</html>
