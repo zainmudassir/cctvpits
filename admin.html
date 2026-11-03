@@ -232,6 +232,7 @@ async function loadServices() {
   $("scount").textContent = snap.size; $("sdef").hidden = snap.size > 0;
   $("slist").innerHTML = snap.docs.map(d => { const v = d.data(); return `<tr data-id="${d.id}"><td>${v.image ? `<img src="${esc(v.image)}" alt="">` : ""}</td><td><b>${esc(v.title)}</b><br>${esc(v.description || "")}</td><td>${v.order}</td><td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-sa="edit">Edit</button><button class="sm" data-sa="photo">Photo</button><button class="sm del" data-sa="del">Delete</button></div></td></tr>`; }).join("") || '<tr><td colspan="4">No services yet. The home page shows the 5 default services until you add your own.</td></tr>';
 }
+const shrinkW = (file, max = 640, q = 0.72) => new Promise((res, rej) => { const img = new Image(), url = URL.createObjectURL(file); img.onload = () => { const s = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas"); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); let d = c.toDataURL("image/webp", q); if (!d.startsWith("data:image/webp")) d = c.toDataURL("image/jpeg", q); res(d); }; img.onerror = rej; img.src = url; });
 let editId = null;
 const sval = () => ({ title: $("stitle").value.trim(), heading: $("sheading").value.trim() || $("stitle").value.trim(), description: $("sdesc").value.trim(), order: Number($("sorder").value) || 1, points: [1, 2, 3, 4, 5].map(i => $("sp" + i).value.trim()).filter(Boolean) });
 const sreset = () => { editId = null; $("sf2").reset(); $("sorder").value = 1; $("sbtn").textContent = "Add service"; $("scancel").hidden = true; };
@@ -240,8 +241,8 @@ $("sf2").onsubmit = async e => {
   e.preventDefault();
   try {
     const f = $("simg").files[0], v = sval();
-    if (editId) { if (f) v.image = await shrink(f, 700); await updateDoc(doc(db, "services", editId), v); smsg("Service updated.", "ok"); }
-    else { await addDoc(collection(db, "services"), { ...v, image: f ? await shrink(f, 700) : "", createdAt: serverTimestamp() }); smsg("Service added.", "ok"); }
+    if (editId) { if (f) v.image = await shrinkW(f); await updateDoc(doc(db, "services", editId), v); smsg("Service updated.", "ok"); }
+    else { await addDoc(collection(db, "services"), { ...v, image: f ? await shrinkW(f) : "", createdAt: serverTimestamp() }); smsg("Service added.", "ok"); }
     sreset(); loadServices();
   } catch (err) { smsg("Could not save. Check your admin login and Firestore rules.", "err"); }
 };
@@ -263,7 +264,7 @@ $("slist").addEventListener("click", async e => {
       $("stitle").scrollIntoView({ behavior: "smooth", block: "center" }); return;
     } else {
       const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
-      inp.onchange = async () => { if (inp.files[0]) { await updateDoc(r, { image: await shrink(inp.files[0], 700) }); loadServices(); } };
+      inp.onchange = async () => { if (inp.files[0]) { await updateDoc(r, { image: await shrinkW(inp.files[0]) }); loadServices(); } };
       inp.click(); return;
     }
     loadServices();
