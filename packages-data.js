@@ -7,5 +7,5 @@ export const PACKAGES = {
   "16": { name: "16 Camera Package", cameras: 16, price: 0, desc: "16 cameras, 16-channel recorder, installation and setup" },
   "32": { name: "32 Camera Package", cameras: 32, price: 0, desc: "32 cameras, 32-channel recorder, installation and setup" }
 };
-export const WORKER_URL = "cheapanel-worker.pages.dev";
+export const WORKER_URL = "https://cctvpits-wa.zainmudassir15.workers.dev/";
 export const BUSINESS_WA = "923053871991";

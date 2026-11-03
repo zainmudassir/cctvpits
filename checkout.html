@@ -109,10 +109,9 @@
   <div id="bad" class="box" hidden><h2>Choose a package first</h2><p class="sub">Pick one of our camera packages and press "Get this package".</p><a class="btn" href="packages/">View packages</a></div>
 </main>
 <script type="module">
-import { auth, db, storage } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import { collection, addDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
-import { ref as sref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-storage.js";
 import { makePdf, money } from "./invoice.js";
 import { PACKAGES, WORKER_URL, BUSINESS_WA } from "./packages-data.js";
 
@@ -186,17 +185,27 @@ else {
     }
   });
 
+  // Same method as the admin test PDF: the PDF is stored as a small Firestore document (invoicePdfs)
+  // and the Worker serves it at <worker>/pdf/<id>. No Firebase Storage, so no CORS problem.
+  const workerBase = () => (/^https?:\/\//i.test(WORKER_URL) ? WORKER_URL : "https://" + WORKER_URL).replace(/\/+$/, "");
+  async function hostPdf(pdf) {
+    const bytes = new Uint8Array(pdf.output("arraybuffer")); let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    const data = btoa(bin);
+    if (data.length > 900000) throw new Error("The PDF is too large to send (" + Math.round(data.length / 1024) + " KB).");
+    const ref = await addDoc(collection(db, "invoicePdfs"), { data, createdAt: serverTimestamp() });
+    return workerBase() + "/pdf/" + ref.id;
+  }
+
   async function sendWhatsApp(reqId, phone) {
     const box = $("sendmsg");
     if (!WORKER_URL) return say(box, "Download your invoice above. Our team will also send it to your WhatsApp.", "ok");
     say(box, "Sending the invoice to your WhatsApp...", "ok");
     try {
-      const f = sref(storage, "invoices/" + reqId + ".pdf");
-      await uploadBytes(f, pdfDoc.output("blob"), { contentType: "application/pdf" });
-      const pdfUrl = await getDownloadURL(f);
+      const pdfUrl = await hostPdf(pdfDoc);
       const body = { to: normPhone(phone), message: "Hello " + inv.customer.name + ", thank you for choosing CCTV PITS. Your invoice " + inv.number + " for the " + pkg.name + " is attached. We will contact you to confirm the final price.",
         media_url: pdfUrl, media_type: "document", filename: inv.number + ".pdf" };
-      const res = await fetch(WORKER_URL, { method: "POST", headers: { Authorization: "Bearer " + await user.getIdToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const res = await fetch(workerBase(), { method: "POST", headers: { Authorization: "Bearer " + await user.getIdToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const out = await res.json().catch(() => ({}));
       if (!res.ok || !out.ok) throw new Error(out.error || res.status);
       say(box, "Invoice sent to your WhatsApp.", "ok");
