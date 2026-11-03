@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin.html
-Disallow: /dashboard.html
-Disallow: /checkout.html
-Disallow: /invoice.html
-Sitemap: https://cctvpits.store/sitemap.xml
