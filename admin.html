@@ -30,13 +30,15 @@
         <div><label for="stitle">Service name</label><input id="stitle" required maxlength="60" placeholder="For example: Electric fencing"></div>
         <div><label for="sorder">Position (1 is first)</label><input id="sorder" type="number" min="1" step="1" value="1"></div>
       </div>
-      <label for="sdesc">Short description</label><input id="sdesc" maxlength="140" placeholder="One short sentence">
+      <label for="sheading">Heading (shown on the service page)</label><input id="sheading" maxlength="80" placeholder="For example: CCTV Installation">
+      <label for="sdesc">Paragraph</label><textarea id="sdesc" maxlength="700" placeholder="2 to 3 sentences about this service"></textarea>
+      <label>Five points</label><div class="pts"><input id="sp1" maxlength="70" placeholder="Point 1"><input id="sp2" maxlength="70" placeholder="Point 2"><input id="sp3" maxlength="70" placeholder="Point 3"><input id="sp4" maxlength="70" placeholder="Point 4"><input id="sp5" maxlength="70" placeholder="Point 5"></div>
       <label for="simg">Photo (optional)</label><input id="simg" type="file" accept="image/*">
-      <button class="primary" type="submit" style="max-width:200px;margin-top:10px">Add service</button>
+      <div class="sfoot"><button class="primary" id="sbtn" type="submit" style="max-width:200px;margin-top:0">Add service</button><button class="sm" id="scancel" type="button" hidden>Cancel edit</button></div>
       <div id="smsg" class="msg" role="alert"></div>
     </form>
     <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Service</th><th>Position</th><th></th></tr></thead><tbody id="slist"></tbody></table></div>
-    <button class="sm" id="sdef" type="button" hidden>Add the 5 default services</button>
+    <button class="sm" id="sdef" type="button" hidden>Add the 8 default services</button>
   </div>
 
   <div class="box"><h2>Companies (<span id="ccount">0</span>)</h2>
@@ -223,23 +225,28 @@ async function loadProducts() {
   updSel();
 }
 
-const DEF_SVC = [["Home CCTV", "Indoor and outdoor cameras set up so you can watch live on your phone."], ["Shop and office", "Multi-camera systems with recording, planned around your space."], ["Wi-Fi cameras", "Plug-in cameras with mobile alerts and cloud or card storage."], ["Locks and sensors", "Smart locks, door sensors and alarms installed and connected."], ["Repair and upgrade", "We fix and improve your existing camera system."]];
+const DEF_SVC = [{"title": "Installation", "heading": "CCTV Installation", "description": "At CCTV PITS, we specialize in providing reliable CCTV solutions to safeguard your home or business. Whether you’re looking for a basic surveillance setup or a fully integrated security system, our expert team will ensure you have the right solution for your needs.", "points": ["Site Assessment & Consultation", "Customized Security Solutions", "High-Quality Cameras", "Installation & Setup", "Remote Viewing Access"]}, {"title": "Maintenance", "heading": "CCTV Maintenance", "description": "A CCTV system only protects you when it is working. We inspect, clean and repair existing systems so your cameras keep recording clearly and nothing fails when you need the footage.", "points": ["Camera Lens & Housing Cleaning", "Cable & Connector Checks", "Recorder & Hard Disk Health Check", "Fault Finding & Repair", "Replacement of Faulty Parts"]}, {"title": "Monitoring", "heading": "Monitoring Services", "description": "Keep an eye on your home, shop or office from wherever you are. We set up live viewing and playback on your phone and computer so you can check your property at any time.", "points": ["Live Viewing on Your Phone", "Playback of Recorded Footage", "Motion Alert Setup", "Multiple Camera & Site Viewing", "User Access & Password Setup"]}, {"title": "System Design", "heading": "System Design", "description": "A good CCTV system starts with a good plan. We study your property and design a layout that covers the important areas without wasting cameras or cable.", "points": ["Site Survey", "Camera Placement Planning", "Camera Type & Number Selection", "Cabling & Power Layout", "Recorder & Storage Sizing"]}, {"title": "Storage and Backup", "heading": "Storage and Backup", "description": "Footage is only useful if it is saved and can be found when you need it. We size your storage to match your cameras and help you keep copies of important recordings safe.", "points": ["Hard Disk Selection & Sizing", "Recording Schedule Setup", "Recording Days Planning", "Backup to External Drive", "Playback & Export Guidance"]}, {"title": "System Upgrade", "heading": "System Upgrade", "description": "You do not always need to replace everything. We upgrade existing CCTV systems with better cameras, recorders and storage, and add more cameras to what you already have.", "points": ["Upgrade to HD or IP Cameras", "Adding More Cameras", "Recorder Replacement", "Storage Upgrade", "Firmware & Software Updates"]}, {"title": "System Configuration", "heading": "System Configuration", "description": "The right settings make a big difference to how well your cameras work. We configure your recorder, cameras and network so everything records properly and is easy to use.", "points": ["Recorder & Camera Setup", "Network & Remote Access Setup", "Resolution & Recording Settings", "Motion Detection Zones", "User Accounts & Passwords"]}, {"title": "System Consultation", "heading": "System Consultation", "description": "Not sure what you need? We visit your place, listen to your needs and recommend a system that fits your space and budget, with no pressure to buy.", "points": ["Free Estimation", "Site Visit & Assessment", "Camera Type Advice (HD, IP or Wi-Fi)", "Number of Cameras Needed", "Brand & Package Recommendations"]}];
 const smsg = (t, c) => { $("smsg").textContent = t; $("smsg").className = "msg " + c; };
 async function loadServices() {
   const snap = await getDocs(query(collection(db, "services"), orderBy("order")));
   $("scount").textContent = snap.size; $("sdef").hidden = snap.size > 0;
   $("slist").innerHTML = snap.docs.map(d => { const v = d.data(); return `<tr data-id="${d.id}"><td>${v.image ? `<img src="${esc(v.image)}" alt="">` : ""}</td><td><b>${esc(v.title)}</b><br>${esc(v.description || "")}</td><td>${v.order}</td><td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-sa="edit">Edit</button><button class="sm" data-sa="photo">Photo</button><button class="sm del" data-sa="del">Delete</button></div></td></tr>`; }).join("") || '<tr><td colspan="4">No services yet. The home page shows the 5 default services until you add your own.</td></tr>';
 }
+let editId = null;
+const sval = () => ({ title: $("stitle").value.trim(), heading: $("sheading").value.trim() || $("stitle").value.trim(), description: $("sdesc").value.trim(), order: Number($("sorder").value) || 1, points: [1, 2, 3, 4, 5].map(i => $("sp" + i).value.trim()).filter(Boolean) });
+const sreset = () => { editId = null; $("sf2").reset(); $("sorder").value = 1; $("sbtn").textContent = "Add service"; $("scancel").hidden = true; };
+$("scancel").onclick = sreset;
 $("sf2").onsubmit = async e => {
   e.preventDefault();
   try {
-    const f = $("simg").files[0];
-    await addDoc(collection(db, "services"), { title: $("stitle").value.trim(), description: $("sdesc").value.trim(), order: Number($("sorder").value) || 1, image: f ? await shrink(f, 700) : "", createdAt: serverTimestamp() });
-    e.target.reset(); $("sorder").value = 1; smsg("Service added.", "ok"); loadServices();
-  } catch (err) { smsg("Could not save. Publish the new Firestore rules first.", "err"); }
+    const f = $("simg").files[0], v = sval();
+    if (editId) { if (f) v.image = await shrink(f, 700); await updateDoc(doc(db, "services", editId), v); smsg("Service updated.", "ok"); }
+    else { await addDoc(collection(db, "services"), { ...v, image: f ? await shrink(f, 700) : "", createdAt: serverTimestamp() }); smsg("Service added.", "ok"); }
+    sreset(); loadServices();
+  } catch (err) { smsg("Could not save. Check your admin login and Firestore rules.", "err"); }
 };
 $("sdef").onclick = async () => {
-  try { for (let i = 0; i < DEF_SVC.length; i++) await addDoc(collection(db, "services"), { title: DEF_SVC[i][0], description: DEF_SVC[i][1], order: i + 1, image: "", createdAt: serverTimestamp() }); loadServices(); }
+  try { for (let i = 0; i < DEF_SVC.length; i++) await addDoc(collection(db, "services"), { ...DEF_SVC[i], order: i + 1, image: "", createdAt: serverTimestamp() }); loadServices(); }
   catch (err) { smsg("Could not save. Publish the new Firestore rules first.", "err"); }
 };
 $("slist").addEventListener("click", async e => {
@@ -248,10 +255,12 @@ $("slist").addEventListener("click", async e => {
   try {
     if (b.dataset.sa === "del") { if (!confirm("Delete this service?")) return; await deleteDoc(r); }
     else if (b.dataset.sa === "edit") {
-      const cur = (await getDoc(r)).data(), t = prompt("Service name", cur.title); if (t === null) return;
-      const d = prompt("Short description", cur.description || ""); if (d === null) return;
-      const o = prompt("Position (1 is first)", cur.order); if (o === null) return;
-      await updateDoc(r, { title: t.trim() || cur.title, description: d.trim(), order: Number(o) || cur.order });
+      const cur = (await getDoc(r)).data(); editId = id;
+      $("stitle").value = cur.title || ""; $("sheading").value = cur.heading || ""; $("sdesc").value = cur.description || ""; $("sorder").value = cur.order || 1;
+      [1, 2, 3, 4, 5].forEach(i => $("sp" + i).value = (cur.points || [])[i - 1] || "");
+      $("sbtn").textContent = "Save changes"; $("scancel").hidden = false;
+      smsg("Editing this service. Change the fields, then click Save changes (leave Photo empty to keep the current one).", "ok");
+      $("stitle").scrollIntoView({ behavior: "smooth", block: "center" }); return;
     } else {
       const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
       inp.onchange = async () => { if (inp.files[0]) { await updateDoc(r, { image: await shrink(inp.files[0], 700) }); loadServices(); } };
@@ -790,6 +799,49 @@ onAuthStateChanged(auth, async u => {
   $("main").hidden = false;
   loadServices(); loadProducts(); loadCompanies(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
 });
+</script>
+<script>
+(function () {
+  var main = document.getElementById("main"); if (!main) return;
+  var T = [["dash", "Dashboard", []], ["orders", "Orders", ["Orders"]], ["installs", "Installation requests", ["Installation requests"]],
+    ["products", "Products", ["Add product", "Import products", "Product photos", "Products"]], ["catalog", "Brands & categories", ["Companies", "Categories"]],
+    ["services", "Services", ["Services"]], ["users", "Users", ["Registered users"]], ["settings", "Settings", ["Payment settings", "WhatsApp settings"]]];
+  var S = [["Orders", "ocount", "orders"], ["Pending orders", "opend", "orders"], ["Install requests", "icount", "installs"], ["New requests", "inew", "installs"],
+    ["Products", "pcount", "products"], ["Services", "scount", "services"], ["Brands", "ccount", "catalog"], ["Users", "ucount", "users"]];
+  var boxes = [].slice.call(main.querySelectorAll(":scope > .box")), wrap = document.createElement("div"), side = document.createElement("nav"), body = document.createElement("div"), panels = {};
+  wrap.className = "adm"; side.className = "adm-side"; main.classList.add("adm-wrap");
+  T.forEach(function (t) {
+    var p = document.createElement("section"); p.className = "adm-panel"; p.hidden = true; p.id = "adm-" + t[0]; panels[t[0]] = p; body.appendChild(p);
+    var b = document.createElement("button"); b.type = "button"; b.dataset.t = t[0]; b.innerHTML = "<span>" + t[1] + "</span>"; side.appendChild(b);
+  });
+  var st = document.createElement("div"); st.className = "stats";
+  st.innerHTML = S.map(function (s) { return '<div class="stat" data-go="' + s[2] + '"><span data-src="' + s[1] + '">0</span><small>' + s[0] + "</small></div>"; }).join("");
+  panels.dash.appendChild(st);
+  boxes.forEach(function (bx) {
+    var h = (bx.querySelector("h2") || {}).textContent || "", dest = "settings";
+    T.forEach(function (t) { t[2].forEach(function (n) { if (h.trim().indexOf(n) === 0 && !(n === "Products" && /^Product photos/.test(h.trim()))) dest = t[0]; }); });
+    panels[dest].appendChild(bx);
+  });
+  var anchor = main.querySelector(":scope > .sub") || main.querySelector("h1"); anchor.after(wrap); wrap.appendChild(side); wrap.appendChild(body);
+  function show(id) {
+    if (!panels[id]) id = "dash";
+    Object.keys(panels).forEach(function (k) { panels[k].hidden = k !== id; });
+    [].forEach.call(side.children, function (b) { b.classList.toggle("on", b.dataset.t === id); });
+    if (history.replaceState) history.replaceState(null, "", "#" + id);
+  }
+  function val(id) { var e = document.getElementById(id); return e ? e.textContent : "0"; }
+  function tick() {
+    [].forEach.call(st.querySelectorAll("[data-src]"), function (e) { e.textContent = val(e.dataset.src); });
+    [["orders", "opend"], ["installs", "inew"]].forEach(function (x) {
+      var b = side.querySelector('[data-t="' + x[0] + '"]'), n = Number(val(x[1])) || 0, old = b.querySelector("b");
+      if (old) old.remove(); if (n > 0) b.insertAdjacentHTML("beforeend", "<b>" + n + "</b>");
+    });
+  }
+  side.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) show(b.dataset.t); });
+  st.addEventListener("click", function (e) { var c = e.target.closest(".stat"); if (c) show(c.dataset.go); });
+  addEventListener("hashchange", function () { show(location.hash.slice(1)); });
+  window.admShow = show; show(location.hash.slice(1)); setInterval(tick, 1000); tick();
+})();
 </script>
 </body>
 </html>
