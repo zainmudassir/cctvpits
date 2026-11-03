@@ -178,8 +178,6 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import { setDoc, deleteField, writeBatch, doc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
-import { storage } from "./firebase.js";
-import { ref as sref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-storage.js";
 import { makePdf, money } from "./invoice.js";
 
 const $ = id => document.getElementById(id);
@@ -746,6 +744,16 @@ async function loadInstalls() {
       </div>
     </div>`; }).join("") || "<p>No requests yet.</p>";
 }
+// ---------- PDF hosting (no Firebase Storage needed) ----------
+// The PDF is saved as a small Firestore document; the Worker serves it at <workerUrl>/pdf/<id> so wasms.net can fetch it.
+async function hostPdf(pdf, workerUrl) {
+  const bytes = new Uint8Array(pdf.output("arraybuffer")); let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  const data = btoa(bin);
+  if (data.length > 900000) throw new Error("The PDF is too large to send (" + Math.round(data.length / 1024) + " KB).");
+  const ref = await addDoc(collection(db, "invoicePdfs"), { data, createdAt: serverTimestamp() });
+  return workerUrl.replace(/\/+$/, "") + "/pdf/" + ref.id;
+}
 // ---------- invoices ----------
 const normPhone = (p, cc) => { let n = String(p || "").replace(/\D/g, ""); if (n.startsWith("00")) n = n.slice(2); else if (n.startsWith("0")) n = (cc || "92") + n.slice(1); return n; };
 async function buildInvoice(card, id) {
@@ -788,14 +796,10 @@ $("ilist").addEventListener("click", async e => {
       if (to.length < 10) throw new Error("Enter a valid WhatsApp number with country code.");
       const invId = await saveInvoice(id, inv);
       const link = location.origin + "/invoice.html?id=" + invId;
-      // upload the PDF so it can be sent as a document (needs Firebase Storage); otherwise send the link only
+      // save the PDF so it can be sent as a document; otherwise send the link only
       let pdfUrl = "";
-      try {
-        const pdf = await makePdf(inv);
-        const f = sref(storage, "invoices/" + invId + ".pdf");
-        await uploadBytes(f, pdf.output("blob"), { contentType: "application/pdf" });
-        pdfUrl = await getDownloadURL(f);
-      } catch (err) { console.warn("PDF upload failed", err); }
+      try { pdfUrl = await hostPdf(await makePdf(inv), set.workerUrl); }
+      catch (err) { console.warn("PDF hosting failed", err); }
       const text = "Hello " + r.name + ", your CCTV PITS installation invoice " + inv.number + " is ready.\nInstallation charges: " + money(inv.installationPrice) + (inv.notes ? "\n" + inv.notes : "") + "\nView or download: " + link + "\nThank you!";
       const body = { to, message: text };
       if (pdfUrl) Object.assign(body, { media_url: pdfUrl, media_type: "document", filename: inv.number + ".pdf" });
@@ -803,7 +807,7 @@ $("ilist").addEventListener("click", async e => {
       const out = await res.json().catch(() => ({}));
       if (!res.ok || !out.ok) throw new Error("WhatsApp: " + (out.error || res.status));
       await updateDoc(doc(db, "installRequests", id), { invoiceId: invId, invoiceNumber: inv.number, invoiceDate: inv.date, invoiceAmount: inv.installationPrice, invoiceNotes: inv.notes, invoiceSentAt: serverTimestamp() });
-      say(pdfUrl ? "Invoice PDF sent on WhatsApp." : "Invoice link sent on WhatsApp (PDF file upload needs Firebase Storage).", "ok");
+      say(pdfUrl ? "Invoice PDF sent on WhatsApp." : "Invoice link sent on WhatsApp (could not save the PDF file, check the invoicePdfs Firestore rule).", "ok");
       setTimeout(loadInstalls, 1500);
     } catch (err) { say(err.message || "Could not send the invoice.", "err"); }
     ib.disabled = false; return;
@@ -843,11 +847,8 @@ async function sendTest(kind) {
       };
       const pdf = await makePdf(inv);
       let url;
-      try {
-        const f = sref(storage, "invoices/test-" + Date.now() + ".pdf");
-        await uploadBytes(f, pdf.output("blob"), { contentType: "application/pdf" });
-        url = await getDownloadURL(f);
-      } catch (err) { throw new Error("Could not upload the test PDF (" + (err.code || err.message) + "). Check Firebase Storage and its rules."); }
+      try { url = await hostPdf(pdf, set.workerUrl); }
+      catch (err) { throw new Error("Could not save the test PDF (" + (err.code || err.message) + "). Add the invoicePdfs rule to your Firestore rules and publish."); }
       body.message = "Test PDF from CCTV PITS admin.";
       Object.assign(body, { media_url: url, media_type: "document", filename: inv.number + ".pdf" });
     }
