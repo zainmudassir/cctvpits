@@ -108,6 +108,12 @@
     <label for="wid">WhatsApp account ID (optional)</label><input id="wid" placeholder="Leave empty to use the first connected number">
     <button class="primary" id="wsave" type="button" style="max-width:200px;margin-top:12px">Save settings</button>
     <div id="wmsg" class="msg" role="alert"></div>
+    <hr style="border:0;border-top:1px solid #e3e3e3;margin:20px 0 4px">
+    <h3 style="margin:14px 0 4px;font-size:16px">Send a test</h3>
+    <p class="sub" style="margin-top:0">Check that WhatsApp sending works. Save your settings above first.</p>
+    <label for="wtest">Send test to (WhatsApp number)</label><input id="wtest" placeholder="03xx xxxxxxx or 923xxxxxxxxx" inputmode="tel">
+    <div style="margin-top:12px"><button class="sm" id="wtestmsg" type="button">Send test message</button> <button class="sm" id="wtestpdf" type="button">Send test PDF</button></div>
+    <div id="wtmsg" class="msg" role="alert"></div>
   </div>
 
   <div class="box"><h2>Installation requests (<span id="icount">0</span>, <span id="inew">0</span> new)</h2><div id="ilist">Loading...</div></div>
@@ -813,6 +819,47 @@ $("wsave").onclick = async () => {
   try { await setDoc(doc(db, "secrets", "wasms"), data, { merge: true }); $("wkey").value = ""; m.textContent = "Saved."; m.className = "msg ok"; loadWa(); }
   catch (e) { m.textContent = "Could not save. Publish the new Firestore rules first."; m.className = "msg err"; }
 };
+// ---------- WhatsApp test ----------
+async function sendTest(kind) {
+  const m = $("wtmsg"), btns = [$("wtestmsg"), $("wtestpdf")];
+  const say = (t, c) => { m.textContent = t; m.className = "msg " + c; };
+  btns.forEach(b => b.disabled = true);
+  try {
+    const set = (await getDoc(doc(db, "secrets", "wasms"))).data() || {};
+    if (!set.apiKey || !set.workerUrl) throw new Error("Save your wasms.net API key and Worker URL first.");
+    const to = normPhone($("wtest").value, set.countryCode);
+    if (to.length < 10) throw new Error("Enter a valid WhatsApp number to send the test to.");
+    const body = { to, message: "Test message from CCTV PITS admin. WhatsApp sending is working." };
+    if (kind === "pdf") {
+      say("Creating test PDF...", "ok");
+      const d = new Date();
+      const inv = {
+        number: "TEST-" + d.toISOString().slice(0, 10).replace(/-/g, ""), date: d.toLocaleDateString("en-GB"),
+        customer: { name: "Test Customer", phone: to, email: "test@example.com", address: "Test address", city: "Gujranwala" },
+        site: { type: "Home", areaValue: 5, areaUnit: "marla" },
+        items: [{ name: "CCTV camera (sample)", desc: "Sample line for testing", quantity: 2, unitPrice: 5000 }, { name: "Installation charges", desc: "", quantity: 1, unitPrice: 3000 }],
+        installationPrice: 13000, notes: "This is a test invoice."
+      };
+      const pdf = await makePdf(inv);
+      let url;
+      try {
+        const f = sref(storage, "invoices/test-" + Date.now() + ".pdf");
+        await uploadBytes(f, pdf.output("blob"), { contentType: "application/pdf" });
+        url = await getDownloadURL(f);
+      } catch (err) { throw new Error("Could not upload the test PDF (" + (err.code || err.message) + "). Check Firebase Storage and its rules."); }
+      body.message = "Test PDF from CCTV PITS admin.";
+      Object.assign(body, { media_url: url, media_type: "document", filename: inv.number + ".pdf" });
+    }
+    say("Sending...", "ok");
+    const res = await fetch(set.workerUrl, { method: "POST", headers: { Authorization: "Bearer " + await auth.currentUser.getIdToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok || !out.ok) throw new Error("WhatsApp: " + (out.error || res.status));
+    say(kind === "pdf" ? "Test PDF sent." : "Test message sent.", "ok");
+  } catch (err) { say(err.message || "Could not send the test.", "err"); }
+  btns.forEach(b => b.disabled = false);
+}
+$("wtestmsg").onclick = () => sendTest("msg");
+$("wtestpdf").onclick = () => sendTest("pdf");
 onAuthStateChanged(auth, async u => {
   if (!u) return location.replace("login.html");
   let admin = false;
