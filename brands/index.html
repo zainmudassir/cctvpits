@@ -102,7 +102,9 @@
       @media (max-width: 575px) { .brand-grid { grid-template-columns: 1fr; } }
 
     </style>
-  </head>
+  <script>window.__brands=fetch("https://firestore.googleapis.com/v1/projects/cctv-pits/databases/(default)/documents/companies?pageSize=100&orderBy=name&mask.fieldPaths=name&key=AIzaSyBI8ye784CeFUEhpnZ-azZGGYn6xO0QH5w").catch(function(){return null});</script>
+<style id="brand-hide">.elementor-element-9fa091b{visibility:hidden;animation:brandshow 0s 2.5s forwards}@keyframes brandshow{to{visibility:visible}}</style>
+</head>
 
   <body class="wp-singular page-template page-template-elementor_header_footer page page-id-1727 wp-embed-responsive wp-theme-ucam ehf-header ehf-footer ehf-template-ucam ehf-stylesheet-ucam elementor-default elementor-template-full-width elementor-kit-7 elementor-page elementor-page-1727">
 
@@ -1253,5 +1255,6 @@ CAMERA PACKAGES
     <script id="ucam-main-js" src="../wp-content/themes/ucam/assets/js/main.js?ver=1.0.0"></script>
     <script id="skrollr-js" src="../wp-content/themes/ucam/assets/js/skrollr.min.js"></script>
   <script type="module" src="/account-link.js"></script>
+  <script type="module" src="/brands-render.js"></script>
 </body>
 </html>
