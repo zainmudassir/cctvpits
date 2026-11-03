@@ -105,6 +105,7 @@
     <div class="row"><div><label for="wkey">API key (wasms_...)</label><input id="wkey" type="password" autocomplete="off" placeholder="Leave empty to keep the saved key"></div>
     <div><label for="wcc">Default country code</label><input id="wcc" value="92"></div></div>
     <label for="wurl">Worker URL</label><input id="wurl" placeholder="https://cctvpits-wa.yourname.workers.dev">
+    <label for="wsend">wasms.net send address (from their API docs)</label><input id="wsend" placeholder="https://...">
     <label for="wid">WhatsApp account ID (optional)</label><input id="wid" placeholder="Leave empty to use the first connected number">
     <button class="primary" id="wsave" type="button" style="max-width:200px;margin-top:12px">Save settings</button>
     <div id="wmsg" class="msg" role="alert"></div>
@@ -812,9 +813,9 @@ $("ilist").addEventListener("click", async e => {
   catch (err) { alert("Could not update request."); }
 });
 
-async function loadWa() { try { const s = (await getDoc(doc(db, "secrets", "wasms"))).data() || {}; $("wcc").value = s.countryCode || "92"; $("wid").value = s.accountId || ""; $("wurl").value = s.workerUrl || ""; if (s.apiKey) $("wkey").placeholder = "Saved. Type a new key to replace it"; } catch (e) {} }
+async function loadWa() { try { const s = (await getDoc(doc(db, "secrets", "wasms"))).data() || {}; $("wcc").value = s.countryCode || "92"; $("wid").value = s.accountId || ""; $("wsend").value = s.sendUrl || ""; $("wurl").value = s.workerUrl || ""; if (s.apiKey) $("wkey").placeholder = "Saved. Type a new key to replace it"; } catch (e) {} }
 $("wsave").onclick = async () => {
-  const m = $("wmsg"), data = { countryCode: $("wcc").value.replace(/\D/g, "") || "92", accountId: $("wid").value.trim(), workerUrl: $("wurl").value.trim().replace(/\/+$/, "") };
+  const m = $("wmsg"), data = { countryCode: $("wcc").value.replace(/\D/g, "") || "92", accountId: $("wid").value.trim(), sendUrl: $("wsend").value.trim(), workerUrl: $("wurl").value.trim().replace(/\/+$/, "") };
   if ($("wkey").value.trim()) data.apiKey = $("wkey").value.trim();
   try { await setDoc(doc(db, "secrets", "wasms"), data, { merge: true }); $("wkey").value = ""; m.textContent = "Saved."; m.className = "msg ok"; loadWa(); }
   catch (e) { m.textContent = "Could not save. Publish the new Firestore rules first."; m.className = "msg err"; }
@@ -851,7 +852,9 @@ async function sendTest(kind) {
       Object.assign(body, { media_url: url, media_type: "document", filename: inv.number + ".pdf" });
     }
     say("Sending...", "ok");
-    const res = await fetch(set.workerUrl, { method: "POST", headers: { Authorization: "Bearer " + await auth.currentUser.getIdToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    let res;
+    try { res = await fetch(set.workerUrl, { method: "POST", headers: { Authorization: "Bearer " + await auth.currentUser.getIdToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
+    catch (err) { throw new Error("Could not reach the Worker. Most likely its CORS setting does not allow " + location.origin + " (see browser console)."); }
     const out = await res.json().catch(() => ({}));
     if (!res.ok || !out.ok) throw new Error("WhatsApp: " + (out.error || res.status));
     say(kind === "pdf" ? "Test PDF sent." : "Test message sent.", "ok");
