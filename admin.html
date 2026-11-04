@@ -73,7 +73,12 @@
       <div class="sfoot"><button class="primary" id="pkbtn" type="submit" style="max-width:200px;margin-top:0">Add package</button><button class="sm" id="pkcancel" type="button" hidden>Cancel edit</button></div>
       <div id="pkmsg" class="msg" role="alert"></div>
     </form>
-    <div class="scroll"><table class="tbl"><thead><tr><th>Package</th><th>Items</th><th>Price</th><th>Position</th><th></th></tr></thead><tbody id="pklist"></tbody></table></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0">
+      <button class="sm" id="pkselall" type="button">Select all</button>
+      <button class="sm del" id="pkdelsel" type="button" disabled>Delete selected (0)</button>
+      <span id="pkselmsg" class="sub" style="margin:0"></span>
+    </div>
+    <div class="scroll"><table class="tbl"><thead><tr><th><input type="checkbox" id="pkselhead" aria-label="Select all packages"></th><th>Package</th><th>Items</th><th>Price</th><th>Position</th><th></th></tr></thead><tbody id="pklist"></tbody></table></div>
     <button class="sm" id="pkdef" type="button" hidden>Add the 4 default packages</button>
   </div>
 
@@ -342,17 +347,34 @@ $("pkadditem").onclick = () => { pkRow().querySelector(".pn").focus(); };
 let pkEdit = null;
 const pkReset = () => { pkEdit = null; $("pkf").reset(); $("pkorder").value = 1; $("pkitems").innerHTML = ""; pkRow(); $("pkbtn").textContent = "Add package"; $("pkcancel").hidden = true; pkUpd(); };
 $("pkcancel").onclick = pkReset; pkReset();
+// Smart scaling used by "Copy as new": works out each line from what the item is, instead of multiplying everything.
+const PK_CH = [4, 8, 16, 32, 64, 128];
+function pkScaleItems(items, old, n) {
+  const r = n / old, up = x => Math.max(1, Math.ceil(x - 1e-9));
+  return (items || []).map(i => {
+    const name = String(i.name || ""), q = Number(i.quantity) || 1, out = { ...i };
+    if (/install|setup|set-up|configur|labou?r|support|warranty|service/i.test(name)) return out;           // one per package: no change
+    if (/\b(dvr|nvr|xvr|recorder)\b/i.test(name)) {                                                         // still 1 recorder, only its channels change
+      const ch = PK_CH.find(c => c >= n) || n;
+      out.name = name.replace(/(\d+)(\s*-?\s*)(channels?|ch)\b/i, (m, a, b, c) => ch + b + c); return out;
+    }
+    const len = name.match(/(\d+(?:\.\d+)?)(\s*)(meters?|metres?|mtrs?|mtr|m|feet|ft)\b/i);               // cable / coil: longer length, quantity stays 1
+    if (len) { const total = Math.round(Number(len[1]) * q * r * 10) / 10; out.name = name.replace(len[0], total + len[2] + len[3]); out.quantity = 1; return out; }
+    out.quantity = up(q * r); return out;                                                                    // cameras, BNC + DC, power supplies, disks...: more quantity
+  });
+}
 let pkCache = {};
 async function loadPackages() {
   const snap = await getDocs(query(collection(db, "packages"), orderBy("order")));
   pkCache = {}; snap.docs.forEach(d => pkCache[d.id] = d.data());
   $("pkcount").textContent = snap.size; $("pkdef").hidden = snap.size > 0;
   $("pklist").innerHTML = snap.docs.map(d => { const v = d.data();
-    return `<tr data-id="${d.id}"><td><b>${esc(v.name)}</b>${v.active === false ? ' <span class="pill">Hidden</span>' : ""}<br>${esc(v.cameras)} cameras${v.who ? " &middot; " + esc(v.who) : ""}</td>
+    return `<tr data-id="${d.id}"><td><input type="checkbox" class="pkc" aria-label="Select package"></td><td><b>${esc(v.name)}</b>${v.active === false ? ' <span class="pill">Hidden</span>' : ""}<br>${esc(v.cameras)} cameras${v.who ? " &middot; " + esc(v.who) : ""}</td>
       <td>${(v.items || []).map(i => `${esc(i.quantity)} &times; ${esc(i.name)}`).join("<br>")}</td>
       <td>${Number(v.price) > 0 ? money(v.price) : "Call for price"}</td><td>${esc(v.order)}</td>
       <td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-pk="edit">Edit</button><button class="sm" data-pk="dup">Copy as new</button><button class="sm" data-pk="vis">${v.active === false ? "Show" : "Hide"}</button><button class="sm del" data-pk="del">Delete</button></div></td></tr>`; }).join("")
-    || '<tr><td colspan="5">No packages yet. Add your first one above.</td></tr>';
+    || '<tr><td colspan="6">No packages yet. Add your first one above.</td></tr>';
+  pkUpdSel();
 }
 $("pkf").onsubmit = async e => {
   e.preventDefault();
@@ -382,10 +404,10 @@ $("pklist").addEventListener("click", async e => {
       const re = new RegExp("\\b" + old + "\\b", "g"), sw = t => String(t || "").replace(re, n);
       pkEdit = null; $("pkname").value = sw(cur.name); $("pkcams").value = n; $("pkwho").value = cur.who || ""; $("pkdesc").value = sw(cur.description);
       $("pkorder").value = (Number(cur.order) || 0) + 1; $("pkprice").value = ""; $("pkactive").value = "1"; $("pkextra").value = (cur.extras || []).join("\n");
-      $("pkitems").innerHTML = ""; (cur.items || []).forEach(i => pkRow({ ...i, name: sw(i.name), quantity: Math.max(1, Math.ceil((Number(i.quantity) || 1) * n / old)) }));
+      $("pkitems").innerHTML = ""; pkScaleItems(cur.items, old, n).forEach(pkRow);
       if (!$("pkitems").children.length) pkRow(); pkUpd();
       $("pkbtn").textContent = "Add package"; $("pkcancel").hidden = false;
-      pkmsg("Copy ready for " + n + " cameras: every quantity was multiplied by " + +(n / old).toFixed(2) + " (" + cur.name + " has " + old + "). Check the quantities, label and prices, then click Add package.", "ok"); $("pkname").scrollIntoView({ behavior: "smooth", block: "center" }); return;
+      pkmsg("Copy ready for " + n + " cameras (from " + old + "). Cameras, connectors, power supplies and disks got more quantity; the recorder stays 1 with its channels updated; cable length grew and stays 1; installation stays 1. Check everything and the prices, then click Add package.", "ok"); $("pkname").scrollIntoView({ behavior: "smooth", block: "center" }); return;
     }
     if (b.dataset.pk === "del") { if (!confirm("Delete this package?")) return; await deleteDoc(r); }
     else if (b.dataset.pk === "vis") await updateDoc(r, { active: cur.active === false });
@@ -398,6 +420,37 @@ $("pklist").addEventListener("click", async e => {
     }
     loadPackages();
   } catch (err) { pkmsg("Could not update. Check your admin login and Firestore rules.", "err"); }
+});
+
+// ---------- packages: select all / delete selected ----------
+const pkBoxes = () => [...document.querySelectorAll("#pklist input.pkc")];
+function pkUpdSel() {
+  const b = pkBoxes(), n = b.filter(x => x.checked).length;
+  $("pkdelsel").disabled = !n; $("pkdelsel").textContent = "Delete selected (" + n + ")";
+  $("pkselall").textContent = b.length && n === b.length ? "Deselect all" : "Select all";
+  $("pkselhead").checked = !!b.length && n === b.length;
+  $("pkselhead").indeterminate = n > 0 && n < b.length;
+}
+const pkToggleAll = on => { pkBoxes().forEach(x => x.checked = on); pkUpdSel(); };
+$("pkselall").addEventListener("click", () => pkToggleAll(pkBoxes().some(x => !x.checked)));
+$("pkselhead").addEventListener("change", e => pkToggleAll(e.target.checked));
+$("pklist").addEventListener("change", e => { if (e.target.classList.contains("pkc")) pkUpdSel(); });
+$("pkdelsel").addEventListener("click", async () => {
+  const ids = pkBoxes().filter(x => x.checked).map(x => x.closest("tr").dataset.id);
+  if (!ids.length) return;
+  if (!confirm("Delete " + ids.length + " package" + (ids.length > 1 ? "s" : "") + "? This cannot be undone.")) return;
+  const m = $("pkselmsg"); $("pkdelsel").disabled = true; $("pkselall").disabled = true; m.textContent = "Deleting...";
+  try {
+    for (let i = 0; i < ids.length; i += 400) {
+      const b = writeBatch(db);
+      ids.slice(i, i + 400).forEach(id => b.delete(doc(db, "packages", id)));
+      await b.commit();
+    }
+    m.textContent = ids.length + " deleted.";
+    if (pkEdit && ids.includes(pkEdit)) pkReset();
+  } catch (err) { m.textContent = "Delete failed. Check you are logged in as admin and your Firestore rules are published."; }
+  $("pkselall").disabled = false;
+  await loadPackages();
 });
 
 async function loadUsers() {
