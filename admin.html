@@ -351,7 +351,7 @@ async function loadPackages() {
     return `<tr data-id="${d.id}"><td><b>${esc(v.name)}</b>${v.active === false ? ' <span class="pill">Hidden</span>' : ""}<br>${esc(v.cameras)} cameras${v.who ? " &middot; " + esc(v.who) : ""}</td>
       <td>${(v.items || []).map(i => `${esc(i.quantity)} &times; ${esc(i.name)}`).join("<br>")}</td>
       <td>${Number(v.price) > 0 ? money(v.price) : "Call for price"}</td><td>${esc(v.order)}</td>
-      <td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-pk="edit">Edit</button><button class="sm" data-pk="vis">${v.active === false ? "Show" : "Hide"}</button><button class="sm del" data-pk="del">Delete</button></div></td></tr>`; }).join("")
+      <td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-pk="edit">Edit</button><button class="sm" data-pk="dup">Copy as new</button><button class="sm" data-pk="vis">${v.active === false ? "Show" : "Hide"}</button><button class="sm del" data-pk="del">Delete</button></div></td></tr>`; }).join("")
     || '<tr><td colspan="5">No packages yet. Add your first one above.</td></tr>';
 }
 $("pkf").onsubmit = async e => {
@@ -375,6 +375,18 @@ $("pklist").addEventListener("click", async e => {
   const b = e.target.closest("button[data-pk]"); if (!b) return;
   const id = b.closest("tr").dataset.id, r = doc(db, "packages", id), cur = pkCache[id] || {};
   try {
+    if (b.dataset.pk === "dup") {
+      // fills the form with a copy of this package for a different camera count; nothing is saved until you click Add package
+      const old = Number(cur.cameras) || 0, n = Math.floor(Number(prompt("Make a copy of \"" + cur.name + "\" for how many cameras? (for example 8, 16 or 32)", ""))) || 0;
+      if (!n || n < 1) return;
+      const re = new RegExp("\\b" + old + "\\b", "g"), sw = t => String(t || "").replace(re, n);
+      pkEdit = null; $("pkname").value = sw(cur.name); $("pkcams").value = n; $("pkwho").value = cur.who || ""; $("pkdesc").value = sw(cur.description);
+      $("pkorder").value = (Number(cur.order) || 0) + 1; $("pkprice").value = ""; $("pkactive").value = "1"; $("pkextra").value = (cur.extras || []).join("\n");
+      $("pkitems").innerHTML = ""; (cur.items || []).forEach(i => pkRow({ ...i, name: sw(i.name), quantity: Number(i.quantity) === old ? n : i.quantity }));
+      if (!$("pkitems").children.length) pkRow(); pkUpd();
+      $("pkbtn").textContent = "Add package"; $("pkcancel").hidden = false;
+      pkmsg("Copy ready for " + n + " cameras. Check the item names, quantities (hard disk, cable, etc.), label and prices, then click Add package.", "ok"); $("pkname").scrollIntoView({ behavior: "smooth", block: "center" }); return;
+    }
     if (b.dataset.pk === "del") { if (!confirm("Delete this package?")) return; await deleteDoc(r); }
     else if (b.dataset.pk === "vis") await updateDoc(r, { active: cur.active === false });
     else {
