@@ -48,7 +48,7 @@
   </div>
 
   <div class="box"><h2>Packages (<span id="pkcount">0</span>)</h2>
-    <p class="sub">These show on the Packages page and are used at checkout. The items you list here are the lines printed on the customer's invoice PDF, exactly as you type them.</p>
+    <p class="sub">These show on the Packages page and are used at checkout. The items you list here are the lines printed on the customer's invoice PDF, exactly as you type them. An item's tooltip shows when visitors hover (or tap) that item on the website card, and also appears as the small description line under it on the invoice.</p>
     <form id="pkf" class="wide">
       <div class="row">
         <div><label for="pkname">Package name</label><input id="pkname" required maxlength="60" placeholder="For example: 4 Camera Package"></div>
@@ -60,7 +60,7 @@
       </div>
       <label for="pkdesc">Short description</label><textarea id="pkdesc" maxlength="300" placeholder="Shown on the package card and on the invoice summary"></textarea>
       <label>Items in this package (printed on the invoice)</label>
-      <div class="pk-head"><span>Item name</span><span>Description (optional)</span><span>Qty</span><span>Unit price (Rs.)</span><span></span></div>
+      <div class="pk-head"><span>Item name</span><span>Tooltip (optional)</span><span>Qty</span><span>Unit price (Rs.)</span><span></span></div>
       <div id="pkitems"></div>
       <div class="sfoot"><button class="sm" id="pkadditem" type="button">+ Add item</button><span class="sub" style="margin:0">Items total: <b id="pksum">Rs. 0</b></span></div>
       <div class="row" style="margin-top:12px">
@@ -327,7 +327,7 @@ const DEF_PKG = [4, 8, 16, 32].map((n, i) => ({ id: String(n), name: n + " Camer
   extras: ["Live viewing and playback on your phone", "Camera angles planned during a site visit", "Support after the job"] }));
 const pkRow = it => {
   const r = document.createElement("div"); r.className = "pk-row";
-  r.innerHTML = '<input class="pn" maxlength="80" placeholder="Item name" aria-label="Item name"><input class="pd" maxlength="120" placeholder="Description" aria-label="Item description"><input class="pq" type="number" min="1" step="1" value="1" aria-label="Quantity"><input class="pp" type="number" min="0" step="1" placeholder="0" aria-label="Unit price"><button type="button" class="sm del" aria-label="Remove item">&times;</button>';
+  r.innerHTML = '<input class="pn" maxlength="80" placeholder="Item name" aria-label="Item name"><input class="pd" maxlength="120" placeholder="Tooltip text, shown on hover" aria-label="Item tooltip"><input class="pq" type="number" min="1" step="1" value="1" aria-label="Quantity"><input class="pp" type="number" min="0" step="1" placeholder="0" aria-label="Unit price"><button type="button" class="sm del" aria-label="Remove item">&times;</button>';
   r.querySelector(".pn").value = (it && it.name) || ""; r.querySelector(".pd").value = (it && it.desc) || "";
   r.querySelector(".pq").value = (it && it.quantity) || 1; r.querySelector(".pp").value = it && it.unitPrice ? it.unitPrice : "";
   $("pkitems").appendChild(r); return r;
