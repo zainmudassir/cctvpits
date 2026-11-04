@@ -5,14 +5,16 @@ const grid = document.querySelector(".pkg-grid");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const val = f => { if (!f) return undefined; if ("stringValue" in f) return f.stringValue; if ("integerValue" in f) return Number(f.integerValue); if ("doubleValue" in f) return f.doubleValue; if ("booleanValue" in f) return f.booleanValue;
   if (f.arrayValue) return (f.arrayValue.values || []).map(val); if (f.mapValue) return Object.fromEntries(Object.entries(f.mapValue.fields || {}).map(([k, v]) => [k, val(v)])); return undefined; };
+const WA = "923053871991"; // same number as wa-float.js
+const waLink = name => "https://wa.me/" + WA + "?text=" + encodeURIComponent("Hi, I want the " + name + ". My place is a ___ (home/shop/office).");
 const money = n => "Rs. " + Number(n).toLocaleString("en-US");
 
 function card(id, v) {
   const lines = (v.items || []).filter(i => i && i.name).map(i => ({ t: (Number(i.quantity) > 1 ? i.quantity + " x " : "") + i.name, tip: i.desc || "" })).concat((v.extras || []).map(t => ({ t, tip: "" })));
   return '<div class="pkg-card"><div class="pkg-num">' + esc(v.cameras) + '</div><h3 class="pkg-title">' + esc(v.name) + '</h3>' + (v.who ? '<span class="pkg-who">' + esc(v.who) + '</span>' : "") +
-    (v.description ? '<p class="pkg-desc">' + esc(v.description) + '</p>' : "") + '<div class="pkg-price">' + (Number(v.price) > 0 ? money(v.price) : "Call for price") + '</div>' +
+    (v.description ? '<p class="pkg-desc">' + esc(v.description) + '</p>' : "") + '<div class="pkg-price">' + (Number(v.price) > 0 ? money(v.price) : '<span class="pkg-quote">Quote after site check</span>') + '</div>' +
     '<ul class="pkg-list">' + lines.map(l => '<li' + (l.tip ? ' class="pkg-tip" tabindex="0" data-tip="' + esc(l.tip) + '"' : "") + '><i class="fas fa-check" aria-hidden="true"></i><span>' + esc(l.t) + '</span></li>').join("") + '</ul>' +
-    '<a class="rts__main__btn rts__btn__slideup" href="../checkout.html?pkg=' + encodeURIComponent(id) + '" data-hover="Get this package"><span>Get this package</span></a></div>';
+    '<a class="rts__main__btn rts__btn__slideup" href="' + waLink(v.name) + '" target="_blank" rel="noopener" data-hover="Get a quote"><span>Get a quote</span></a></div>';
 }
 
 const st = document.createElement("style");
