@@ -12,7 +12,13 @@
 <link rel="stylesheet" href="auth.css">
 <link rel="stylesheet" href="dash.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>.inv{border-top:1px dashed var(--line);margin-top:8px;padding-top:10px}.inv .row{margin-bottom:6px}</style>
+<style>.inv{border-top:1px dashed var(--line);margin-top:8px;padding-top:10px}.inv .row{margin-bottom:6px}
+.pk-head,.pk-row{display:grid;grid-template-columns:1.3fr 1.5fr 70px 120px 40px;gap:8px;align-items:center}
+.pk-head{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.pk-row{margin-bottom:8px}
+.pk-row input{min-width:0}
+.pk-row .sm{padding:9px 0;text-align:center}
+@media(max-width:760px){.pk-head{display:none}.pk-row{grid-template-columns:1fr 1fr;padding:10px;border:1px solid var(--line);border-radius:6px}.pk-row input:nth-child(1),.pk-row input:nth-child(2){grid-column:1/-1}}</style>
 </head>
 <body>
 <header class="topbar">
@@ -39,6 +45,36 @@
     </form>
     <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Service</th><th>Position</th><th></th></tr></thead><tbody id="slist"></tbody></table></div>
     <button class="sm" id="sdef" type="button" hidden>Add the 8 default services</button>
+  </div>
+
+  <div class="box"><h2>Packages (<span id="pkcount">0</span>)</h2>
+    <p class="sub">These show on the Packages page and are used at checkout. The items you list here are the lines printed on the customer's invoice PDF, exactly as you type them.</p>
+    <form id="pkf" class="wide">
+      <div class="row">
+        <div><label for="pkname">Package name</label><input id="pkname" required maxlength="60" placeholder="For example: 4 Camera Package"></div>
+        <div><label for="pkcams">Number of cameras</label><input id="pkcams" type="number" min="1" step="1" required placeholder="4"></div>
+      </div>
+      <div class="row">
+        <div><label for="pkwho">Suited for (small label)</label><input id="pkwho" maxlength="50" placeholder="For example: Small homes &amp; shops"></div>
+        <div><label for="pkorder">Position (1 is first)</label><input id="pkorder" type="number" min="1" step="1" value="1"></div>
+      </div>
+      <label for="pkdesc">Short description</label><textarea id="pkdesc" maxlength="300" placeholder="Shown on the package card and on the invoice summary"></textarea>
+      <label>Items in this package (printed on the invoice)</label>
+      <div class="pk-head"><span>Item name</span><span>Description (optional)</span><span>Qty</span><span>Unit price (Rs.)</span><span></span></div>
+      <div id="pkitems"></div>
+      <div class="sfoot"><button class="sm" id="pkadditem" type="button">+ Add item</button><span class="sub" style="margin:0">Items total: <b id="pksum">Rs. 0</b></span></div>
+      <div class="row" style="margin-top:12px">
+        <div><label for="pkprice">Package price (Rs.)</label><input id="pkprice" type="number" min="0" step="1" placeholder="Leave empty to use the items total"></div>
+        <div><label for="pkactive">Show on website</label><select id="pkactive"><option value="1">Yes, visible</option><option value="0">No, hidden</option></select></div>
+      </div>
+      <p class="sub" style="margin:6px 0 0">If prices are 0 or empty, the website shows "Call for price" and the invoice says "To be confirmed". If the package price differs from the items total, the invoice shows the difference as a separate line.</p>
+      <label for="pkextra">Extra points for the website card (optional, one per line)</label>
+      <textarea id="pkextra" maxlength="600" placeholder="Support after the job&#10;Live viewing on your phone"></textarea>
+      <div class="sfoot"><button class="primary" id="pkbtn" type="submit" style="max-width:200px;margin-top:0">Add package</button><button class="sm" id="pkcancel" type="button" hidden>Cancel edit</button></div>
+      <div id="pkmsg" class="msg" role="alert"></div>
+    </form>
+    <div class="scroll"><table class="tbl"><thead><tr><th>Package</th><th>Items</th><th>Price</th><th>Position</th><th></th></tr></thead><tbody id="pklist"></tbody></table></div>
+    <button class="sm" id="pkdef" type="button" hidden>Add the 4 default packages</button>
   </div>
 
   <div class="box"><h2>Companies (<span id="ccount">0</span>)</h2>
@@ -279,6 +315,77 @@ $("slist").addEventListener("click", async e => {
     }
     loadServices();
   } catch (err) { smsg("Could not update. Check your admin login and Firestore rules.", "err"); }
+});
+
+// ---------- packages ----------
+// Stored in Firestore packages/{id}: { name, cameras, who, description, price, items: [{name, desc, quantity, unitPrice}], extras: [text], order, active }
+const pkmsg = (t, c) => { $("pkmsg").textContent = t; $("pkmsg").className = "msg " + c; };
+const DEF_PKG = [4, 8, 16, 32].map((n, i) => ({ id: String(n), name: n + " Camera Package", cameras: n, order: i + 1, price: 0, active: true,
+  who: ["Small homes & shops", "Larger homes & busy shops", "Offices & plazas", "Big sites"][i],
+  description: ["Up to 4 cameras for a flat, small home or single shop.", "8 cameras to cover a full house, front and back, or a busy shop.", "16 cameras for offices, showrooms, plazas and multi-floor buildings.", "32 cameras for factories, warehouses, schools and large commercial sites."][i],
+  items: [{ name: "CCTV cameras", desc: "", quantity: n, unitPrice: 0 }, { name: n + "-channel recorder", desc: "", quantity: 1, unitPrice: 0 }, { name: "Installation and setup", desc: "Professional installation and clean wiring", quantity: 1, unitPrice: 0 }],
+  extras: ["Live viewing and playback on your phone", "Camera angles planned during a site visit", "Support after the job"] }));
+const pkRow = it => {
+  const r = document.createElement("div"); r.className = "pk-row";
+  r.innerHTML = '<input class="pn" maxlength="80" placeholder="Item name" aria-label="Item name"><input class="pd" maxlength="120" placeholder="Description" aria-label="Item description"><input class="pq" type="number" min="1" step="1" value="1" aria-label="Quantity"><input class="pp" type="number" min="0" step="1" placeholder="0" aria-label="Unit price"><button type="button" class="sm del" aria-label="Remove item">&times;</button>';
+  r.querySelector(".pn").value = (it && it.name) || ""; r.querySelector(".pd").value = (it && it.desc) || "";
+  r.querySelector(".pq").value = (it && it.quantity) || 1; r.querySelector(".pp").value = it && it.unitPrice ? it.unitPrice : "";
+  $("pkitems").appendChild(r); return r;
+};
+const pkItems = () => [...$("pkitems").children].map(r => ({ name: r.querySelector(".pn").value.trim(), desc: r.querySelector(".pd").value.trim(),
+  quantity: Math.max(1, Math.floor(Number(r.querySelector(".pq").value)) || 1), unitPrice: Math.max(0, Number(r.querySelector(".pp").value) || 0) })).filter(i => i.name);
+const pkSum = () => pkItems().reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+const pkUpd = () => { $("pksum").textContent = money(pkSum()); };
+$("pkitems").addEventListener("input", pkUpd);
+$("pkitems").addEventListener("click", e => { if (e.target.closest(".del")) { e.target.closest(".pk-row").remove(); pkUpd(); } });
+$("pkadditem").onclick = () => { pkRow().querySelector(".pn").focus(); };
+let pkEdit = null;
+const pkReset = () => { pkEdit = null; $("pkf").reset(); $("pkorder").value = 1; $("pkitems").innerHTML = ""; pkRow(); $("pkbtn").textContent = "Add package"; $("pkcancel").hidden = true; pkUpd(); };
+$("pkcancel").onclick = pkReset; pkReset();
+let pkCache = {};
+async function loadPackages() {
+  const snap = await getDocs(query(collection(db, "packages"), orderBy("order")));
+  pkCache = {}; snap.docs.forEach(d => pkCache[d.id] = d.data());
+  $("pkcount").textContent = snap.size; $("pkdef").hidden = snap.size > 0;
+  $("pklist").innerHTML = snap.docs.map(d => { const v = d.data();
+    return `<tr data-id="${d.id}"><td><b>${esc(v.name)}</b>${v.active === false ? ' <span class="pill">Hidden</span>' : ""}<br>${esc(v.cameras)} cameras${v.who ? " &middot; " + esc(v.who) : ""}</td>
+      <td>${(v.items || []).map(i => `${esc(i.quantity)} &times; ${esc(i.name)}`).join("<br>")}</td>
+      <td>${Number(v.price) > 0 ? money(v.price) : "Call for price"}</td><td>${esc(v.order)}</td>
+      <td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-pk="edit">Edit</button><button class="sm" data-pk="vis">${v.active === false ? "Show" : "Hide"}</button><button class="sm del" data-pk="del">Delete</button></div></td></tr>`; }).join("")
+    || '<tr><td colspan="5">No packages yet. Add your first one above.</td></tr>';
+}
+$("pkf").onsubmit = async e => {
+  e.preventDefault();
+  const items = pkItems(); if (!items.length) return pkmsg("Add at least one item. These are the lines on the invoice.", "err");
+  const v = { name: $("pkname").value.trim(), cameras: Math.floor(Number($("pkcams").value)) || 0, who: $("pkwho").value.trim(), description: $("pkdesc").value.trim(),
+    order: Number($("pkorder").value) || 1, active: $("pkactive").value === "1", items,
+    price: Math.round(Number($("pkprice").value)) || pkSum(), extras: $("pkextra").value.split("\n").map(x => x.trim()).filter(Boolean).slice(0, 10) };
+  if (!v.name || v.cameras < 1) return pkmsg("Enter the package name and the number of cameras.", "err");
+  try {
+    if (pkEdit) { await updateDoc(doc(db, "packages", pkEdit), v); pkmsg("Package updated.", "ok"); }
+    else { await addDoc(collection(db, "packages"), { ...v, createdAt: serverTimestamp() }); pkmsg("Package added.", "ok"); }
+    pkReset(); loadPackages();
+  } catch (err) { pkmsg("Could not save. Check your admin login and that the packages rule is published in Firestore.", "err"); }
+};
+$("pkdef").onclick = async () => {
+  try { for (const p of DEF_PKG) { const { id, ...v } = p; await setDoc(doc(db, "packages", id), { ...v, createdAt: serverTimestamp() }); } loadPackages(); }
+  catch (err) { pkmsg("Could not save. Publish the packages rule in Firestore first.", "err"); }
+};
+$("pklist").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-pk]"); if (!b) return;
+  const id = b.closest("tr").dataset.id, r = doc(db, "packages", id), cur = pkCache[id] || {};
+  try {
+    if (b.dataset.pk === "del") { if (!confirm("Delete this package?")) return; await deleteDoc(r); }
+    else if (b.dataset.pk === "vis") await updateDoc(r, { active: cur.active === false });
+    else {
+      pkEdit = id; $("pkname").value = cur.name || ""; $("pkcams").value = cur.cameras || ""; $("pkwho").value = cur.who || ""; $("pkdesc").value = cur.description || "";
+      $("pkorder").value = cur.order || 1; $("pkprice").value = cur.price || ""; $("pkactive").value = cur.active === false ? "0" : "1"; $("pkextra").value = (cur.extras || []).join("\n");
+      $("pkitems").innerHTML = ""; (cur.items && cur.items.length ? cur.items : [null]).forEach(pkRow); pkUpd();
+      $("pkbtn").textContent = "Save changes"; $("pkcancel").hidden = false;
+      pkmsg("Editing this package. Change the fields, then click Save changes.", "ok"); $("pkname").scrollIntoView({ behavior: "smooth", block: "center" }); return;
+    }
+    loadPackages();
+  } catch (err) { pkmsg("Could not update. Check your admin login and Firestore rules.", "err"); }
 });
 
 async function loadUsers() {
@@ -736,7 +843,7 @@ async function loadInstalls() {
       <div><button class="sm" data-st="contacted">Contacted</button> <button class="sm" data-st="scheduled">Scheduled</button> <button class="sm" data-st="done">Done</button> <button class="sm del" data-st="cancelled">Cancel</button> <button class="sm" data-inv="open">${r.invoiceId ? "Invoice" : "Create invoice"}</button></div>
       ${r.invoiceId ? `<div>Invoice ${esc(r.invoiceNumber)}: ${money(r.invoiceAmount)}${r.invoiceSentAt ? " &middot; sent on WhatsApp" : ""}</div>` : ""}
       <div class="inv" hidden>
-        <div class="row"><div><label>Installation price (Rs.)</label><input type="number" min="1" step="1" class="ip" value="${esc(r.invoiceAmount || "")}"></div>
+        <div class="row"><div><label>Installation price (Rs.)</label><input type="number" min="1" step="1" class="ip" value="${esc(r.invoiceAmount || r.packagePrice || "")}"></div>
         <div><label>Send to WhatsApp number</label><input class="iw" value="${esc(r.phone)}"></div></div>
         <label>Invoice note (optional)</label><input class="in" maxlength="200" value="${esc(r.invoiceNotes || "")}">
         <div style="margin-top:10px"><button class="sm" data-inv="send">Generate PDF &amp; send on WhatsApp</button> <button class="sm" data-inv="dl">Download PDF only</button></div>
@@ -765,7 +872,7 @@ async function buildInvoice(card, id) {
     date: r.invoiceDate || d.toLocaleDateString("en-GB"),
     customer: { name: r.name, phone: r.phone, email: r.email || "", address: r.address, city: r.city },
     site: r.siteType ? { type: r.siteType, areaValue: r.areaValue, areaUnit: r.areaUnit } : null,
-    items: (r.items || []).map(i => ({ name: i.name, quantity: i.quantity })),
+    items: (r.items || []).map(i => ({ name: i.name, desc: i.desc || "", quantity: i.quantity, unitPrice: Number(i.unitPrice) || 0 })),
     installationPrice: price, notes: card.querySelector(".in").value.trim(),
     requestId: id, userId: r.userId
   };
@@ -870,7 +977,7 @@ onAuthStateChanged(auth, async u => {
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   if (!admin) return location.replace("dashboard.html");
   $("main").hidden = false;
-  loadServices(); loadProducts(); loadCompanies(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
+  loadServices(); loadPackages(); loadProducts(); loadCompanies(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
 });
 </script>
 <script>
@@ -878,9 +985,9 @@ onAuthStateChanged(auth, async u => {
   var main = document.getElementById("main"); if (!main) return;
   var T = [["dash", "Dashboard", []], ["orders", "Orders", ["Orders"]], ["installs", "Installation requests", ["Installation requests"]],
     ["products", "Products", ["Add product", "Import products", "Product photos", "Products"]], ["catalog", "Brands & categories", ["Companies", "Categories"]],
-    ["services", "Services", ["Services"]], ["users", "Users", ["Registered users"]], ["settings", "Settings", ["Payment settings", "WhatsApp settings"]]];
+    ["services", "Services", ["Services"]], ["packages", "Packages", ["Packages"]], ["users", "Users", ["Registered users"]], ["settings", "Settings", ["Payment settings", "WhatsApp settings"]]];
   var S = [["Orders", "ocount", "orders"], ["Pending orders", "opend", "orders"], ["Install requests", "icount", "installs"], ["New requests", "inew", "installs"],
-    ["Products", "pcount", "products"], ["Services", "scount", "services"], ["Brands", "ccount", "catalog"], ["Users", "ucount", "users"]];
+    ["Products", "pcount", "products"], ["Services", "scount", "services"], ["Packages", "pkcount", "packages"], ["Brands", "ccount", "catalog"], ["Users", "ucount", "users"]];
   var boxes = [].slice.call(main.querySelectorAll(":scope > .box")), wrap = document.createElement("div"), side = document.createElement("nav"), body = document.createElement("div"), panels = {};
   wrap.className = "adm"; side.className = "adm-side"; main.classList.add("adm-wrap");
   T.forEach(function (t) {

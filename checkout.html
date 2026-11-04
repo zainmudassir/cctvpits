@@ -113,12 +113,23 @@ import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import { collection, addDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 import { makePdf, money } from "./invoice.js";
-import { PACKAGES, WORKER_URL, BUSINESS_WA } from "./packages-data.js";
+import { WORKER_URL, BUSINESS_WA } from "./site-config.js";
 
 const $ = id => document.getElementById(id);
 const say = (el, t, c) => { el.textContent = t; el.className = "msg " + c; };
 const key = new URLSearchParams(location.search).get("pkg");
-const pkg = PACKAGES[key];
+// the package comes from the database (admin > Packages); its items become the invoice lines
+let pkg = null;
+if (key) {
+  try {
+    const s = await getDoc(doc(db, "packages", key)), v = s.exists() ? s.data() : null;
+    if (v && v.active !== false) {
+      const items = (v.items || []).filter(i => i && i.name).map(i => ({ name: String(i.name), desc: String(i.desc || ""), quantity: Number(i.quantity) || 1, unitPrice: Number(i.unitPrice) || 0 }));
+      const sum = items.reduce((t, i) => t + i.quantity * i.unitPrice, 0);
+      pkg = { id: s.id, name: v.name || "Package", cameras: Number(v.cameras) || 1, desc: v.description || "", items: items.length ? items : [{ name: v.name || "Package", desc: v.description || "", quantity: 1, unitPrice: 0 }], price: Number(v.price) || sum };
+    }
+  } catch (e) { console.warn("Could not load package", e); }
+}
 const normPhone = p => { let n = String(p || "").replace(/\D/g, ""); if (n.startsWith("00")) n = n.slice(2); else if (n.startsWith("0")) n = "92" + n.slice(1); return n; };
 const val = n => document.querySelector('input[name="' + n + '"]:checked').value;
 
@@ -126,7 +137,7 @@ if (!pkg) { $("bad").hidden = false; }
 else {
   $("pname").textContent = pkg.name;
   const drawSummary = () => {
-    $("psum").innerHTML = [["Cameras", pkg.cameras], ["Place", val("type")], ["Size", ($("area").value || "-") + " " + val("unit")],
+    $("psum").innerHTML = [["Cameras", pkg.cameras], ["Includes", pkg.items.length + " item" + (pkg.items.length > 1 ? "s" : "")], ["Place", val("type")], ["Size", ($("area").value || "-") + " " + val("unit")],
       ["Price", pkg.price > 0 ? money(pkg.price) : "Confirmed after site details"]]
       .map(r => `<div class="line"><span>${r[0]}</span><span>${String(r[1]).replace(/[<>&]/g, "")}</span></div>`).join("");
   };
@@ -161,7 +172,7 @@ else {
       const type = val("type"), unit = val("unit"), mapUrl = $("map").value.trim();
       const base = {
         userId: user.uid, name, phone, email: user.email || "", placeType: type, siteType: type, areaValue: area, areaUnit: unit,
-        cameras: pkg.cameras, package: pkg.name, items: [{ name: pkg.name, quantity: 1 }], address: addr, city,
+        cameras: pkg.cameras, package: pkg.name, items: pkg.items, packageId: pkg.id, packagePrice: pkg.price, address: addr, city,
         locationUrl: mapUrl, lat, lng, preferredDate: $("date").value, notes: $("notes").value.trim(), status: "new", createdAt: serverTimestamp()
       };
       const ref = await addDoc(collection(db, "installRequests"), base);
@@ -171,7 +182,7 @@ else {
         date: now.toLocaleDateString("en-GB"), notes: "",
         customer: { name, phone, email: user.email || "", address: addr, city },
         site: { type, areaValue: area, areaUnit: unit },
-        items: [{ name: pkg.name, desc: pkg.desc, quantity: 1, unitPrice: pkg.price }],
+        items: pkg.items,
         installationPrice: pkg.price
       };
       pdfDoc = await makePdf(inv);
