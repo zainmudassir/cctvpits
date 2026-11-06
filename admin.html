@@ -911,7 +911,7 @@ async function loadInstalls() {
         <div class="row"><div><label>Installation price (Rs.)</label><input type="number" min="1" step="1" class="ip" value="${esc(r.invoiceAmount || r.packagePrice || "")}"></div>
         <div><label>Send to WhatsApp number</label><input class="iw" value="${esc(r.phone)}"></div></div>
         <label>Invoice note (optional)</label><input class="in" maxlength="200" value="${esc(r.invoiceNotes || "")}">
-        <div style="margin-top:10px"><button class="sm" data-inv="send">Generate PDF &amp; send on WhatsApp</button> <button class="sm" data-inv="dl">Download PDF only</button></div>
+        <div style="margin-top:10px"><button class="sm" data-inv="send">Generate PDF &amp; send on WhatsApp</button> <button class="sm" data-inv="gen">Generate invoice only</button> <button class="sm" data-inv="dl">Download PDF only</button></div>
         <div class="msg im" role="alert"></div>
       </div>
     </div>`; }).join("") || "<p>No requests yet.</p>";
@@ -947,8 +947,11 @@ async function buildInvoice(card, id) {
 async function saveInvoice(id, inv) {
   const r = reqs[id];
   let invId = r.invoiceId;
-  if (invId) await setDoc(doc(db, "invoices", invId), { ...inv, createdAt: serverTimestamp() });
-  else { const ref = await addDoc(collection(db, "invoices"), { ...inv, createdAt: serverTimestamp() }); invId = ref.id; }
+  // The invoice copy is a bonus. If the "invoices" rule is missing, do not block the invoice: fall back to the request id.
+  try {
+    if (invId) await setDoc(doc(db, "invoices", invId), { ...inv, createdAt: serverTimestamp() });
+    else { const ref = await addDoc(collection(db, "invoices"), { ...inv, createdAt: serverTimestamp() }); invId = ref.id; }
+  } catch (err) { console.warn("Could not save invoice copy (check the invoices Firestore rule)", err); invId = invId || id; }
   return invId;
 }
 $("ilist").addEventListener("click", async e => {
@@ -961,18 +964,25 @@ $("ilist").addEventListener("click", async e => {
     try {
       const inv = await buildInvoice(card, id);
       if (ib.dataset.inv === "dl") { (await makePdf(inv)).save(inv.number + ".pdf"); say("PDF downloaded.", "ok"); ib.disabled = false; return; }
+      if (ib.dataset.inv === "gen") {
+        say("Generating invoice...", "ok");
+        const invId = await saveInvoice(id, inv);
+        await updateDoc(doc(db, "installRequests", id), { invoiceId: invId, invoiceNumber: inv.number, invoiceDate: inv.date, invoiceAmount: inv.installationPrice, invoiceNotes: inv.notes });
+        (await makePdf(inv)).save(inv.number + ".pdf");
+        say("Invoice " + inv.number + " generated and PDF downloaded. Not sent on WhatsApp.", "ok");
+        setTimeout(loadInstalls, 1500); ib.disabled = false; return;
+      }
       say("Preparing invoice...", "ok");
       const set = (await getDoc(doc(db, "secrets", "wasms"))).data() || {};
       if (!set.apiKey || !set.workerUrl) throw new Error("Save your wasms.net API key and Worker URL in WhatsApp settings first.");
       const to = normPhone(card.querySelector(".iw").value, set.countryCode);
       if (to.length < 10) throw new Error("Enter a valid WhatsApp number with country code.");
       const invId = await saveInvoice(id, inv);
-      const link = location.origin + "/invoice.html?id=" + invId;
       // save the PDF so it can be sent as a document; otherwise send the link only
       let pdfUrl = "";
       try { pdfUrl = await hostPdf(await makePdf(inv), set.workerUrl); }
       catch (err) { console.warn("PDF hosting failed", err); }
-      const text = "Hello " + r.name + ", your CCTV PITS installation invoice " + inv.number + " is ready.\nInstallation charges: " + money(inv.installationPrice) + (inv.notes ? "\n" + inv.notes : "") + "\nView or download: " + link + "\nThank you!";
+      const text = "Hello " + r.name + ", your CCTV PITS installation invoice " + inv.number + " is ready.\nInstallation charges: " + money(inv.installationPrice) + (inv.notes ? "\n" + inv.notes : "") + "\nThank you!";
       const body = { to, message: text };
       if (pdfUrl) Object.assign(body, { media_url: pdfUrl, media_type: "document", filename: inv.number + ".pdf" });
       const res = await fetch(set.workerUrl, { method: "POST", headers: { Authorization: "Bearer " + await auth.currentUser.getIdToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
