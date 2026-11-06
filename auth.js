@@ -29,7 +29,7 @@ async function goHome(u) {
   let admin = false;
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   const next = new URLSearchParams(location.search).get("next");
-  const ok = /^[a-z]+\.html(\?pkg=\d+)?$/.test(next || "");
+  const ok = /^[a-z]+\.html(\?pkg=[A-Za-z0-9_-]+)?$/.test(next || "");
   location.replace(admin ? "admin.html" : (ok ? next : "dashboard.html"));
 }
 
