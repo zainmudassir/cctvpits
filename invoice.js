@@ -39,8 +39,7 @@ function buildRows(inv) {
     return { name: String(i.name || ""), desc: String(i.desc || ""), qty, unit, total: unit === null ? null : unit * qty };
   });
   const charge = Number(inv.installationPrice) || 0;
-  if (!priced) {                         // older invoices: items without prices plus one installation charge
-    if (charge > 0) rows.push({ name: "Installation charges", desc: "", qty: 1, unit: charge, total: charge });
+  if (!priced) {                         // older invoices: items without prices: no extra line, only the Total Due shows the price
     return { rows, total: charge };
   }
   const sum = rows.reduce((s, r) => s + r.total, 0), diff = Math.round(charge - sum);
