@@ -957,7 +957,7 @@ async function saveInvoice(id, inv) {
 $("ilist").addEventListener("click", async e => {
   const ib = e.target.closest("button[data-inv]");
   if (ib) {
-    const card = ib.closest(".order"), id = card.dataset.id, box = card.querySelector(".inv"), m = card.querySelector(".im");
+    const card = ib.closest(".order"), id = card.dataset.id, r = reqs[id] || {}, box = card.querySelector(".inv"), m = card.querySelector(".im");
     const say = (t, c) => { m.textContent = t; m.className = "msg im " + c; };
     if (ib.dataset.inv === "open") { box.hidden = !box.hidden; return; }
     ib.disabled = true;
