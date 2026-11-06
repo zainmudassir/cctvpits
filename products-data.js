@@ -100,7 +100,7 @@ export function injectStyles() {
 .prd-count{color:#c9d1dc;margin:0 0 18px;width:100%}.prd-msg{color:#c9d1dc;text-align:center;width:100%;padding:50px 0;grid-column:1/-1}
 .prd-more[hidden]{display:none}.prd-more{display:flex;justify-content:center;width:100%;margin-top:34px}.prd-more button{background:transparent;color:#fff;border:1px solid #ed1d24;padding:14px 34px;font:600 15px 'Public Sans',sans-serif;cursor:pointer;transition:.2s}.prd-more button:hover{background:#ed1d24}
 .prd-cta{display:flex;justify-content:center;width:100%;margin-top:34px}
-.prd-card .rts__main__btn{width:100%;justify-content:center;text-align:center}
+.prd-card .rts__main__btn{width:100%;justify-content:center;text-align:center;background:#ed1d24;border-color:#ed1d24;color:#fff}
 @media(max-width:1200px){.prd-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:900px){.prd-grid{grid-template-columns:repeat(2,1fr)}.prd-bar{grid-template-columns:1fr 1fr}.prd-bar input{grid-column:1/-1}}
 @media(max-width:520px){.prd-grid{gap:14px}.prd-body{padding:16px 14px 18px}.prd-name{font-size:16px}.prd-price{font-size:15px}}`;

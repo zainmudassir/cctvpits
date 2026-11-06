@@ -14,13 +14,24 @@
 .elementor-element-5eef853 .rts__service__description{color:#c9d1dc!important}
 .elementor-element-5eef853 .rts__service__box .triangle-bottomright-dark{border-bottom-color:#010a1a!important}
 /* Our Products */
-#home-products{background:#010a1a!important;position:relative;padding:90px 15px!important;border-top:1px solid rgba(255,255,255,.06)}
+#home-products{background:#fff!important;position:relative;padding:90px 15px!important}
 #home-products>.e-con-inner{width:100%;max-width:min(100%,1400px);margin:0 auto}
-#home-products h2{color:#fff!important}
-#home-products .prd-cta .rts__main__btn{color:#fff;border:1px solid #fff;padding:14px 36px;font-size:13px;text-transform:uppercase}
+#home-products h2{color:#010a1a!important}
+#home-products .prd-cta .rts__main__btn{color:#010a1a;border:1px solid #010a1a;padding:14px 36px;font-size:13px;text-transform:uppercase}
+#home-products .prd-cta .rts__main__btn:hover,#home-products .prd-cta .rts__main__btn::before{color:#fff}
 #home-products .prd-cta .rts__main__btn:hover{background:#ed1d24;border-color:#ed1d24}
 @media(max-width:767px){#home-products{padding:60px 15px!important}.elementor-1040 .elementor-element.elementor-element-5eef853{padding-top:70px;padding-bottom:70px}}
 #home-products{flex-direction:column;align-items:center;box-sizing:border-box}
 #home-products .prd-grid{margin:0}
 #home-products .prd-card{border-radius:0}
 #home-products .prd-cta{margin-top:44px}
+/* white product cards on the white section */
+#home-products .prd-card{background:#fff;border:1px solid #e3e7ee;box-shadow:0 2px 14px rgba(1,10,26,.06)}
+#home-products .prd-card:hover{border-color:#ed1d24;box-shadow:0 14px 34px rgba(1,10,26,.14)}
+#home-products .prd-img{background:#f4f6fa}
+#home-products .prd-name{color:#010a1a}
+#home-products .prd-desc{color:#5b6677}
+#home-products .prd-price{color:#010a1a;border-top-color:#e3e7ee}
+#home-products .prd-price s{color:#8b97a8}
+#home-products .prd-stock.in{color:#16a34a}#home-products .prd-stock.out{color:#dc2626}
+#home-products .prd-off{background:#010a1a}
