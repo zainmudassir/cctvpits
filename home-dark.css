@@ -1,0 +1,26 @@
+/* Homepage: dark "Our Services" + "Our Products" sections (theme: #010a1a navy, #0b1a30 cards, #ed1d24 red) */
+.elementor-1040 .elementor-element.elementor-element-5eef853,
+.elementor-1040 .elementor-element.elementor-element-5eef853:not(.elementor-motion-effects-element-type-background){background:#010a1a!important;position:relative;
+  --padding-left:15px;--padding-right:15px;padding-left:15px;padding-right:15px}
+.elementor-element-5eef853::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 85% 0,rgba(237,29,36,.10),transparent 55%),linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px) 0 0/48px 48px}
+.elementor-element-5eef853>.e-con-inner{position:relative;z-index:1}
+.elementor-element-5eef853 .rts__section__title{color:#fff!important}
+.elementor-element-5eef853 .rts__section__subtitle{color:#ed1d24!important}
+.elementor-element-5eef853 .elementor-widget-text-editor,.elementor-element-5eef853 .elementor-widget-text-editor p{color:#c9d1dc!important}
+.elementor-element-5eef853 .rts__service__box .service__background{background:#0b1a30!important;border:1px solid rgba(255,255,255,.10);transition:border-color .3s,transform .3s,box-shadow .3s}
+.elementor-element-5eef853 .rts__service__box:hover .service__background{border-color:#ed1d24;transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,0,0,.45)}
+.elementor-element-5eef853 .rts__service__title{color:#fff!important}
+.elementor-element-5eef853 .rts__service__description{color:#c9d1dc!important}
+.elementor-element-5eef853 .rts__service__box .triangle-bottomright-dark{border-bottom-color:#010a1a!important}
+/* Our Products */
+#home-products{background:#010a1a!important;position:relative;padding:90px 15px!important;border-top:1px solid rgba(255,255,255,.06)}
+#home-products>.e-con-inner{width:100%;max-width:min(100%,1400px);margin:0 auto}
+#home-products h2{color:#fff!important}
+#home-products .prd-cta .rts__main__btn{color:#fff;border:1px solid #fff;padding:14px 36px;font-size:13px;text-transform:uppercase}
+#home-products .prd-cta .rts__main__btn:hover{background:#ed1d24;border-color:#ed1d24}
+@media(max-width:767px){#home-products{padding:60px 15px!important}.elementor-1040 .elementor-element.elementor-element-5eef853{padding-top:70px;padding-bottom:70px}}
+#home-products{flex-direction:column;align-items:center;box-sizing:border-box}
+#home-products .prd-grid{margin:0}
+#home-products .prd-card{border-radius:0}
+#home-products .prd-cta{margin-top:44px}

@@ -6,5 +6,5 @@ if (sec) (async () => {
   const list = await loadProducts(); if (!list || !list.length) return;
   injectStyles();
   const top = list.slice(0, 8), grid = sec.querySelector(".prd-grid"), byId = new Map(top.map(p => [p.id, p]));
-  grid.innerHTML = top.map(cardHtml).join(""); sec.style.display = ""; hydrateImages(grid, byId);
+  grid.innerHTML = top.map(cardHtml).join(""); sec.style.display = "flex"; hydrateImages(grid, byId);
 })();
