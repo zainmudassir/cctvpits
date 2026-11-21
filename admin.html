@@ -47,6 +47,21 @@
     <button class="sm" id="sdef" type="button" hidden>Add the 8 default services</button>
   </div>
 
+  <div class="box"><h2>Projects (<span id="pjcount">0</span>)</h2>
+    <p class="sub">These show on the Projects page, lowest Position first. Until you add the first one, the page keeps its original sample cards.</p>
+    <form id="pjf" class="wide">
+      <div class="row">
+        <div><label for="pjtitle">Project name</label><input id="pjtitle" required maxlength="80" placeholder="For example: 16 camera setup, City Plaza"></div>
+        <div><label for="pjorder">Position (1 is first)</label><input id="pjorder" type="number" min="1" step="1" value="1"></div>
+      </div>
+      <label for="pjloc">Location</label><input id="pjloc" maxlength="80" placeholder="For example: Gujranwala, Pakistan">
+      <label for="pjimg">Photo</label><input id="pjimg" type="file" accept="image/*">
+      <div class="sfoot"><button class="primary" id="pjbtn" type="submit" style="max-width:200px;margin-top:0">Add project</button><button class="sm" id="pjcancel" type="button" hidden>Cancel edit</button></div>
+      <div id="pjmsg" class="msg" role="alert"></div>
+    </form>
+    <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Project</th><th>Position</th><th></th></tr></thead><tbody id="pjlist"></tbody></table></div>
+  </div>
+
   <div class="box"><h2>Packages (<span id="pkcount">0</span>)</h2>
     <p class="sub">These show on the Packages page and are used at checkout. The items you list here are the lines printed on the customer's invoice PDF, exactly as you type them. An item's tooltip shows when visitors hover (or tap) that item on the website card, and also appears as the small description line under it on the invoice.</p>
     <form id="pkf" class="wide">
@@ -320,6 +335,49 @@ $("slist").addEventListener("click", async e => {
     }
     loadServices();
   } catch (err) { smsg("Could not update. Check your admin login and Firestore rules.", "err"); }
+});
+
+// ---------- projects (public Projects page) ----------
+const pjmsg = (t, c) => { $("pjmsg").textContent = t; $("pjmsg").className = "msg " + c; };
+let pjEdit = null;
+async function loadProjects() {
+  let snap;
+  try { snap = await getDocs(query(collection(db, "projects"), orderBy("order"))); }
+  catch (err) { pjmsg("Could not load projects (" + (err.code || err.message) + "). Publish the Firestore rules first.", "err"); return; }
+  $("pjcount").textContent = snap.size;
+  $("pjlist").innerHTML = snap.docs.map(d => { const v = d.data(); return `<tr data-id="${d.id}"><td>${v.image ? `<img src="${esc(v.image)}" alt="">` : ""}</td><td><b>${esc(v.title)}</b><br>${esc(v.location || "")}</td><td>${esc(v.order)}</td><td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-pj="edit">Edit</button><button class="sm" data-pj="photo">Photo</button><button class="sm del" data-pj="del">Delete</button></div></td></tr>`; }).join("") || '<tr><td colspan="4">No projects yet. Add your first one above.</td></tr>';
+}
+const pjReset = () => { pjEdit = null; $("pjf").reset(); $("pjorder").value = 1; $("pjbtn").textContent = "Add project"; $("pjcancel").hidden = true; };
+$("pjcancel").onclick = pjReset;
+$("pjf").onsubmit = async e => {
+  e.preventDefault();
+  const btn = $("pjbtn"); btn.disabled = true;
+  try {
+    const f = $("pjimg").files[0], v = { title: $("pjtitle").value.trim(), location: $("pjloc").value.trim(), order: Number($("pjorder").value) || 1 };
+    if (pjEdit) { if (f) v.image = await shrinkW(f); await updateDoc(doc(db, "projects", pjEdit), v); pjmsg("Project updated.", "ok"); }
+    else { await addDoc(collection(db, "projects"), { ...v, image: f ? await shrinkW(f) : "", createdAt: serverTimestamp() }); pjmsg("Project added.", "ok"); }
+    pjReset(); loadProjects();
+  } catch (err) { pjmsg("Could not save (" + (err.code || err.message) + "). Check your admin login and that the Firestore rules include the projects collection.", "err"); }
+  btn.disabled = false;
+};
+$("pjlist").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-pj]"); if (!b) return;
+  const id = b.closest("tr").dataset.id, r = doc(db, "projects", id);
+  try {
+    if (b.dataset.pj === "del") { if (!confirm("Delete this project?")) return; await deleteDoc(r); }
+    else if (b.dataset.pj === "edit") {
+      const cur = (await getDoc(r)).data(); pjEdit = id;
+      $("pjtitle").value = cur.title || ""; $("pjloc").value = cur.location || ""; $("pjorder").value = cur.order || 1;
+      $("pjbtn").textContent = "Save changes"; $("pjcancel").hidden = false;
+      pjmsg("Editing this project. Change the fields, then click Save changes (leave Photo empty to keep the current one).", "ok");
+      $("pjtitle").scrollIntoView({ behavior: "smooth", block: "center" }); return;
+    } else {
+      const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+      inp.onchange = async () => { if (inp.files[0]) { try { await updateDoc(r, { image: await shrinkW(inp.files[0]) }); loadProjects(); } catch (err) { pjmsg("Could not update the photo.", "err"); } } };
+      inp.click(); return;
+    }
+    loadProjects();
+  } catch (err) { pjmsg("Could not update (" + (err.code || err.message) + ").", "err"); }
 });
 
 // ---------- packages ----------
@@ -1052,7 +1110,7 @@ onAuthStateChanged(auth, async u => {
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   if (!admin) return location.replace("dashboard.html");
   $("main").hidden = false;
-  loadServices(); loadPackages(); loadProducts(); loadCompanies(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
+  loadServices(); loadProjects(); loadPackages(); loadProducts(); loadCompanies(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
 });
 </script>
 <script>
@@ -1060,9 +1118,9 @@ onAuthStateChanged(auth, async u => {
   var main = document.getElementById("main"); if (!main) return;
   var T = [["dash", "Dashboard", []], ["orders", "Orders", ["Orders"]], ["installs", "Installation requests", ["Installation requests"]],
     ["products", "Products", ["Add product", "Import products", "Product photos", "Products"]], ["catalog", "Brands & categories", ["Companies", "Categories"]],
-    ["services", "Services", ["Services"]], ["packages", "Packages", ["Packages"]], ["users", "Users", ["Registered users"]], ["settings", "Settings", ["Payment settings", "WhatsApp settings"]]];
+    ["services", "Services", ["Services"]], ["projects", "Projects", ["Projects"]], ["packages", "Packages", ["Packages"]], ["users", "Users", ["Registered users"]], ["settings", "Settings", ["Payment settings", "WhatsApp settings"]]];
   var S = [["Orders", "ocount", "orders"], ["Pending orders", "opend", "orders"], ["Install requests", "icount", "installs"], ["New requests", "inew", "installs"],
-    ["Products", "pcount", "products"], ["Services", "scount", "services"], ["Packages", "pkcount", "packages"], ["Brands", "ccount", "catalog"], ["Users", "ucount", "users"]];
+    ["Products", "pcount", "products"], ["Services", "scount", "services"], ["Projects", "pjcount", "projects"], ["Packages", "pkcount", "packages"], ["Brands", "ccount", "catalog"], ["Users", "ucount", "users"]];
   var boxes = [].slice.call(main.querySelectorAll(":scope > .box")), wrap = document.createElement("div"), side = document.createElement("nav"), body = document.createElement("div"), panels = {};
   wrap.className = "adm"; side.className = "adm-side"; main.classList.add("adm-wrap");
   T.forEach(function (t) {
