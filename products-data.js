@@ -1,7 +1,7 @@
 // Shared by the Products page (products-render.js) and the Products section on the home page (home-products.js).
 // Products come from the "products" collection (Admin > Products) through the Firestore REST API. The list is loaded WITHOUT photos
 // (photos are stored inside the documents and are large); each photo is fetched only when its card scrolls into view.
-export const WA = "923053871991"; // same number as wa-float.js
+export const WA = "923053871991"; // store WhatsApp number
 const BASE = "https://firestore.googleapis.com/v1/projects/cctv-pits/databases/(default)/documents/products", KEY = "AIzaSyBI8ye784CeFUEhpnZ-azZGGYn6xO0QH5w";
 const FIELDS = ["name", "price", "brand", "category", "stock", "comparePrice", "isNew", "description", "createdAt"];
 const LS = "products:list", TTL = 5 * 60 * 1000;

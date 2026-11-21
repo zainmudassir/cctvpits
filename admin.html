@@ -11,14 +11,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="auth.css">
 <link rel="stylesheet" href="dash.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>.inv{border-top:1px dashed var(--line);margin-top:8px;padding-top:10px}.inv .row{margin-bottom:6px}
-.pk-head,.pk-row{display:grid;grid-template-columns:1.3fr 1.5fr 70px 120px 40px;gap:8px;align-items:center}
-.pk-head{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
-.pk-row{margin-bottom:8px}
-.pk-row input{min-width:0}
-.pk-row .sm{padding:9px 0;text-align:center}
-@media(max-width:760px){.pk-head{display:none}.pk-row{grid-template-columns:1fr 1fr;padding:10px;border:1px solid var(--line);border-radius:6px}.pk-row input:nth-child(1),.pk-row input:nth-child(2){grid-column:1/-1}}</style>
 </head>
 <body>
 <header class="topbar">
@@ -27,75 +19,7 @@
 </header>
 <main class="wrap" id="main" hidden>
   <h1>Admin dashboard</h1>
-  <p class="sub">Manage services, products, orders and installation requests.</p>
-
-  <div class="box"><h2>Services (<span id="scount">0</span>)</h2>
-    <p class="sub">These show on the Services page. The first 4 (lowest Position) also appear in the "Our Services" section of the home page, and the first 6 in the footer of every page.</p>
-    <form id="sf2" class="wide">
-      <div class="row">
-        <div><label for="stitle">Service name</label><input id="stitle" required maxlength="60" placeholder="For example: Electric fencing"></div>
-        <div><label for="sorder">Position (1 is first)</label><input id="sorder" type="number" min="1" step="1" value="1"></div>
-      </div>
-      <label for="sheading">Heading (shown on the service page)</label><input id="sheading" maxlength="80" placeholder="For example: CCTV Installation">
-      <label for="sdesc">Paragraph</label><textarea id="sdesc" maxlength="700" placeholder="2 to 3 sentences about this service"></textarea>
-      <label>Five points</label><div class="pts"><input id="sp1" maxlength="70" placeholder="Point 1"><input id="sp2" maxlength="70" placeholder="Point 2"><input id="sp3" maxlength="70" placeholder="Point 3"><input id="sp4" maxlength="70" placeholder="Point 4"><input id="sp5" maxlength="70" placeholder="Point 5"></div>
-      <label for="simg">Photo (optional)</label><input id="simg" type="file" accept="image/*">
-      <div class="sfoot"><button class="primary" id="sbtn" type="submit" style="max-width:200px;margin-top:0">Add service</button><button class="sm" id="scancel" type="button" hidden>Cancel edit</button></div>
-      <div id="smsg" class="msg" role="alert"></div>
-    </form>
-    <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Service</th><th>Position</th><th></th></tr></thead><tbody id="slist"></tbody></table></div>
-    <button class="sm" id="sdef" type="button" hidden>Add the 8 default services</button>
-  </div>
-
-  <div class="box"><h2>Projects (<span id="pjcount">0</span>)</h2>
-    <p class="sub">These show on the Projects page, lowest Position first. Until you add the first one, the page keeps its original sample cards.</p>
-    <form id="pjf" class="wide">
-      <div class="row">
-        <div><label for="pjtitle">Project name</label><input id="pjtitle" required maxlength="80" placeholder="For example: 16 camera setup, City Plaza"></div>
-        <div><label for="pjorder">Position (1 is first)</label><input id="pjorder" type="number" min="1" step="1" value="1"></div>
-      </div>
-      <label for="pjloc">Location</label><input id="pjloc" maxlength="80" placeholder="For example: Gujranwala, Pakistan">
-      <label for="pjimg">Photo</label><input id="pjimg" type="file" accept="image/*">
-      <div class="sfoot"><button class="primary" id="pjbtn" type="submit" style="max-width:200px;margin-top:0">Add project</button><button class="sm" id="pjcancel" type="button" hidden>Cancel edit</button></div>
-      <div id="pjmsg" class="msg" role="alert"></div>
-    </form>
-    <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Project</th><th>Position</th><th></th></tr></thead><tbody id="pjlist"></tbody></table></div>
-  </div>
-
-  <div class="box"><h2>Packages (<span id="pkcount">0</span>)</h2>
-    <p class="sub">These show on the Packages page and are used at checkout. The items you list here are the lines printed on the customer's invoice PDF, exactly as you type them. An item's tooltip shows when visitors hover (or tap) that item on the website card, and also appears as the small description line under it on the invoice.</p>
-    <form id="pkf" class="wide">
-      <div class="row">
-        <div><label for="pkname">Package name</label><input id="pkname" required maxlength="60" placeholder="For example: 4 Camera Package"></div>
-        <div><label for="pkcams">Number of cameras</label><input id="pkcams" type="number" min="1" step="1" required placeholder="4"></div>
-      </div>
-      <div class="row">
-        <div><label for="pkwho">Suited for (small label)</label><input id="pkwho" maxlength="50" placeholder="For example: Small homes &amp; shops"></div>
-        <div><label for="pkorder">Position (1 is first)</label><input id="pkorder" type="number" min="1" step="1" value="1"></div>
-      </div>
-      <label for="pkdesc">Short description</label><textarea id="pkdesc" maxlength="300" placeholder="Shown on the package card and on the invoice summary"></textarea>
-      <label>Items in this package (printed on the invoice)</label>
-      <div class="pk-head"><span>Item name</span><span>Tooltip (optional)</span><span>Qty</span><span>Unit price (Rs.)</span><span></span></div>
-      <div id="pkitems"></div>
-      <div class="sfoot"><button class="sm" id="pkadditem" type="button">+ Add item</button><span class="sub" style="margin:0">Items total: <b id="pksum">Rs. 0</b></span></div>
-      <div class="row" style="margin-top:12px">
-        <div><label for="pkprice">Package price (Rs.)</label><input id="pkprice" type="number" min="0" step="1" placeholder="Leave empty to use the items total"></div>
-        <div><label for="pkactive">Show on website</label><select id="pkactive"><option value="1">Yes, visible</option><option value="0">No, hidden</option></select></div>
-      </div>
-      <p class="sub" style="margin:6px 0 0">If prices are 0 or empty, the website shows "Call for price" and the invoice says "To be confirmed". If the package price differs from the items total, the invoice shows the difference as a separate line.</p>
-      <label for="pkextra">Extra points for the website card (optional, one per line)</label>
-      <textarea id="pkextra" maxlength="600" placeholder="Support after the job&#10;Live viewing on your phone"></textarea>
-      <div class="sfoot"><button class="primary" id="pkbtn" type="submit" style="max-width:200px;margin-top:0">Add package</button><button class="sm" id="pkcancel" type="button" hidden>Cancel edit</button></div>
-      <div id="pkmsg" class="msg" role="alert"></div>
-    </form>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0">
-      <button class="sm" id="pkselall" type="button">Select all</button>
-      <button class="sm del" id="pkdelsel" type="button" disabled>Delete selected (0)</button>
-      <span id="pkselmsg" class="sub" style="margin:0"></span>
-    </div>
-    <div class="scroll"><table class="tbl"><thead><tr><th><input type="checkbox" id="pkselhead" aria-label="Select all packages"></th><th>Package</th><th>Items</th><th>Price</th><th>Position</th><th></th></tr></thead><tbody id="pklist"></tbody></table></div>
-    <button class="sm" id="pkdef" type="button" hidden>Add the 4 default packages</button>
-  </div>
+  <p class="sub">Manage products, orders and payment accounts.</p>
 
   <div class="box"><h2>Companies (<span id="ccount">0</span>)</h2>
     <p class="sub">Products are organised as Company, then Category, then Product. Add a company here, add its categories in the Categories section below, then pick both when you add a product.</p>
@@ -156,25 +80,6 @@
     </form>
   </div>
 
-  <div class="box"><h2>WhatsApp settings (wasms.net)</h2>
-    <p class="sub" style="margin-top:0">Used to send installation invoices. Sending goes through your Cloudflare Worker. The API key is saved privately in your database and only admins can read it.</p>
-    <div class="row"><div><label for="wkey">API key (wasms_...)</label><input id="wkey" type="password" autocomplete="off" placeholder="Leave empty to keep the saved key"></div>
-    <div><label for="wcc">Default country code</label><input id="wcc" value="92"></div></div>
-    <label for="wurl">Worker URL</label><input id="wurl" placeholder="https://cctvpits-wa.yourname.workers.dev">
-    <label for="wsend">wasms.net send address (optional)</label><input id="wsend" placeholder="Leave empty to use https://wasms.net/api/public/v1/whatsapp/send">
-    <label for="wid">WhatsApp ID (optional, only if you have several numbers)</label><input id="wid" placeholder="Leave empty to use the first connected number">
-    <button class="primary" id="wsave" type="button" style="max-width:200px;margin-top:12px">Save settings</button>
-    <div id="wmsg" class="msg" role="alert"></div>
-    <hr style="border:0;border-top:1px solid #e3e3e3;margin:20px 0 4px">
-    <h3 style="margin:14px 0 4px;font-size:16px">Send a test</h3>
-    <p class="sub" style="margin-top:0">Check that WhatsApp sending works. Save your settings above first.</p>
-    <label for="wtest">Send test to (WhatsApp number)</label><input id="wtest" placeholder="03xx xxxxxxx or 923xxxxxxxxx" inputmode="tel">
-    <div style="margin-top:12px"><button class="sm" id="wtestmsg" type="button">Send test message</button> <button class="sm" id="wtestpdf" type="button">Send test PDF</button></div>
-    <div id="wtmsg" class="msg" role="alert"></div>
-  </div>
-
-  <div class="box"><h2>Installation requests (<span id="icount">0</span>, <span id="inew">0</span> new)</h2><div id="ilist">Loading...</div></div>
-
   <div class="box"><h2>Orders (<span id="ocount">0</span>, <span id="opend">0</span> pending)</h2>
     <div id="olist">Loading...</div>
   </div>
@@ -222,9 +127,6 @@
     <div class="scroll"><table class="tbl"><thead><tr><th><input type="checkbox" id="selhead" aria-label="Select all products"></th><th></th><th>Name</th><th>Company / Category</th><th>Price</th><th></th></tr></thead><tbody id="plist"></tbody></table></div>
   </div>
 
-  <div class="box"><h2>Registered users (<span id="ucount">0</span>)</h2>
-    <div class="scroll"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th></tr></thead><tbody id="ulist"></tbody></table></div>
-  </div>
 </main>
 <div class="lb" id="lb" hidden><img alt=""></div>
 
@@ -234,7 +136,6 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import { setDoc, deleteField, writeBatch, doc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
-import { makePdf, money } from "./invoice.js";
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -289,234 +190,6 @@ async function loadProducts() {
         <button class="sm del" data-act="del">Delete</button></div></td>
     </tr>`; }).join("") || '<tr><td colspan="6">No products yet. Add your first one above.</td></tr>';
   updSel();
-}
-
-const DEF_SVC = [{"title": "Installation", "heading": "CCTV Installation", "description": "At CCTV PITS, we specialize in providing reliable CCTV solutions to safeguard your home or business. Whether you’re looking for a basic surveillance setup or a fully integrated security system, our expert team will ensure you have the right solution for your needs.", "points": ["Site Assessment & Consultation", "Customized Security Solutions", "High-Quality Cameras", "Installation & Setup", "Remote Viewing Access"]}, {"title": "Maintenance", "heading": "CCTV Maintenance", "description": "A CCTV system only protects you when it is working. We inspect, clean and repair existing systems so your cameras keep recording clearly and nothing fails when you need the footage.", "points": ["Camera Lens & Housing Cleaning", "Cable & Connector Checks", "Recorder & Hard Disk Health Check", "Fault Finding & Repair", "Replacement of Faulty Parts"]}, {"title": "Monitoring", "heading": "Monitoring Services", "description": "Keep an eye on your home, shop or office from wherever you are. We set up live viewing and playback on your phone and computer so you can check your property at any time.", "points": ["Live Viewing on Your Phone", "Playback of Recorded Footage", "Motion Alert Setup", "Multiple Camera & Site Viewing", "User Access & Password Setup"]}, {"title": "System Design", "heading": "System Design", "description": "A good CCTV system starts with a good plan. We study your property and design a layout that covers the important areas without wasting cameras or cable.", "points": ["Site Survey", "Camera Placement Planning", "Camera Type & Number Selection", "Cabling & Power Layout", "Recorder & Storage Sizing"]}, {"title": "Storage and Backup", "heading": "Storage and Backup", "description": "Footage is only useful if it is saved and can be found when you need it. We size your storage to match your cameras and help you keep copies of important recordings safe.", "points": ["Hard Disk Selection & Sizing", "Recording Schedule Setup", "Recording Days Planning", "Backup to External Drive", "Playback & Export Guidance"]}, {"title": "System Upgrade", "heading": "System Upgrade", "description": "You do not always need to replace everything. We upgrade existing CCTV systems with better cameras, recorders and storage, and add more cameras to what you already have.", "points": ["Upgrade to HD or IP Cameras", "Adding More Cameras", "Recorder Replacement", "Storage Upgrade", "Firmware & Software Updates"]}, {"title": "System Configuration", "heading": "System Configuration", "description": "The right settings make a big difference to how well your cameras work. We configure your recorder, cameras and network so everything records properly and is easy to use.", "points": ["Recorder & Camera Setup", "Network & Remote Access Setup", "Resolution & Recording Settings", "Motion Detection Zones", "User Accounts & Passwords"]}, {"title": "System Consultation", "heading": "System Consultation", "description": "Not sure what you need? We visit your place, listen to your needs and recommend a system that fits your space and budget, with no pressure to buy.", "points": ["Free Estimation", "Site Visit & Assessment", "Camera Type Advice (HD, IP or Wi-Fi)", "Number of Cameras Needed", "Brand & Package Recommendations"]}];
-const smsg = (t, c) => { $("smsg").textContent = t; $("smsg").className = "msg " + c; };
-async function loadServices() {
-  const snap = await getDocs(query(collection(db, "services"), orderBy("order")));
-  $("scount").textContent = snap.size; $("sdef").hidden = snap.size > 0;
-  $("slist").innerHTML = snap.docs.map(d => { const v = d.data(); return `<tr data-id="${d.id}"><td>${v.image ? `<img src="${esc(v.image)}" alt="">` : ""}</td><td><b>${esc(v.title)}</b><br>${esc(v.description || "")}</td><td>${v.order}</td><td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-sa="edit">Edit</button><button class="sm" data-sa="photo">Photo</button><button class="sm del" data-sa="del">Delete</button></div></td></tr>`; }).join("") || '<tr><td colspan="4">No services yet. The home page shows the 5 default services until you add your own.</td></tr>';
-}
-const shrinkW = (file, max = 640, q = 0.72) => new Promise((res, rej) => { const img = new Image(), url = URL.createObjectURL(file); img.onload = () => { const s = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas"); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); let d = c.toDataURL("image/webp", q); if (!d.startsWith("data:image/webp")) d = c.toDataURL("image/jpeg", q); res(d); }; img.onerror = rej; img.src = url; });
-let editId = null;
-const sval = () => ({ title: $("stitle").value.trim(), heading: $("sheading").value.trim() || $("stitle").value.trim(), description: $("sdesc").value.trim(), order: Number($("sorder").value) || 1, points: [1, 2, 3, 4, 5].map(i => $("sp" + i).value.trim()).filter(Boolean) });
-const sreset = () => { editId = null; $("sf2").reset(); $("sorder").value = 1; $("sbtn").textContent = "Add service"; $("scancel").hidden = true; };
-$("scancel").onclick = sreset;
-$("sf2").onsubmit = async e => {
-  e.preventDefault();
-  try {
-    const f = $("simg").files[0], v = sval();
-    if (editId) { if (f) v.image = await shrinkW(f); await updateDoc(doc(db, "services", editId), v); smsg("Service updated.", "ok"); }
-    else { await addDoc(collection(db, "services"), { ...v, image: f ? await shrinkW(f) : "", createdAt: serverTimestamp() }); smsg("Service added.", "ok"); }
-    sreset(); loadServices();
-  } catch (err) { smsg("Could not save. Check your admin login and Firestore rules.", "err"); }
-};
-$("sdef").onclick = async () => {
-  try { for (let i = 0; i < DEF_SVC.length; i++) await addDoc(collection(db, "services"), { ...DEF_SVC[i], order: i + 1, image: "", createdAt: serverTimestamp() }); loadServices(); }
-  catch (err) { smsg("Could not save. Publish the new Firestore rules first.", "err"); }
-};
-$("slist").addEventListener("click", async e => {
-  const b = e.target.closest("button[data-sa]"); if (!b) return;
-  const id = b.closest("tr").dataset.id, r = doc(db, "services", id);
-  try {
-    if (b.dataset.sa === "del") { if (!confirm("Delete this service?")) return; await deleteDoc(r); }
-    else if (b.dataset.sa === "edit") {
-      const cur = (await getDoc(r)).data(); editId = id;
-      $("stitle").value = cur.title || ""; $("sheading").value = cur.heading || ""; $("sdesc").value = cur.description || ""; $("sorder").value = cur.order || 1;
-      [1, 2, 3, 4, 5].forEach(i => $("sp" + i).value = (cur.points || [])[i - 1] || "");
-      $("sbtn").textContent = "Save changes"; $("scancel").hidden = false;
-      smsg("Editing this service. Change the fields, then click Save changes (leave Photo empty to keep the current one).", "ok");
-      $("stitle").scrollIntoView({ behavior: "smooth", block: "center" }); return;
-    } else {
-      const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
-      inp.onchange = async () => { if (inp.files[0]) { await updateDoc(r, { image: await shrinkW(inp.files[0]) }); loadServices(); } };
-      inp.click(); return;
-    }
-    loadServices();
-  } catch (err) { smsg("Could not update. Check your admin login and Firestore rules.", "err"); }
-});
-
-// ---------- projects (public Projects page) ----------
-const pjmsg = (t, c) => { $("pjmsg").textContent = t; $("pjmsg").className = "msg " + c; };
-let pjEdit = null;
-async function loadProjects() {
-  let snap;
-  try { snap = await getDocs(query(collection(db, "projects"), orderBy("order"))); }
-  catch (err) { pjmsg("Could not load projects (" + (err.code || err.message) + "). Publish the Firestore rules first.", "err"); return; }
-  $("pjcount").textContent = snap.size;
-  $("pjlist").innerHTML = snap.docs.map(d => { const v = d.data(); return `<tr data-id="${d.id}"><td>${v.image ? `<img src="${esc(v.image)}" alt="">` : ""}</td><td><b>${esc(v.title)}</b><br>${esc(v.location || "")}</td><td>${esc(v.order)}</td><td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-pj="edit">Edit</button><button class="sm" data-pj="photo">Photo</button><button class="sm del" data-pj="del">Delete</button></div></td></tr>`; }).join("") || '<tr><td colspan="4">No projects yet. Add your first one above.</td></tr>';
-}
-const pjReset = () => { pjEdit = null; $("pjf").reset(); $("pjorder").value = 1; $("pjbtn").textContent = "Add project"; $("pjcancel").hidden = true; };
-$("pjcancel").onclick = pjReset;
-$("pjf").onsubmit = async e => {
-  e.preventDefault();
-  const btn = $("pjbtn"); btn.disabled = true;
-  try {
-    const f = $("pjimg").files[0], v = { title: $("pjtitle").value.trim(), location: $("pjloc").value.trim(), order: Number($("pjorder").value) || 1 };
-    if (pjEdit) { if (f) v.image = await shrinkW(f); await updateDoc(doc(db, "projects", pjEdit), v); pjmsg("Project updated.", "ok"); }
-    else { await addDoc(collection(db, "projects"), { ...v, image: f ? await shrinkW(f) : "", createdAt: serverTimestamp() }); pjmsg("Project added.", "ok"); }
-    pjReset(); loadProjects();
-  } catch (err) { pjmsg("Could not save (" + (err.code || err.message) + "). Check your admin login and that the Firestore rules include the projects collection.", "err"); }
-  btn.disabled = false;
-};
-$("pjlist").addEventListener("click", async e => {
-  const b = e.target.closest("button[data-pj]"); if (!b) return;
-  const id = b.closest("tr").dataset.id, r = doc(db, "projects", id);
-  try {
-    if (b.dataset.pj === "del") { if (!confirm("Delete this project?")) return; await deleteDoc(r); }
-    else if (b.dataset.pj === "edit") {
-      const cur = (await getDoc(r)).data(); pjEdit = id;
-      $("pjtitle").value = cur.title || ""; $("pjloc").value = cur.location || ""; $("pjorder").value = cur.order || 1;
-      $("pjbtn").textContent = "Save changes"; $("pjcancel").hidden = false;
-      pjmsg("Editing this project. Change the fields, then click Save changes (leave Photo empty to keep the current one).", "ok");
-      $("pjtitle").scrollIntoView({ behavior: "smooth", block: "center" }); return;
-    } else {
-      const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
-      inp.onchange = async () => { if (inp.files[0]) { try { await updateDoc(r, { image: await shrinkW(inp.files[0]) }); loadProjects(); } catch (err) { pjmsg("Could not update the photo.", "err"); } } };
-      inp.click(); return;
-    }
-    loadProjects();
-  } catch (err) { pjmsg("Could not update (" + (err.code || err.message) + ").", "err"); }
-});
-
-// ---------- packages ----------
-// Stored in Firestore packages/{id}: { name, cameras, who, description, price, items: [{name, desc, quantity, unitPrice}], extras: [text], order, active }
-const pkmsg = (t, c) => { $("pkmsg").textContent = t; $("pkmsg").className = "msg " + c; };
-const DEF_PKG = [4, 8, 16, 32].map((n, i) => ({ id: String(n), name: n + " Camera Package", cameras: n, order: i + 1, price: 0, active: true,
-  who: ["Small homes & shops", "Larger homes & busy shops", "Offices & plazas", "Big sites"][i],
-  description: ["Up to 4 cameras for a flat, small home or single shop.", "8 cameras to cover a full house, front and back, or a busy shop.", "16 cameras for offices, showrooms, plazas and multi-floor buildings.", "32 cameras for factories, warehouses, schools and large commercial sites."][i],
-  items: [{ name: "CCTV cameras", desc: "", quantity: n, unitPrice: 0 }, { name: n + "-channel recorder", desc: "", quantity: 1, unitPrice: 0 }, { name: "Installation and setup", desc: "Professional installation and clean wiring", quantity: 1, unitPrice: 0 }],
-  extras: ["Live viewing and playback on your phone", "Camera angles planned during a site visit", "Support after the job"] }));
-const pkRow = it => {
-  const r = document.createElement("div"); r.className = "pk-row";
-  r.innerHTML = '<input class="pn" maxlength="80" placeholder="Item name" aria-label="Item name"><input class="pd" maxlength="120" placeholder="Tooltip text, shown on hover" aria-label="Item tooltip"><input class="pq" type="number" min="1" step="1" value="1" aria-label="Quantity"><input class="pp" type="number" min="0" step="1" placeholder="0" aria-label="Unit price"><button type="button" class="sm del" aria-label="Remove item">&times;</button>';
-  r.querySelector(".pn").value = (it && it.name) || ""; r.querySelector(".pd").value = (it && it.desc) || "";
-  r.querySelector(".pq").value = (it && it.quantity) || 1; r.querySelector(".pp").value = it && it.unitPrice ? it.unitPrice : "";
-  $("pkitems").appendChild(r); return r;
-};
-const pkItems = () => [...$("pkitems").children].map(r => ({ name: r.querySelector(".pn").value.trim(), desc: r.querySelector(".pd").value.trim(),
-  quantity: Math.max(1, Math.floor(Number(r.querySelector(".pq").value)) || 1), unitPrice: Math.max(0, Number(r.querySelector(".pp").value) || 0) })).filter(i => i.name);
-const pkSum = () => pkItems().reduce((s, i) => s + i.quantity * i.unitPrice, 0);
-const pkUpd = () => { $("pksum").textContent = money(pkSum()); };
-$("pkitems").addEventListener("input", pkUpd);
-$("pkitems").addEventListener("click", e => { if (e.target.closest(".del")) { e.target.closest(".pk-row").remove(); pkUpd(); } });
-$("pkadditem").onclick = () => { pkRow().querySelector(".pn").focus(); };
-let pkEdit = null;
-const pkReset = () => { pkEdit = null; $("pkf").reset(); $("pkorder").value = 1; $("pkitems").innerHTML = ""; pkRow(); $("pkbtn").textContent = "Add package"; $("pkcancel").hidden = true; pkUpd(); };
-$("pkcancel").onclick = pkReset; pkReset();
-// Smart scaling used by "Copy as new": works out each line from what the item is, instead of multiplying everything.
-const PK_CH = [4, 8, 16, 32, 64, 128];
-function pkScaleItems(items, old, n) {
-  const r = n / old, up = x => Math.max(1, Math.ceil(x - 1e-9));
-  return (items || []).map(i => {
-    const name = String(i.name || ""), q = Number(i.quantity) || 1, out = { ...i };
-    if (/install|setup|set-up|configur|labou?r|support|warranty|service/i.test(name)) return out;           // one per package: no change
-    if (/\b(dvr|nvr|xvr|recorder)\b/i.test(name)) {                                                         // still 1 recorder, only its channels change
-      const ch = PK_CH.find(c => c >= n) || n;
-      out.name = name.replace(/(\d+)(\s*-?\s*)(channels?|ch)\b/i, (m, a, b, c) => ch + b + c); return out;
-    }
-    const len = name.match(/(\d+(?:\.\d+)?)(\s*)(meters?|metres?|mtrs?|mtr|m|feet|ft)\b/i);               // cable / coil: longer length, quantity stays 1
-    if (len) { const total = Math.round(Number(len[1]) * q * r * 10) / 10; out.name = name.replace(len[0], total + len[2] + len[3]); out.quantity = 1; return out; }
-    out.quantity = up(q * r); return out;                                                                    // cameras, BNC + DC, power supplies, disks...: more quantity
-  });
-}
-let pkCache = {};
-async function loadPackages() {
-  const snap = await getDocs(query(collection(db, "packages"), orderBy("order")));
-  pkCache = {}; snap.docs.forEach(d => pkCache[d.id] = d.data());
-  $("pkcount").textContent = snap.size; $("pkdef").hidden = snap.size > 0;
-  $("pklist").innerHTML = snap.docs.map(d => { const v = d.data();
-    return `<tr data-id="${d.id}"><td><input type="checkbox" class="pkc" aria-label="Select package"></td><td><b>${esc(v.name)}</b>${v.active === false ? ' <span class="pill">Hidden</span>' : ""}<br>${esc(v.cameras)} cameras${v.who ? " &middot; " + esc(v.who) : ""}</td>
-      <td>${(v.items || []).map(i => `${esc(i.quantity)} &times; ${esc(i.name)}`).join("<br>")}</td>
-      <td>${Number(v.price) > 0 ? money(v.price) : "Call for price"}</td><td>${esc(v.order)}</td>
-      <td><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-pk="edit">Edit</button><button class="sm" data-pk="dup">Copy as new</button><button class="sm" data-pk="vis">${v.active === false ? "Show" : "Hide"}</button><button class="sm del" data-pk="del">Delete</button></div></td></tr>`; }).join("")
-    || '<tr><td colspan="6">No packages yet. Add your first one above.</td></tr>';
-  pkUpdSel();
-}
-$("pkf").onsubmit = async e => {
-  e.preventDefault();
-  const items = pkItems(); if (!items.length) return pkmsg("Add at least one item. These are the lines on the invoice.", "err");
-  const v = { name: $("pkname").value.trim(), cameras: Math.floor(Number($("pkcams").value)) || 0, who: $("pkwho").value.trim(), description: $("pkdesc").value.trim(),
-    order: Number($("pkorder").value) || 1, active: $("pkactive").value === "1", items,
-    price: Math.round(Number($("pkprice").value)) || pkSum(), extras: $("pkextra").value.split("\n").map(x => x.trim()).filter(Boolean).slice(0, 10) };
-  if (!v.name || v.cameras < 1) return pkmsg("Enter the package name and the number of cameras.", "err");
-  try {
-    if (pkEdit) { await updateDoc(doc(db, "packages", pkEdit), v); pkmsg("Package updated.", "ok"); }
-    else { await addDoc(collection(db, "packages"), { ...v, createdAt: serverTimestamp() }); pkmsg("Package added.", "ok"); }
-    pkReset(); loadPackages();
-  } catch (err) { pkmsg("Could not save. Check your admin login and that the packages rule is published in Firestore.", "err"); }
-};
-$("pkdef").onclick = async () => {
-  try { for (const p of DEF_PKG) { const { id, ...v } = p; await setDoc(doc(db, "packages", id), { ...v, createdAt: serverTimestamp() }); } loadPackages(); }
-  catch (err) { pkmsg("Could not save. Publish the packages rule in Firestore first.", "err"); }
-};
-$("pklist").addEventListener("click", async e => {
-  const b = e.target.closest("button[data-pk]"); if (!b) return;
-  const id = b.closest("tr").dataset.id, r = doc(db, "packages", id), cur = pkCache[id] || {};
-  try {
-    if (b.dataset.pk === "dup") {
-      // fills the form with a copy of this package for a different camera count; nothing is saved until you click Add package
-      const old = Number(cur.cameras) || 0, n = Math.floor(Number(prompt("Make a copy of \"" + cur.name + "\" for how many cameras? (for example 8, 16 or 32)", ""))) || 0;
-      if (!n || n < 1 || !old) return;
-      const re = new RegExp("\\b" + old + "\\b", "g"), sw = t => String(t || "").replace(re, n);
-      pkEdit = null; $("pkname").value = sw(cur.name); $("pkcams").value = n; $("pkwho").value = cur.who || ""; $("pkdesc").value = sw(cur.description);
-      $("pkorder").value = (Number(cur.order) || 0) + 1; $("pkprice").value = ""; $("pkactive").value = "1"; $("pkextra").value = (cur.extras || []).join("\n");
-      $("pkitems").innerHTML = ""; pkScaleItems(cur.items, old, n).forEach(pkRow);
-      if (!$("pkitems").children.length) pkRow(); pkUpd();
-      $("pkbtn").textContent = "Add package"; $("pkcancel").hidden = false;
-      pkmsg("Copy ready for " + n + " cameras (from " + old + "). Cameras, connectors, power supplies and disks got more quantity; the recorder stays 1 with its channels updated; cable length grew and stays 1; installation stays 1. Check everything and the prices, then click Add package.", "ok"); $("pkname").scrollIntoView({ behavior: "smooth", block: "center" }); return;
-    }
-    if (b.dataset.pk === "del") { if (!confirm("Delete this package?")) return; await deleteDoc(r); }
-    else if (b.dataset.pk === "vis") await updateDoc(r, { active: cur.active === false });
-    else {
-      pkEdit = id; $("pkname").value = cur.name || ""; $("pkcams").value = cur.cameras || ""; $("pkwho").value = cur.who || ""; $("pkdesc").value = cur.description || "";
-      $("pkorder").value = cur.order || 1; $("pkprice").value = cur.price || ""; $("pkactive").value = cur.active === false ? "0" : "1"; $("pkextra").value = (cur.extras || []).join("\n");
-      $("pkitems").innerHTML = ""; (cur.items && cur.items.length ? cur.items : [null]).forEach(pkRow); pkUpd();
-      $("pkbtn").textContent = "Save changes"; $("pkcancel").hidden = false;
-      pkmsg("Editing this package. Change the fields, then click Save changes.", "ok"); $("pkname").scrollIntoView({ behavior: "smooth", block: "center" }); return;
-    }
-    loadPackages();
-  } catch (err) { pkmsg("Could not update. Check your admin login and Firestore rules.", "err"); }
-});
-
-// ---------- packages: select all / delete selected ----------
-const pkBoxes = () => [...document.querySelectorAll("#pklist input.pkc")];
-function pkUpdSel() {
-  const b = pkBoxes(), n = b.filter(x => x.checked).length;
-  $("pkdelsel").disabled = !n; $("pkdelsel").textContent = "Delete selected (" + n + ")";
-  $("pkselall").textContent = b.length && n === b.length ? "Deselect all" : "Select all";
-  $("pkselhead").checked = !!b.length && n === b.length;
-  $("pkselhead").indeterminate = n > 0 && n < b.length;
-}
-const pkToggleAll = on => { pkBoxes().forEach(x => x.checked = on); pkUpdSel(); };
-$("pkselall").addEventListener("click", () => pkToggleAll(pkBoxes().some(x => !x.checked)));
-$("pkselhead").addEventListener("change", e => pkToggleAll(e.target.checked));
-$("pklist").addEventListener("change", e => { if (e.target.classList.contains("pkc")) pkUpdSel(); });
-$("pkdelsel").addEventListener("click", async () => {
-  const ids = pkBoxes().filter(x => x.checked).map(x => x.closest("tr").dataset.id);
-  if (!ids.length) return;
-  if (!confirm("Delete " + ids.length + " package" + (ids.length > 1 ? "s" : "") + "? This cannot be undone.")) return;
-  const m = $("pkselmsg"); $("pkdelsel").disabled = true; $("pkselall").disabled = true; m.textContent = "Deleting...";
-  try {
-    for (let i = 0; i < ids.length; i += 400) {
-      const b = writeBatch(db);
-      ids.slice(i, i + 400).forEach(id => b.delete(doc(db, "packages", id)));
-      await b.commit();
-    }
-    m.textContent = ids.length + " deleted.";
-    if (pkEdit && ids.includes(pkEdit)) pkReset();
-  } catch (err) { m.textContent = "Delete failed. Check you are logged in as admin and your Firestore rules are published."; }
-  $("pkselall").disabled = false;
-  await loadPackages();
-});
-
-async function loadUsers() {
-  const snap = await getDocs(collection(db, "users"));
-  $("ucount").textContent = snap.size;
-  $("ulist").innerHTML = snap.docs.map(d => { const u = d.data(); return `
-    <tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.phone)}</td>
-    <td>${u.createdAt ? u.createdAt.toDate().toLocaleDateString() : "-"}</td></tr>`; }).join("");
 }
 
 // ---------- select all / delete selected ----------
@@ -948,179 +621,20 @@ $("plink").addEventListener("click", async () => {
   } catch (err) { plshow("Could not link photos. Check you are admin and your rules are published.", "err"); }
 });
 
-let reqs = {};
-async function loadInstalls() {
-  const snap = await getDocs(query(collection(db, "installRequests"), orderBy("createdAt", "desc")));
-  $("icount").textContent = snap.size;
-  $("inew").textContent = snap.docs.filter(d => d.data().status === "new").length;
-  reqs = {}; snap.docs.forEach(d => reqs[d.id] = d.data());
-  $("ilist").innerHTML = snap.docs.map(d => { const r = d.data(); return `
-    <div class="order" data-id="${d.id}">
-      <div class="oh"><b>#${d.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(r.status)}">${esc(r.status)}</span><span>${r.createdAt ? r.createdAt.toDate().toLocaleString() : ""}</span></div>
-      <div><b>${esc(r.name)}</b> &middot; ${esc(r.phone)} &middot; ${esc(r.email)}</div>
-      <div>${esc(r.placeType)} &middot; ${esc(r.cameras)} item${r.cameras > 1 ? "s" : ""}${r.preferredDate ? " &middot; preferred " + esc(r.preferredDate) : ""}</div>
-      ${(r.items || []).map(i => `<div>&bull; ${esc(i.quantity)} x ${esc(i.name)}</div>`).join("")}
-      <div>${esc(r.address)}, ${esc(r.city)}</div>
-      ${r.siteType ? `<div>Site: ${esc(r.siteType)}, ${esc(r.areaValue)} ${esc(r.areaUnit)}${/^https?:\/\//.test(r.locationUrl || "") ? ` &middot; <a href="${esc(r.locationUrl)}" target="_blank" rel="noopener">Open map</a>` : ""}</div>` : ""}
-      ${r.notes ? `<div>Notes: ${esc(r.notes)}</div>` : ""}
-      <div><button class="sm" data-st="contacted">Contacted</button> <button class="sm" data-st="scheduled">Scheduled</button> <button class="sm" data-st="done">Done</button> <button class="sm del" data-st="cancelled">Cancel</button> <button class="sm" data-inv="open">${r.invoiceId ? "Invoice" : "Create invoice"}</button></div>
-      ${r.invoiceId ? `<div>Invoice ${esc(r.invoiceNumber)}: ${money(r.invoiceAmount)}${r.invoiceSentAt ? " &middot; sent on WhatsApp" : ""}</div>` : ""}
-      <div class="inv" hidden>
-        <div class="row"><div><label>Installation price (Rs.)</label><input type="number" min="1" step="1" class="ip" value="${esc(r.invoiceAmount || r.packagePrice || "")}"></div>
-        <div><label>Send to WhatsApp number</label><input class="iw" value="${esc(r.phone)}"></div></div>
-        <label>Invoice note (optional)</label><input class="in" maxlength="200" value="${esc(r.invoiceNotes || "")}">
-        <div style="margin-top:10px"><button class="sm" data-inv="send">Generate PDF &amp; send on WhatsApp</button> <button class="sm" data-inv="gen">Generate invoice only</button> <button class="sm" data-inv="dl">Download PDF only</button></div>
-        <div class="msg im" role="alert"></div>
-      </div>
-    </div>`; }).join("") || "<p>No requests yet.</p>";
-}
-// ---------- PDF hosting (no Firebase Storage needed) ----------
-// The PDF is saved as a small Firestore document; the Worker serves it at <workerUrl>/pdf/<id> so wasms.net can fetch it.
-async function hostPdf(pdf, workerUrl) {
-  const bytes = new Uint8Array(pdf.output("arraybuffer")); let bin = "";
-  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-  const data = btoa(bin);
-  if (data.length > 900000) throw new Error("The PDF is too large to send (" + Math.round(data.length / 1024) + " KB).");
-  const ref = await addDoc(collection(db, "invoicePdfs"), { data, createdAt: serverTimestamp() });
-  return workerUrl.replace(/\/+$/, "") + "/pdf/" + ref.id;
-}
-// ---------- invoices ----------
-const normPhone = (p, cc) => { let n = String(p || "").replace(/\D/g, ""); if (n.startsWith("00")) n = n.slice(2); else if (n.startsWith("0")) n = (cc || "92") + n.slice(1); return n; };
-async function buildInvoice(card, id) {
-  const r = reqs[id], price = Number(card.querySelector(".ip").value);
-  if (!(price > 0)) throw new Error("Enter the installation price.");
-  const d = new Date();
-  const inv = {
-    number: r.invoiceNumber || ("INV-" + d.toISOString().slice(0, 10).replace(/-/g, "") + "-" + id.slice(0, 4).toUpperCase()),
-    date: r.invoiceDate || d.toLocaleDateString("en-GB"),
-    customer: { name: r.name, phone: r.phone, email: r.email || "", address: r.address, city: r.city },
-    site: r.siteType ? { type: r.siteType, areaValue: r.areaValue, areaUnit: r.areaUnit } : null,
-    items: (r.items || []).map(i => ({ name: i.name, desc: i.desc || "", quantity: i.quantity, unitPrice: Number(i.unitPrice) || 0 })),
-    installationPrice: price, notes: card.querySelector(".in").value.trim(),
-    requestId: id, userId: r.userId
-  };
-  if (!inv.items.length) inv.items = [{ name: "CCTV installation (" + (r.cameras || 1) + " item" + (r.cameras > 1 ? "s" : "") + ")", quantity: r.cameras || 1 }];
-  return inv;
-}
-async function saveInvoice(id, inv) {
-  const r = reqs[id];
-  let invId = r.invoiceId;
-  // The invoice copy is a bonus. If the "invoices" rule is missing, do not block the invoice: fall back to the request id.
-  try {
-    if (invId) await setDoc(doc(db, "invoices", invId), { ...inv, createdAt: serverTimestamp() });
-    else { const ref = await addDoc(collection(db, "invoices"), { ...inv, createdAt: serverTimestamp() }); invId = ref.id; }
-  } catch (err) { console.warn("Could not save invoice copy (check the invoices Firestore rule)", err); invId = invId || id; }
-  return invId;
-}
-$("ilist").addEventListener("click", async e => {
-  const ib = e.target.closest("button[data-inv]");
-  if (ib) {
-    const card = ib.closest(".order"), id = card.dataset.id, r = reqs[id] || {}, box = card.querySelector(".inv"), m = card.querySelector(".im");
-    const say = (t, c) => { m.textContent = t; m.className = "msg im " + c; };
-    if (ib.dataset.inv === "open") { box.hidden = !box.hidden; return; }
-    ib.disabled = true;
-    try {
-      const inv = await buildInvoice(card, id);
-      if (ib.dataset.inv === "dl") { (await makePdf(inv)).save(inv.number + ".pdf"); say("PDF downloaded.", "ok"); ib.disabled = false; return; }
-      if (ib.dataset.inv === "gen") {
-        say("Generating invoice...", "ok");
-        const invId = await saveInvoice(id, inv);
-        await updateDoc(doc(db, "installRequests", id), { invoiceId: invId, invoiceNumber: inv.number, invoiceDate: inv.date, invoiceAmount: inv.installationPrice, invoiceNotes: inv.notes });
-        (await makePdf(inv)).save(inv.number + ".pdf");
-        say("Invoice " + inv.number + " generated and PDF downloaded. Not sent on WhatsApp.", "ok");
-        setTimeout(loadInstalls, 1500); ib.disabled = false; return;
-      }
-      say("Preparing invoice...", "ok");
-      const set = (await getDoc(doc(db, "secrets", "wasms"))).data() || {};
-      if (!set.apiKey || !set.workerUrl) throw new Error("Save your wasms.net API key and Worker URL in WhatsApp settings first.");
-      const to = normPhone(card.querySelector(".iw").value, set.countryCode);
-      if (to.length < 10) throw new Error("Enter a valid WhatsApp number with country code.");
-      const invId = await saveInvoice(id, inv);
-      // save the PDF so it can be sent as a document; otherwise send the link only
-      let pdfUrl = "";
-      try { pdfUrl = await hostPdf(await makePdf(inv), set.workerUrl); }
-      catch (err) { console.warn("PDF hosting failed", err); }
-      const text = "Hello " + r.name + ", your CCTV PITS installation invoice " + inv.number + " is ready.\nInstallation charges: " + money(inv.installationPrice) + (inv.notes ? "\n" + inv.notes : "") + "\nThank you!";
-      const body = { to, message: text };
-      if (pdfUrl) Object.assign(body, { media_url: pdfUrl, media_type: "document", filename: inv.number + ".pdf" });
-      const res = await fetch(set.workerUrl, { method: "POST", headers: { Authorization: "Bearer " + await auth.currentUser.getIdToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      const out = await res.json().catch(() => ({}));
-      if (!res.ok || !out.ok) throw new Error("WhatsApp: " + (out.error || res.status));
-      await updateDoc(doc(db, "installRequests", id), { invoiceId: invId, invoiceNumber: inv.number, invoiceDate: inv.date, invoiceAmount: inv.installationPrice, invoiceNotes: inv.notes, invoiceSentAt: serverTimestamp() });
-      say(pdfUrl ? "Invoice PDF sent on WhatsApp." : "Invoice link sent on WhatsApp (could not save the PDF file, check the invoicePdfs Firestore rule).", "ok");
-      setTimeout(loadInstalls, 1500);
-    } catch (err) { say(err.message || "Could not send the invoice.", "err"); }
-    ib.disabled = false; return;
-  }
-  const b = e.target.closest("button[data-st]"); if (!b) return;
-  try { await updateDoc(doc(db, "installRequests", b.closest(".order").dataset.id), { status: b.dataset.st }); loadInstalls(); }
-  catch (err) { alert("Could not update request."); }
-});
-
-async function loadWa() { try { const s = (await getDoc(doc(db, "secrets", "wasms"))).data() || {}; $("wcc").value = s.countryCode || "92"; $("wid").value = s.accountId || ""; $("wsend").value = s.sendUrl || ""; $("wurl").value = s.workerUrl || ""; if (s.apiKey) $("wkey").placeholder = "Saved. Type a new key to replace it"; } catch (e) {} }
-$("wsave").onclick = async () => {
-  const m = $("wmsg"), data = { countryCode: $("wcc").value.replace(/\D/g, "") || "92", accountId: $("wid").value.trim(), sendUrl: $("wsend").value.trim(), workerUrl: $("wurl").value.trim().replace(/\/+$/, "") };
-  if ($("wkey").value.trim()) data.apiKey = $("wkey").value.trim();
-  try { await setDoc(doc(db, "secrets", "wasms"), data, { merge: true }); $("wkey").value = ""; m.textContent = "Saved."; m.className = "msg ok"; loadWa(); }
-  catch (e) { m.textContent = "Could not save. Publish the new Firestore rules first."; m.className = "msg err"; }
-};
-// ---------- WhatsApp test ----------
-async function sendTest(kind) {
-  const m = $("wtmsg"), btns = [$("wtestmsg"), $("wtestpdf")];
-  const say = (t, c) => { m.textContent = t; m.className = "msg " + c; };
-  btns.forEach(b => b.disabled = true);
-  try {
-    const set = (await getDoc(doc(db, "secrets", "wasms"))).data() || {};
-    if (!set.apiKey || !set.workerUrl) throw new Error("Save your wasms.net API key and Worker URL first.");
-    const to = normPhone($("wtest").value, set.countryCode);
-    if (to.length < 10) throw new Error("Enter a valid WhatsApp number to send the test to.");
-    const body = { to, message: "Test message from CCTV PITS admin. WhatsApp sending is working." };
-    if (kind === "pdf") {
-      say("Creating test PDF...", "ok");
-      const d = new Date();
-      const inv = {
-        number: "TEST-" + d.toISOString().slice(0, 10).replace(/-/g, ""), date: d.toLocaleDateString("en-GB"),
-        customer: { name: "Test Customer", phone: to, email: "test@example.com", address: "Test address", city: "Gujranwala" },
-        site: { type: "Home", areaValue: 5, areaUnit: "marla" },
-        items: [{ name: "CCTV camera (sample)", desc: "Sample line for testing", quantity: 2, unitPrice: 5000 }, { name: "Installation charges", desc: "", quantity: 1, unitPrice: 3000 }],
-        installationPrice: 13000, notes: "This is a test invoice."
-      };
-      const pdf = await makePdf(inv);
-      let url;
-      try { url = await hostPdf(pdf, set.workerUrl); }
-      catch (err) { throw new Error("Could not save the test PDF (" + (err.code || err.message) + "). Add the invoicePdfs rule to your Firestore rules and publish."); }
-      body.message = "Test PDF from CCTV PITS admin.";
-      Object.assign(body, { media_url: url, media_type: "document", filename: inv.number + ".pdf" });
-    }
-    say("Sending...", "ok");
-    let res;
-    try { res = await fetch(set.workerUrl, { method: "POST", headers: { Authorization: "Bearer " + await auth.currentUser.getIdToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
-    catch (err) { throw new Error("Could not reach the Worker. Most likely its CORS setting does not allow " + location.origin + " (see browser console)."); }
-    const out = await res.json().catch(() => ({}));
-    if (!res.ok || !out.ok) throw new Error("WhatsApp: " + (out.error || res.status));
-    say(kind === "pdf" ? "Test PDF sent." : "Test message sent.", "ok");
-  } catch (err) { say(err.message || "Could not send the test.", "err"); }
-  btns.forEach(b => b.disabled = false);
-}
-$("wtestmsg").onclick = () => sendTest("msg");
-$("wtestpdf").onclick = () => sendTest("pdf");
 onAuthStateChanged(auth, async u => {
   if (!u) return location.replace("login.html");
   let admin = false;
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   if (!admin) return location.replace("dashboard.html");
   $("main").hidden = false;
-  loadServices(); loadProjects(); loadPackages(); loadProducts(); loadCompanies(); loadUsers(); loadAccounts(); loadOrders(); loadInstalls(); loadWa();
+  loadProducts(); loadCompanies(); loadAccounts(); loadOrders();
 });
 </script>
 <script>
 (function () {
   var main = document.getElementById("main"); if (!main) return;
-  var T = [["dash", "Dashboard", []], ["orders", "Orders", ["Orders"]], ["installs", "Installation requests", ["Installation requests"]],
-    ["products", "Products", ["Add product", "Import products", "Product photos", "Products"]], ["catalog", "Brands & categories", ["Companies", "Categories"]],
-    ["services", "Services", ["Services"]], ["projects", "Projects", ["Projects"]], ["packages", "Packages", ["Packages"]], ["users", "Users", ["Registered users"]], ["settings", "Settings", ["Payment settings", "WhatsApp settings"]]];
-  var S = [["Orders", "ocount", "orders"], ["Pending orders", "opend", "orders"], ["Install requests", "icount", "installs"], ["New requests", "inew", "installs"],
-    ["Products", "pcount", "products"], ["Services", "scount", "services"], ["Projects", "pjcount", "projects"], ["Packages", "pkcount", "packages"], ["Brands", "ccount", "catalog"], ["Users", "ucount", "users"]];
+  var T = [["dash", "Dashboard", []], ["orders", "Orders", ["Orders"]], ["products", "Products", ["Add product", "Import products", "Product photos", "Products"]], ["catalog", "Brands & categories", ["Companies", "Categories"]], ["settings", "Settings", ["Payment settings"]]];
+  var S = [["Orders", "ocount", "orders"], ["Pending orders", "opend", "orders"], ["Products", "pcount", "products"], ["Brands", "ccount", "catalog"]];
   var boxes = [].slice.call(main.querySelectorAll(":scope > .box")), wrap = document.createElement("div"), side = document.createElement("nav"), body = document.createElement("div"), panels = {};
   wrap.className = "adm"; side.className = "adm-side"; main.classList.add("adm-wrap");
   T.forEach(function (t) {
@@ -1145,7 +659,7 @@ onAuthStateChanged(auth, async u => {
   function val(id) { var e = document.getElementById(id); return e ? e.textContent : "0"; }
   function tick() {
     [].forEach.call(st.querySelectorAll("[data-src]"), function (e) { e.textContent = val(e.dataset.src); });
-    [["orders", "opend"], ["installs", "inew"]].forEach(function (x) {
+    [["orders", "opend"]].forEach(function (x) {
       var b = side.querySelector('[data-t="' + x[0] + '"]'), n = Number(val(x[1])) || 0, old = b.querySelector("b");
       if (old) old.remove(); if (n > 0) b.insertAdjacentHTML("beforeend", "<b>" + n + "</b>");
     });

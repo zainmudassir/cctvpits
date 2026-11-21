@@ -24,13 +24,13 @@ const errors = {
 };
 const friendly = e => errors[e.code] || "Something went wrong. Please try again.";
 
-// Admins go to the admin dashboard, everyone else to the store.
+// Admins go to the admin dashboard; customers return to the store (?next=/) or their account page.
 async function goHome(u) {
   let admin = false;
   try { admin = (await getDoc(doc(db, "admins", u.uid))).exists(); } catch (e) {}
   const next = new URLSearchParams(location.search).get("next");
-  const ok = /^[a-z]+\.html(\?pkg=[A-Za-z0-9_-]+)?$/.test(next || "");
-  location.replace(admin ? "admin.html" : (ok ? next : "dashboard.html"));
+  const ok = next === "/";   // only the store homepage is allowed as a return page
+  location.replace(admin ? "admin.html" : (ok ? "/" : "dashboard.html"));
 }
 
 onAuthStateChanged(auth, u => { if (u && !form.dataset.busy) goHome(u); });

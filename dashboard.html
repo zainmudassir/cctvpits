@@ -14,12 +14,12 @@
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="index.html"><img src="assets/images/logo.png" alt="" onerror="this.style.display='none'"></a>
-  <nav><a href="index.html">Home</a><a href="old/shop.html">Store</a><a href="packages/">Packages</a><a href="old/cart.html">Cart</a><a href="#" id="out">Log out</a></nav>
+  <a class="brand" href="/"><img src="assets/images/logo.png" alt="" onerror="this.style.display='none'"></a>
+  <nav><a href="/">Store</a><a href="#" id="out">Log out</a></nav>
 </header>
 <main class="wrap">
   <h1 id="hello">My account</h1>
-  <p class="sub">Your details and settings.</p>
+  <p class="sub">Your details and orders.</p>
   <div class="box"><h2>Account</h2>
     <div class="kv"><b>Name</b><span id="v-name"></span><b>Email</b><span id="v-email"></span><b>Phone</b><span id="v-phone"></span><b>Member since</b><span id="v-since"></span></div>
   </div>
@@ -32,7 +32,6 @@
     </form>
   </div>
   <div class="box" id="orders"><h2>My orders</h2><div id="olist">Loading...</div></div>
-  <div class="box" id="installs"><h2>My installation requests</h2><div id="ilist">Loading...</div><p style="margin-top:12px"><a href="old/install.html" style="color:var(--blue);font-weight:700">Book an installation</a></p></div>
 </main>
 <script type="module">
 import { auth, db } from "./firebase.js";
@@ -53,18 +52,6 @@ async function loadOrders(uid) {
     </div>`).join("") || "<p>No orders yet.</p>";
   } catch (e) { $("olist").textContent = "Could not load orders."; }
 }
-async function loadInstalls(uid) {
-  try {
-    const snap = await getDocs(query(collection(db, "installRequests"), where("userId", "==", uid)));
-    const list = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-    $("ilist").innerHTML = list.map(r => `<div class="order">
-      <div class="oh"><b>#${r.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(r.status)}">${esc(r.status)}</span><span>${r.createdAt ? r.createdAt.toDate().toLocaleDateString() : ""}</span></div>
-      <div>${esc(r.placeType)} &middot; ${esc(r.cameras)} item${r.cameras > 1 ? "s" : ""} &middot; ${esc(r.address)}, ${esc(r.city)}</div>
-      ${(r.items || []).map(i => `<div>&bull; ${esc(i.quantity)} x ${esc(i.name)}</div>`).join("")}
-      ${r.invoiceId ? `<div><a style="color:var(--blue);font-weight:700" href="old/invoice.html?id=${esc(r.invoiceId)}">View invoice ${esc(r.invoiceNumber)} (Rs. ${esc(Number(r.invoiceAmount).toLocaleString())})</a></div>` : ""}
-    </div>`).join("") || "<p>No installation requests yet.</p>";
-  } catch (e) { $("ilist").textContent = "Could not load requests."; }
-}
 let user;
 onAuthStateChanged(auth, async u => {
   if (!u) return location.replace("login.html");
@@ -78,7 +65,7 @@ onAuthStateChanged(auth, async u => {
   $("v-phone").textContent = d.phone || "-";
   $("v-since").textContent = d.createdAt ? d.createdAt.toDate().toLocaleDateString() : "-";
   $("name").value = name; $("phone").value = d.phone || "";
-  loadOrders(u.uid); loadInstalls(u.uid);
+  loadOrders(u.uid);
 });
 $("f").addEventListener("submit", async e => {
   e.preventDefault();

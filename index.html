@@ -138,14 +138,14 @@ form.co input[type=file]{padding:9px}
 <body>
 <header class="hd" id="hd">
   <div class="hd-in">
-    <a class="logo" href="/home-2/" aria-label="CCTV PITS home"><img src="/assets/images/logo.png" alt="CCTV PITS" width="120" height="36"></a>
+    <a class="logo" href="/" aria-label="CCTV PITS home"><img src="/assets/images/logo.png" alt="CCTV PITS" width="120" height="36"></a>
     <form class="search" role="search" id="sf" onsubmit="return false">
       <label class="sr" for="q">Search products</label>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="Search cameras, DVRs, brands..." autocomplete="off">
     </form>
     <div class="acts">
-      <a class="acct" id="acct" href="/login.html?next=%2Fhome-2%2F">Login</a>
+      <a class="acct" id="acct" href="/login.html?next=%2F">Login</a>
       <button class="cartbtn" id="cartbtn" type="button" aria-label="Open cart">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.4a1.6 1.6 0 0 0 1.6 1.2h8.2a1.6 1.6 0 0 0 1.6-1.2L21 7H6"/></svg>
         <span class="sr">Cart,</span><b id="cc">0</b>
@@ -194,7 +194,7 @@ const inCart = id => (getCart().find(x => x.id === id) || {}).qty || 0;
 /* ---------------- firebase (loaded only when needed) ---------------- */
 let fbp = null, authP = null, user = null;
 const fire = () => fbp || (fbp = Promise.all([import("/firebase-lite.js"), import(AU), import(FS)]).then(([l, a, f]) => ({ auth: l.auth, db: l.db, a, f })));
-const drawAcct = k => { const a = $("acct"); a.textContent = k === "guest" ? "Login" : k === "admin" ? "Admin" : "My account"; a.href = k === "guest" ? "/login.html?next=%2Fhome-2%2F" : k === "admin" ? "/admin.html" : "/dashboard.html"; };
+const drawAcct = k => { const a = $("acct"); a.textContent = k === "guest" ? "Login" : k === "admin" ? "Admin" : "My account"; a.href = k === "guest" ? "/login.html?next=%2F" : k === "admin" ? "/admin.html" : "/dashboard.html"; };
 try { drawAcct(localStorage.getItem("acct-hint") || "guest"); } catch (e) {}
 const authState = () => authP || (authP = fire().then(x => new Promise(res => {
   x.a.onAuthStateChanged(x.auth, async u => {
@@ -333,7 +333,7 @@ async function startCheckout() {
   if (notes.length) return renderCart();            // show what changed first; the customer presses Checkout again
   let u = null; try { u = await authState(); } catch (e) {}
   if (!u) {
-    mode = "login"; pbody.innerHTML = '<div class="empty"><p>Log in or create an account to place your order. Your cart is saved.</p><div class="stack"><a class="btn" href="/login.html?next=%2Fhome-2%2F">Log in</a><a class="btn sec" href="/register.html?next=%2Fhome-2%2F">Create account</a><button class="btn sec" type="button" data-back>Back to cart</button></div></div>'; return;
+    mode = "login"; pbody.innerHTML = '<div class="empty"><p>Log in or create an account to place your order. Your cart is saved.</p><div class="stack"><a class="btn" href="/login.html?next=%2F">Log in</a><a class="btn sec" href="/register.html?next=%2F">Create account</a><button class="btn sec" type="button" data-back>Back to cart</button></div></div>'; return;
   }
   let accounts = [], prof = {};
   try {
