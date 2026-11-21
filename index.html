@@ -133,6 +133,24 @@ form.co input[type=file]{padding:9px}
 }
 @media(max-width:520px){.grid{gap:12px}.body{padding:14px 12px 16px}.name{font-size:15px}.price{font-size:15px}.btn{font-size:11px;padding:12px 8px}.acct{padding:10px 11px;font-size:11px}.r2{grid-template-columns:1fr}.logo img{height:30px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* add-ons dialog ("Need anything with this?") */
+#adov{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;visibility:hidden;transition:.25s;z-index:90}
+#adov.on{opacity:1;visibility:visible}
+#adn{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%);width:min(520px,94vw);max-height:88vh;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line);border-top:3px solid var(--accent);z-index:100;opacity:0;visibility:hidden;transition:.25s}
+#adn.on{opacity:1;visibility:visible;transform:translate(-50%,-50%)}
+#adb{overflow-y:auto;padding:16px 20px 20px}
+.adm{color:var(--mute);font-size:14px}
+.adg{font:700 12px/1 var(--head);letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin:18px 0 2px}
+.ado{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:4px;margin-top:8px;cursor:pointer;background:var(--card)}
+.ado:has(input:checked){border-color:var(--accent);background:var(--card2)}
+.ado input{accent-color:var(--accent);width:18px;height:18px;flex:none}
+.ado .prd-img{width:56px;flex:none;aspect-ratio:1;border-radius:3px}.ado .prd-img svg{width:26px;height:26px}
+.ado>div:not(.prd-img){min-width:0;flex:1}.ado b{display:block;font-size:14px;line-height:1.3}.ado small{color:var(--dim)}
+.ado .pr{font-weight:700;white-space:nowrap;font-size:14px}
+.adf{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+@media(max-width:520px){.adf{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){#adn{transition:none}}
 </style>
 </head>
 <body>
@@ -170,6 +188,11 @@ form.co input[type=file]{padding:9px}
 <footer class="ft" id="ft">&copy; CCTV PITS &middot; Orders are confirmed after payment is verified &middot; <a id="walink" href="https://wa.me/923053871991" target="_blank" rel="noopener">WhatsApp +92 305 3871991</a></footer>
 
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="adov"></div>
+<div id="adn" role="dialog" aria-modal="true" aria-labelledby="adt" aria-hidden="true">
+  <div class="ph"><h2 id="adt">Need anything with this?</h2><button class="x" id="adx" type="button" aria-label="Close">&times;</button></div>
+  <div id="adb"></div>
+</div>
 <div id="ov"></div>
 <aside id="panel" role="dialog" aria-modal="true" aria-labelledby="ptitle" aria-hidden="true">
   <div class="ph"><h2 id="ptitle">Your cart</h2><button class="x" id="pclose" type="button" aria-label="Close">&times;</button></div>
@@ -259,7 +282,7 @@ grid.addEventListener("click", e => {
   const b = e.target.closest("[data-add]"); if (!b) return;
   const p = byId.get(b.dataset.add); if (!p) return;
   if (p.stock !== null && inCart(p.id) >= p.stock) return toast("Only " + p.stock + " in stock");
-  addToCart(p); toast(p.name + " added to cart");
+  addToCart(p); if (!openAddons(p, b)) toast(p.name + " added to cart");
 });
 
 /* ---------------- cart badge ---------------- */
@@ -396,6 +419,41 @@ function done(id, total) {
     '<div class="stack"><a class="btn" href="https://wa.me/' + WA + '?text=' + encodeURIComponent("Hello CCTV PITS, I placed order #" + no + ".") + '" target="_blank" rel="noopener">Message us on WhatsApp</a><a class="btn sec" href="/dashboard.html">View my orders</a><button class="btn sec" type="button" data-close>Continue shopping</button></div></div>';
   footer("");
 }
+
+/* ---------------- add-ons: "Only this item" or add related products (DVR, cable...) ---------------- */
+const LOCK = ["hd", "bar", "count", "main", "ft"];
+const avail = r => r && r.price > 0 && (r.stock === null || r.stock > 0);
+let adOpen = false, adFrom = null, adRel = [];
+function openAddons(p, from) {
+  const rel = (p.related || []).map(id => byId.get(id)).filter(r => avail(r) && r.id !== p.id && !inCart(r.id)).slice(0, 12);
+  if (!rel.length) return false;
+  adRel = rel; adFrom = from || null; adOpen = true;
+  const groups = {}; rel.forEach(r => { const g = r.category || "More"; (groups[g] = groups[g] || []).push(r); });
+  $("adb").innerHTML = '<p class="adm"><b>' + esc(p.name) + '</b> is in your cart. Add what you need to complete your setup, or continue with just this item.</p>' +
+    Object.keys(groups).map(g => '<div class="adg">' + esc(g) + '</div>' + groups[g].map(r =>
+      '<label class="ado"><input type="checkbox" value="' + esc(r.id) + '"><div class="prd-img" data-id="' + esc(r.id) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' +
+      '<div><b>' + esc(r.name) + '</b><small>' + esc(r.brand) + '</small></div><span class="pr">' + money(r.price) + '</span></label>').join("")).join("") +
+    '<div class="adf"><button class="btn sec" type="button" data-adskip>Only this item</button><button class="btn" type="button" data-adadd disabled>Add selected</button></div>';
+  $("adov").classList.add("on"); $("adn").classList.add("on"); $("adn").setAttribute("aria-hidden", "false");
+  LOCK.forEach(id => { const e = $(id); if (e) e.inert = true; }); document.body.style.overflow = "hidden";
+  hydrateImages($("adb"), byId); $("adx").focus(); return true;
+}
+function closeAddons() {
+  if (!adOpen) return; adOpen = false;
+  $("adov").classList.remove("on"); $("adn").classList.remove("on"); $("adn").setAttribute("aria-hidden", "true");
+  LOCK.forEach(id => { const e = $(id); if (e) e.inert = false; }); document.body.style.overflow = "";
+  if (adFrom && adFrom.focus) adFrom.focus();
+}
+const adPicked = () => [...$("adb").querySelectorAll("input:checked")].map(i => byId.get(i.value)).filter(Boolean);
+$("adb").addEventListener("change", () => { const n = adPicked().length, b = $("adb").querySelector("[data-adadd]"); b.disabled = !n; b.textContent = n ? "Add selected (" + n + ")" : "Add selected"; });
+$("adb").addEventListener("click", e => {
+  if (e.target.closest("[data-adskip]")) { toast("Added to cart"); return closeAddons(); }
+  if (!e.target.closest("[data-adadd]")) return;
+  const picked = adPicked().filter(r => avail(r) && (r.stock === null || inCart(r.id) < r.stock));
+  picked.forEach(r => addToCart(r)); closeAddons(); toast(picked.length + " add-on" + (picked.length === 1 ? "" : "s") + " added to cart");
+});
+$("adx").onclick = () => { toast("Added to cart"); closeAddons(); }; $("adov").onclick = () => { toast("Added to cart"); closeAddons(); };
+addEventListener("keydown", e => { if (e.key === "Escape" && adOpen) { toast("Added to cart"); closeAddons(); } });
 </script>
 </body>
 </html>

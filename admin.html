@@ -11,6 +11,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="auth.css">
 <link rel="stylesheet" href="dash.css">
+<style>
+.rel-q{width:100%;margin-bottom:8px}
+.rel-list{max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;background:#fff}
+.rel-row{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;margin:0;font-weight:600}
+.rel-row:last-child{border-bottom:0}.rel-row input{margin-top:4px;width:auto}
+.rel-row small{display:block;font-weight:400;color:var(--muted)}
+.rel-n{margin:6px 0 0}
+dialog#reldlg{border:1px solid var(--line);border-radius:8px;padding:20px;width:min(560px,94vw)}
+dialog#reldlg::backdrop{background:rgba(0,0,0,.6)}
+dialog#reldlg h3{margin-bottom:12px;font-size:17px}
+.rbtns{display:flex;gap:10px;margin-top:14px}
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -73,6 +85,8 @@
       <div><label for="pcmp">Old price (optional, shows Sale)</label><input id="pcmp" type="number" min="0"></div></div>
       <label style="display:flex;align-items:center;font-weight:600"><input id="pnew" type="checkbox"> Mark as New</label>
       <img id="preview" alt="">
+      <label>Related products <span style="font-weight:400;color:var(--muted)">(optional: when a customer adds this product, we offer these, for example a DVR or cable for a camera)</span></label>
+      <div id="prel"></div>
       <label for="pdesc">Short description</label>
       <textarea id="pdesc"></textarea>
       <button class="primary" type="submit" style="max-width:220px">Add product</button>
@@ -129,6 +143,7 @@
 
 </main>
 <div class="lb" id="lb" hidden><img alt=""></div>
+<dialog id="reldlg"><h3 id="reltitle">Related products</h3><div id="relhost"></div><div class="rbtns"><button class="primary" id="relsave" type="button" style="max-width:160px;margin-top:0">Save</button><button class="sm" id="relcancel" type="button">Cancel</button></div></dialog>
 
 <script type="module">
 import { auth, db } from "./firebase.js";
@@ -168,17 +183,49 @@ $("pimg").addEventListener("change", async e => {
   } catch (err) { show("That file is not a valid image.", "err"); }
 });
 
+// ---------- related products (offered when a customer adds a product to the cart) ----------
+let relList = [], getRel = () => [], relEditId = null, relGetEdit = () => [];
+const REL_MAX = 12;
+function relPicker(host, selected, excludeId) {
+  const sel = new Set((selected || []).filter(id => id !== excludeId));
+  host.innerHTML = '<input class="rel-q" type="search" placeholder="Search products..." aria-label="Search related products" autocomplete="off"><div class="rel-list"></div><p class="sub rel-n"></p>';
+  const q = host.querySelector(".rel-q"), list = host.querySelector(".rel-list"), n = host.querySelector(".rel-n");
+  const count = () => { n.textContent = sel.size + " selected (max " + REL_MAX + ")"; };
+  const draw = () => {
+    const t = q.value.trim().toLowerCase();
+    list.innerHTML = relList.filter(p => p.id !== excludeId && (sel.has(p.id) || !t || (p.name + " " + p.brand + " " + p.category).toLowerCase().includes(t)))
+      .map(p => `<label class="rel-row"><input type="checkbox" value="${esc(p.id)}"${sel.has(p.id) ? " checked" : ""}><span>${esc(p.name)}<small>${esc(p.brand)} &middot; ${esc(p.category)} &middot; ${rs(p.price)}</small></span></label>`).join("") || "<p style=\"padding:12px\">No products found.</p>";
+    count();
+  };
+  list.addEventListener("change", e => {
+    const c = e.target; if (c.type !== "checkbox") return;
+    if (c.checked && sel.size >= REL_MAX) { c.checked = false; n.textContent = "You can pick up to " + REL_MAX + " related products."; return; }
+    c.checked ? sel.add(c.value) : sel.delete(c.value); count();
+  });
+  q.addEventListener("input", draw);
+  q.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });   // Enter in the search box must not submit the form
+  draw(); return () => [...sel];
+}
+const initAddRel = keep => { getRel = relPicker($("prel"), keep || [], null); };
+$("relcancel").onclick = () => $("reldlg").close();
+$("relsave").onclick = async () => {
+  try { await updateDoc(doc(db, "products", relEditId), { related: relGetEdit() }); $("reldlg").close(); loadProducts(); }
+  catch (err) { alert("Could not save. Check your admin login and Firestore rules."); }
+};
+
 async function loadProducts() {
   const snap = await getDocs(query(collection(db, "products"), orderBy("createdAt", "desc")));
   // one-time tidy: banners now live in their own section, so remove old banner data from products
   snap.docs.filter(d => d.data().bannerImage !== undefined || d.data().showInBanner !== undefined)
     .forEach(d => updateDoc(d.ref, { bannerImage: deleteField(), showInBanner: deleteField() }).catch(() => {}));
   $("pcount").textContent = snap.size;
+  relList = snap.docs.map(d => { const v = d.data(); return { id: d.id, name: String(v.name || ""), brand: String(v.brand || ""), category: String(v.category || ""), price: Number(v.price) || 0 }; }).sort((x, y) => x.name.localeCompare(y.name));
+  initAddRel(getRel());
   $("plist").innerHTML = snap.docs.map(d => { const p = d.data(), sale = Number(p.comparePrice) > Number(p.price); return `
     <tr data-id="${d.id}" data-new="${!!p.isNew}">
       <td><input type="checkbox" class="pk" aria-label="Select product"></td>
       <td>${p.image ? `<img src="${esc(p.image)}" alt="">` : ""}</td>
-      <td>${esc(p.name)}<br>${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span> ' : ""}${p.stock === 0 ? '<span class="pill">Out of stock</span>' : ""}</td>
+      <td>${esc(p.name)}<br>${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span> ' : ""}${p.stock === 0 ? '<span class="pill">Out of stock</span> ' : ""}${(p.related || []).length ? '<span class="pill confirmed">' + p.related.length + " related</span>" : ""}</td>
       <td>${p.brand ? esc(p.brand) : '<span class="pill pending">No company</span>'}<br>${esc(p.category)}</td>
       <td>${sale ? "<s>" + rs(p.comparePrice) + "</s><br>" : ""}${rs(p.price)}</td>
       <td style="min-width:230px"><div style="display:flex;flex-wrap:wrap;gap:6px">
@@ -186,6 +233,7 @@ async function loadProducts() {
         <button class="sm" data-act="path">Image path</button>
         <button class="sm" data-act="new">${p.isNew ? "Unmark New" : "Mark New"}</button>
         <button class="sm" data-act="company">Company / category</button>
+        <button class="sm" data-act="related">Related</button>
         <button class="sm" data-act="price">Edit price</button>
         <button class="sm del" data-act="del">Delete</button></div></td>
     </tr>`; }).join("") || '<tr><td colspan="6">No products yet. Add your first one above.</td></tr>';
@@ -234,6 +282,11 @@ $("plist").addEventListener("click", async e => {
       await updateDoc(ref, { image: v.trim() });
     }
     else if (act === "new") await updateDoc(ref, { isNew: tr.dataset.new !== "true" });
+    else if (act === "related") {
+      const cur = (await getDoc(ref)).data() || {}; relEditId = id;
+      $("reltitle").textContent = "Related products for " + (cur.name || "this product");
+      relGetEdit = relPicker($("relhost"), cur.related || [], id); $("reldlg").showModal(); return;
+    }
     else if (act === "company") {
       const cur = (await getDoc(ref)).data(), names = companyList.map(c => c.name);
       if (!names.length) { alert("Add a company first."); return; }
@@ -465,11 +518,12 @@ $("pf").addEventListener("submit", async e => {
       comparePrice: Number($("pcmp").value) || 0,
       isNew: $("pnew").checked,
       description: $("pdesc").value.trim(),
+      related: getRel(),
       image: imageData,
       createdAt: serverTimestamp(),
       createdBy: auth.currentUser.uid
     });
-    e.target.reset(); imageData = ""; $("preview").style.display = "none";
+    e.target.reset(); initAddRel([]); imageData = ""; $("preview").style.display = "none";
     show("Product added. It is now live on the store.", "ok");
     loadProducts(); loadCompanies();
   } catch (err) {
