@@ -207,7 +207,7 @@ h3.st{font-size:14px;letter-spacing:.4px;text-transform:uppercase;margin:24px 0 
       </div>
       <p class="sub" id="pksum" style="margin:6px 0 0">Nothing picked yet.</p>
       <div class="row" style="margin-top:14px">
-        <div><label for="pkimg">Photo (optional)</label><input id="pkimg" type="file" accept="image/*"></div>
+        <div><label for="pkimg">Photo (optional). Empty = the CCTV PITS package picture is used</label><input id="pkimg" type="file" accept="image/*"></div>
         <div><label for="pkdesc">Short description (optional)</label><input id="pkdesc"></div>
       </div>
       <label style="display:flex;align-items:center;font-weight:600"><input id="pknew" type="checkbox"> Mark as New</label>
@@ -498,7 +498,7 @@ function renderPackages(pdocs) {
     const inc = (p.items || []).map(t => { const [id, q] = String(t).split("|"), r = pById(id); return `<li>${esc(q)} &times; ${r ? esc(r.name) : "<i>(deleted product)</i>"}</li>`; }).join("") +
       (p.services || []).map(t => { const [l, a] = svParts(t); return `<li>${esc(l)} &mdash; ${a ? rs(a) : "free"}</li>`; }).join("");
     return `<tr data-id="${d.id}" data-new="${!!p.isNew}">
-      <td>${p.image ? `<img src="${esc(p.image)}" alt="">` : ""}</td>
+      <td><img src="${p.image ? esc(p.image) : "/assets/images/package.svg"}" alt=""></td>
       <td>${esc(p.name)}<br>${p.brand ? `<span class="pill">${esc(p.brand)}</span> ` : ""}${p.pkType ? `<span class="pill confirmed">${p.pkType === "ip" ? "IP" : "Analog"}</span> ` : ""}${p.channels ? `<span class="pill confirmed">${p.channels} ch</span> ` : ""}${p.mp ? `<span class="pill confirmed">${p.mp} MP</span> ` : ""}${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span>' : ""}</td>
       <td><ul class="inc" style="list-style:none;padding:0;margin:0">${inc}</ul></td>
       <td>${sale ? "<s>" + rs(p.comparePrice) + "</s><br>" : ""}${rs(p.price)}</td>

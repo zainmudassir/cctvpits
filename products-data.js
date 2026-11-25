@@ -46,9 +46,11 @@ export async function loadProducts() {
 // ---------- photos (lazy) ----------
 const imgs = new Map();
 const resolveImg = s => !s ? "" : /^(data:|https?:)/i.test(s) ? s : "/" + s.replace(/^\/+/, "");
+const PK_IMG = "/assets/images/package.svg";
 function getImage(p) {
-  if (p.image !== undefined) return Promise.resolve(resolveImg(p.image));
-  if (!imgs.has(p.id)) imgs.set(p.id, fetch(BASE + "/" + p.id + "?mask.fieldPaths=image&key=" + KEY).then(r => r.ok ? r.json() : null).then(j => resolveImg(sv(((j || {}).fields || {}).image))).catch(() => ""));
+  const dflt = s => s || (p.type === "package" ? PK_IMG : "");
+  if (p.image !== undefined) return Promise.resolve(dflt(resolveImg(p.image)));
+  if (!imgs.has(p.id)) imgs.set(p.id, fetch(BASE + "/" + p.id + "?mask.fieldPaths=image&key=" + KEY).then(r => r.ok ? r.json() : null).then(j => dflt(resolveImg(sv(((j || {}).fields || {}).image)))).catch(() => dflt("")));
   return imgs.get(p.id);
 }
 export function hydrateImages(root, byId) {

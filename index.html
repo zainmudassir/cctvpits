@@ -190,7 +190,7 @@ body{font-family:'Manrope',system-ui,sans-serif}
 .pkc .cnt{font-size:13px;color:var(--mute)}
 .pkc .pp{font-family:var(--head);font-weight:800;font-size:18px;margin-top:auto;padding-top:6px}.pkc .pp s{font:400 12px 'Manrope',sans-serif;color:var(--dim);margin-left:6px}
 .pkc .btn{padding:11px 10px;font-size:12px;background:var(--tag);border-color:var(--tag);color:#fff}.pkc .btn:hover{background:#a90f14;border-color:#a90f14}
-.pkc .save{position:absolute;right:10px;top:10px;background:var(--ink);color:#fff;font:800 11px/1 'Manrope',sans-serif;padding:6px 8px;border-radius:4px;z-index:2}
+.pkc .badge{display:none}.pkc .save{position:absolute;right:10px;top:10px;background:var(--ink);color:#fff;font:800 11px/1 'Manrope',sans-serif;padding:6px 8px;border-radius:4px;z-index:2}
 @media(max-width:1100px){.pkrow{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px;scrollbar-width:thin}.pkc{flex:0 0 230px;scroll-snap-align:start}}
 .pkf{max-width:1320px;margin:0 auto;width:100%;padding:12px 4vw 0;display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}
 .pkf[hidden]{display:none}.pkf .g{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.pkf .l{font-weight:800;font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
@@ -241,6 +241,27 @@ body{font-family:'Manrope',system-ui,sans-serif}
 .adf{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
 @media(max-width:520px){.adf{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){#adn{transition:none}}
+#pkv{position:fixed;inset:0;z-index:50;background:#f6f8fb;overflow-y:auto}#pkv[hidden]{display:none}
+.pkv-in{max-width:1180px;margin:0 auto;padding:16px 4vw 60px}
+.pkv-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.pkv-bar button{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font:800 13px/1 'Manrope',sans-serif;cursor:pointer;color:var(--ink)}
+.pkv-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+.pkv-l,.pkv-r{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}.pkv-r{position:sticky;top:16px}
+.pkv-head{display:grid;grid-template-columns:minmax(0,320px) 1fr;gap:18px;align-items:center;margin-bottom:6px}
+.pkv-head .prd-img{aspect-ratio:16/10;border-radius:12px;background:#eaf2ff}
+.pkv-head h1{font-size:clamp(22px,3vw,30px);line-height:1.15;margin:4px 0 8px;font-weight:800}.pkv-head p{color:var(--dim);margin:0}
+.pkv h2{font-size:17px;font-weight:800;margin:22px 0 8px}
+.pvl,.pvr{display:grid;grid-template-columns:54px minmax(0,1fr) auto auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.pvl .prd-img,.pvr .prd-img{width:54px;aspect-ratio:1;border-radius:8px}.pvl small,.pvr small{display:block;color:var(--dim);font-size:12.5px}
+.pvl .qty{margin:0}.pvl.off{opacity:.45}.pvl.svc{grid-template-columns:minmax(0,1fr) auto auto auto}.pvl .pvt{min-width:84px;text-align:right}
+.pvx{background:none;border:0;font-size:18px;cursor:pointer;color:var(--dim);padding:4px 8px}
+.pvr{grid-template-columns:54px minmax(0,1fr) auto auto}
+.pkv input[type=search]{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font:inherit}
+.pvs-p{font-size:30px;font-weight:800;margin:4px 0}.pvs-p s{font-size:15px;color:var(--dim);margin-left:8px;font-weight:600}
+.pvs-n{font-size:13px;color:var(--dim);line-height:1.5;margin:8px 0}.pvs-w{background:#fef3c7;border-radius:10px;padding:10px 12px;font-size:13px;color:#78350f;margin:8px 0}.pvs-g{color:#15803d;font-weight:800}
+#pkv .btn{margin-top:8px}#pkv .btn:not(.ghost):not(:disabled){background:var(--tag);border-color:var(--tag);color:#fff}#pkv .btn:not(.ghost):not(:disabled):hover{background:#a90f14;border-color:#a90f14}#pkv #pvq{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+[data-pkview]{cursor:pointer}
+@media(max-width:860px){.pkv-grid{grid-template-columns:1fr}.pkv-r{position:static;order:-1}.pkv-head{grid-template-columns:1fr}.pvl{grid-template-columns:54px minmax(0,1fr) auto}.pvl .qty,.pvl .pvt{grid-column:2}.pvl .pvx{grid-column:3;grid-row:1}.pvl.svc{grid-template-columns:minmax(0,1fr) auto}}
 </style>
 </head>
 <body>
@@ -302,6 +323,7 @@ body{font-family:'Manrope',system-ui,sans-serif}
 
 <footer class="ft" id="ft">&copy; CCTV PITS &middot; Orders are confirmed after payment is verified &middot; <a href="tel:+923053871991">Call +92 305 3871991</a> &middot; <a id="walink" href="https://wa.me/923053871991" target="_blank" rel="noopener">WhatsApp +92 305 3871991</a></footer>
 
+<div id="pkv" hidden role="dialog" aria-modal="true" aria-label="Package details"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="adov"></div>
 <div id="adn" role="dialog" aria-modal="true" aria-labelledby="adt" aria-hidden="true">
@@ -362,11 +384,11 @@ const card = p => {
   const action = p.price > 0 ? (out ? '<button class="btn" type="button" disabled>' + (pk ? "Unavailable" : "Out of stock") + '</button>' : '<button class="btn" type="button" data-add="' + esc(p.id) + '">' + (pk ? "Add package" : "Add to cart") + '</button>')
     : '<a class="btn ghost" href="' + waLink(p) + '" target="_blank" rel="noopener">Ask price on WhatsApp</a>';
   const inc = pk ? incHtml(p, 7) : "";
-  return '<article class="card"><div class="media"><div class="prd-img" data-id="' + esc(p.id) + '"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' +
+  return '<article class="card"><div class="media"><div class="prd-img" data-id="' + esc(p.id) + '"' + (pk ? ' data-pkview="' + esc(p.id) + '"' : "") + '><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' +
     (pk ? '<span class="badge b-pk">Package</span>' : p.isNew ? '<span class="badge b-new">New</span>' : "") + (off > 0 ? '<span class="badge b-off">-' + off + '%</span>' : "") + '<button class="shr" type="button" data-share="' + esc(p.id) + '" aria-label="Share ' + esc(p.name) + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button></div>' +
-    '<div class="body">' + (pk ? '<span class="brand">' + esc(pkLabel(p)) + '</span>' : p.brand ? '<span class="brand">' + esc(p.brand) + '</span>' : "") + '<h3 class="name">' + esc(p.name) + '</h3>' + (p.description ? '<p class="desc">' + esc(p.description) + '</p>' : "") + inc +
+    '<div class="body">' + (pk ? '<span class="brand">' + esc(pkLabel(p)) + '</span>' : p.brand ? '<span class="brand">' + esc(p.brand) + '</span>' : "") + '<h3 class="name"' + (pk ? ' data-pkview="' + esc(p.id) + '"' : "") + '>' + esc(p.name) + '</h3>' + (p.description ? '<p class="desc">' + esc(p.description) + '</p>' : "") + inc +
     '<div class="price">' + (p.price > 0 ? money(p.price) + (off > 0 ? '<s>' + money(p.comparePrice) + '</s>' : "") : '<span style="font-size:15px">Call for price</span>') + '</div>' +
-    '<div class="stock ' + (out ? "out" : low ? "low" : "in") + '">' + (out ? (pk ? "Some items unavailable" : "Out of stock") : low ? "Only " + p.stock + " left" : "In stock") + '</div>' + action + '</div></article>';
+    '<div class="stock ' + (out ? "out" : low ? "low" : "in") + '">' + (out ? (pk ? "Some items unavailable" : "Out of stock") : low ? "Only " + p.stock + " left" : "In stock") + '</div>' + action + (pk ? '<button class="btn ghost" type="button" data-pkview="' + esc(p.id) + '" style="margin-top:8px">View details &amp; customise</button>' : "") + '</div></article>';
 };
 let onlyId = "";
 function view() {
@@ -399,8 +421,8 @@ function drawPk() {
   box.hidden = !list.length; if (!list.length) return;
   $("pkrow").innerHTML = list.map(p => {
     const it = pkgItems(p), n = it.reduce((t, x) => t + x.q, 0), off = p.comparePrice > p.price ? Math.round((1 - p.price / p.comparePrice) * 100) : 0;
-    return '<article class="pkc"><div class="prd-img" data-id="' + esc(p.id) + '"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' + (off > 0 ? '<span class="save">SAVE ' + off + '%</span>' : '<span class="badge b-pk">Package</span>') +
-      '<div class="pb"><span class="brand">' + esc(pkLabel(p)) + '</span><h3>' + esc(p.name) + '</h3><span class="cnt">' + (n ? n + ' item' + (n === 1 ? "" : "s") + (pkServ(p).length ? " + services" : "") : "Service") + ' included:</span>' + incHtml(p, 7) + '<div class="pp">' + money(p.price) + (off > 0 ? '<s>' + money(p.comparePrice) + '</s>' : "") + '</div><button class="btn" type="button" data-add="' + esc(p.id) + '">Add package</button></div></article>';
+    return '<article class="pkc"><div class="prd-img" data-id="' + esc(p.id) + '" data-pkview="' + esc(p.id) + '"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' + (off > 0 ? '<span class="save">SAVE ' + off + '%</span>' : '<span class="badge b-pk">Package</span>') +
+      '<div class="pb"><span class="brand">' + esc(pkLabel(p)) + '</span><h3 data-pkview="' + esc(p.id) + '">' + esc(p.name) + '</h3><span class="cnt">' + (n ? n + ' item' + (n === 1 ? "" : "s") + (pkServ(p).length ? " + services" : "") : "Service") + ' included:</span>' + incHtml(p, 7) + '<div class="pp">' + money(p.price) + (off > 0 ? '<s>' + money(p.comparePrice) + '</s>' : "") + '</div><button class="btn" type="button" data-add="' + esc(p.id) + '">Add package</button><button class="btn ghost" type="button" data-pkview="' + esc(p.id) + '" style="margin-top:8px">View details &amp; customise</button></div></article>';
   }).join("");
   hydrateImages($("pkrow"), byId);
 }
@@ -420,9 +442,10 @@ function syncUrl() {
   if (!list.length) { grid.innerHTML = '<p class="msg">Products are coming soon. Message us on WhatsApp for prices and availability.</p>'; countEl.textContent = ""; return; }
   all = list; all.forEach(p => byId.set(p.id, p)); ready = true;
   const u = new URLSearchParams(location.search);
-  q.value = u.get("q") || ""; cat = u.get("category") || ""; onlyId = u.get("product") || "";
+  q.value = u.get("q") || ""; cat = u.get("category") || ""; onlyId = u.get("product") || ""; const pkOpen = u.get("package") || (isPkg(byId.get(onlyId)) ? onlyId : ""); if (isPkg(byId.get(onlyId))) onlyId = "";
   const brands = uniq(all.map(p => p.brand)); selB.innerHTML = '<option value="">All brands</option>' + brands.map(b => '<option>' + esc(b) + '</option>').join(""); selB.value = brands.includes(u.get("brand")) ? u.get("brand") : "";
   drawChips(); draw(true); drawPk(); if (onlyId) setTimeout(() => $("bar").scrollIntoView(), 60);
+  if (pkOpen) openPk(pkOpen, false);
 })();
 let st; q.addEventListener("input", () => { clearTimeout(st); st = setTimeout(() => { onlyId = ""; syncUrl(); draw(true); }, 200); });
 selB.addEventListener("change", () => { drawChips(); syncUrl(); draw(true); });
@@ -431,6 +454,7 @@ $("chips").addEventListener("click", e => { const b = e.target.closest("[data-ca
 more.querySelector("button").addEventListener("click", () => { shown += PER; draw(false); });
 countEl.addEventListener("click", e => { if (!e.target.closest("[data-showall]")) return; e.preventDefault(); onlyId = ""; try { history.replaceState(null, "", "/"); } catch (x) {} draw(true); });
 const gridClick = e => {
+  const pvw = e.target.closest("[data-pkview]"); if (pvw && !e.target.closest("[data-share]")) return openPk(pvw.dataset.pkview, true);
   const sb = e.target.closest("[data-share]");
   if (sb) {
     const p = byId.get(sb.dataset.share); if (!p) return;
@@ -447,6 +471,80 @@ const gridClick = e => {
 };
 grid.addEventListener("click", gridClick); $("pkrow").addEventListener("click", gridClick);
 
+/* ---------------- package details page: see everything, add or remove, price follows ---------------- */
+const pkv = $("pkv"); let pv = null;
+const svParse = (s, i) => { const m = s.l.match(/^(.*) x (\d+)$/), n = m ? Number(m[2]) : 0; return { i, l: m ? m[1] : s.l, unit: n ? s.a / n : s.a, n, q: n || 1, on: true }; };
+const pvKey = v => JSON.stringify([[...v.it].sort(), v.sv.map(s => [s.on ? 1 : 0, s.q])]);
+const pvMod = () => pvKey(pv) !== pv.o;
+const pvTot = () => { let t = 0; pv.it.forEach((q, id) => { const r = byId.get(id); if (r) t += r.price * q; }); pv.sv.forEach(s => { if (s.on) t += Math.round(s.unit) * s.q; }); return t; };
+const pvCap = r => r.stock === null ? 99 : Math.min(99, r.stock);
+function openPk(id, push) {
+  const p = byId.get(id); if (!p || !isPkg(p)) return;
+  pv = { p, it: new Map(pkgItems(p).map(x => [x.r.id, x.q])), sv: pkServ(p).map(svParse) }; pv.o = pvKey(pv);
+  pkv.innerHTML = '<div class="pkv-in"><div class="pkv-bar"><button type="button" data-pvback>&larr; Back to shop</button><button type="button" data-pvshare>Share</button></div><div class="pkv-grid"><div class="pkv-l">' +
+    '<div class="pkv-head"><div class="prd-img" data-id="' + esc(p.id) + '"></div><div><span class="brand">' + esc(pkLabel(p)) + '</span><h1>' + esc(p.name) + '</h1>' + (p.description ? '<p>' + esc(p.description) + '</p>' : "") + '</div></div>' +
+    '<h2>What is included</h2><div id="pvlines"></div><h2>Add more items</h2><input id="pvq" type="search" placeholder="Search cameras, cables, hard disks..." autocomplete="off" aria-label="Search items to add"><div id="pvres"></div></div><aside class="pkv-r" id="pvsum"></aside></div></div>';
+  pkv.hidden = false; pkv.scrollTop = 0; document.body.style.overflow = "hidden";
+  if (push) try { history.pushState({ pk: id }, "", "/?package=" + encodeURIComponent(id)); } catch (e) {}
+  pvDraw(); pvRes(); hydrateImages(pkv, byId);
+}
+function hidePk() { if (pkv.hidden) return; pkv.hidden = true; pv = null; if (!open) document.body.style.overflow = ""; }
+function backPk() { if (history.state && history.state.pk) history.back(); else { hidePk(); try { history.replaceState(null, "", "/"); } catch (e) {} } }
+addEventListener("popstate", () => { if (!(history.state && history.state.pk)) hidePk(); });
+function pvDraw() {
+  const p = pv.p;
+  const items = [...pv.it].map(([id, q]) => { const r = byId.get(id); return r ? '<div class="pvl" data-k="i:' + esc(id) + '"><div class="prd-img" data-id="' + esc(id) + '"></div><div><b>' + esc(r.name) + '</b><small>' + (r.brand ? esc(r.brand) + ' &middot; ' : "") + money(r.price) + ' each</small></div><div class="qty"><button type="button" data-pvq="-1" aria-label="Less">&minus;</button><span>' + q + '</span><button type="button" data-pvq="1" aria-label="More"' + (q >= pvCap(r) ? " disabled" : "") + '>+</button></div><b class="pvt">' + money(r.price * q) + '</b><button class="pvx" type="button" data-pvrm aria-label="Remove ' + esc(r.name) + '">&times;</button></div>' : ""; }).join("");
+  const svs = pv.sv.map(s => '<div class="pvl svc' + (s.on ? "" : " off") + '" data-k="s:' + s.i + '"><div><b>' + esc(s.l) + '</b><small>' + (s.unit ? (s.n ? money(Math.round(s.unit)) + ' each' : "Service") : "Free") + '</small></div>' +
+    (s.n && s.on ? '<div class="qty"><button type="button" data-pvq="-1" aria-label="Less">&minus;</button><span>' + s.q + '</span><button type="button" data-pvq="1" aria-label="More">+</button></div>' : "<span></span>") + '<b class="pvt">' + (s.unit ? money(Math.round(s.unit) * s.q) : "Free") + '</b><button class="pvx" type="button" data-pvrm aria-label="' + (s.on ? "Remove" : "Add back") + '">' + (s.on ? "&times;" : "+") + '</button></div>').join("");
+  $("pvlines").innerHTML = (items + svs) || '<p class="sub">Nothing left in this package. Add items below.</p>';
+  const mod = pvMod(), tot = pvTot(), pr = p.price, save = tot - pr;
+  $("pvsum").innerHTML = !mod
+    ? '<b>Complete package price</b><div class="pvs-p">' + money(pr) + (save > 0 ? '<s>' + money(tot) + '</s>' : "") + '</div>' + (save > 0 ? '<div class="pvs-g">You save ' + money(save) + ' (' + Math.round(save / tot * 100) + '%)</div>' : "") +
+      '<p class="pvs-n">This special price is for the complete package as shown. If you add or remove anything, every item is charged at its normal single-item rate.</p><button class="btn" type="button" data-pvcart' + (pkgOk(p) ? "" : " disabled") + '>' + (pkgOk(p) ? "Add package to cart" : "Unavailable") + '</button>'
+    : '<b>Your customised package</b><div class="pvs-p">' + money(tot) + '</div><div class="pvs-w">You changed the package, so the package discount no longer applies. Items are at their normal rates. The original package costs ' + money(pr) + '.</div>' +
+      '<button class="btn" type="button" data-pvcart' + (tot > 0 ? "" : " disabled") + '>Add to cart</button><button class="btn ghost" type="button" data-pvreset>Reset to original package</button>';
+}
+function pvRes() {
+  const t = ($("pvq").value || "").trim().toLowerCase();
+  const list = all.filter(r => !isPkg(r) && r.price > 0 && (r.stock === null || r.stock > 0) && (!t || (r.name + " " + r.brand + " " + r.category).toLowerCase().includes(t))).sort((a, b) => a.name.localeCompare(b.name)).slice(0, t ? 30 : 12);
+  $("pvres").innerHTML = list.map(r => '<div class="pvr"><div class="prd-img" data-id="' + esc(r.id) + '"></div><div><b>' + esc(r.name) + '</b><small>' + esc([r.brand, r.category].filter(Boolean).join(" · ")) + '</small></div><span>' + money(r.price) + '</span><button class="sm" type="button" data-pvadd="' + esc(r.id) + '">Add</button></div>').join("") || '<p class="sub">No items found.</p>';
+  hydrateImages($("pvres"), byId);
+}
+pkv.addEventListener("input", e => { if (e.target.id === "pvq") pvRes(); });
+pkv.addEventListener("click", e => {
+  if (!pv) return;
+  if (e.target.closest("[data-pvback]")) return backPk();
+  if (e.target.closest("[data-pvshare]")) { const url = location.origin + "/p/" + pv.p.id; if (navigator.share) navigator.share({ title: pv.p.name, url }).catch(() => {}); else (navigator.clipboard ? navigator.clipboard.writeText(url).then(() => toast("Link copied"), () => toast(url)) : toast(url)); return; }
+  if (e.target.closest("[data-pvreset]")) { openPk(pv.p.id, false); return; }
+  const ad = e.target.closest("[data-pvadd]");
+  if (ad) { const r = byId.get(ad.dataset.pvadd); if (!r) return; pv.it.set(r.id, Math.min(pvCap(r), (pv.it.get(r.id) || 0) + 1)); pvDraw(); hydrateImages($("pvlines"), byId); toast(r.name + " added to this package"); return; }
+  if (e.target.closest("[data-pvcart]")) return pvAdd();
+  const row = e.target.closest(".pvl"); if (!row) return; const k = row.dataset.k.slice(0, 1), id = row.dataset.k.slice(2);
+  const step = e.target.closest("[data-pvq]"), rm = e.target.closest("[data-pvrm]");
+  if (k === "i") {
+    const r = byId.get(id), cur = pv.it.get(id) || 0;
+    if (step) { const n = Math.min(pvCap(r), cur + Number(step.dataset.pvq)); n > 0 ? pv.it.set(id, n) : pv.it.delete(id); }
+    else if (rm) pv.it.delete(id);
+  } else {
+    const s = pv.sv[Number(id)];
+    if (step && s.n) s.q = Math.max(1, Math.min(99, s.q + Number(step.dataset.pvq)));
+    else if (rm) s.on = !s.on;
+  }
+  pvDraw(); hydrateImages($("pvlines"), byId);
+});
+function pvAdd() {
+  const p = pv.p;
+  if (!pvMod()) { if (!pkgOk(p)) return toast("Some items in this package are unavailable"); addP(p); }
+  else {
+    let n = 0;
+    pv.it.forEach((q, id) => { const r = byId.get(id); if (!r || !(r.price > 0)) return; const cur = inCart(id); addToCart(r); setQty(id, cur + q); n++; });
+    pv.sv.forEach(s => { const u = Math.round(s.unit); if (!s.on || !(u > 0)) return; const id = "svc:" + p.id + ":" + s.i, cur = inCart(id); addToCart({ id, name: s.l + " (" + p.name + ")", price: u }); setQty(id, cur + s.q); n++; });
+    if (!n) return toast("Add at least one item first");
+  }
+  toast("Added to cart"); backPk(); setTimeout(() => openPanel("cart"), 60);
+}
+addEventListener("keydown", e => { if (e.key === "Escape" && pv && !open && !adOpen) backPk(); });
+
 /* ---------------- cart badge ---------------- */
 const badge = () => { const n = cartCount(), b = $("cc"); b.textContent = n; b.classList.remove("bump"); void b.offsetWidth; if (n) b.classList.add("bump"); };
 addEventListener("cartchange", () => { badge(); if (open && mode === "cart") renderCart(); });
@@ -459,13 +557,13 @@ const panel = $("panel"), pbody = $("pbody"), pfoot = $("pfoot");
 function openPanel(m) {
   opener = document.activeElement; open = true;
   $("ov").classList.add("on"); panel.classList.add("on"); panel.setAttribute("aria-hidden", "false");
-  ["topstrip", "hd", "pkgs", "hero", "bar", "pkf", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = true; });
+  ["topstrip", "hd", "pkgs", "hero", "bar", "pkf", "count", "main", "ft", "pkv"].forEach(id => { const e = $(id); if (e) e.inert = true; });
   document.body.style.overflow = "hidden";
   m === "checkout" ? startCheckout() : m === "build" ? renderBuilder() : renderCart(); $("pclose").focus();
 }
 function closePanel() {
   open = false; $("ov").classList.remove("on"); panel.classList.remove("on"); panel.setAttribute("aria-hidden", "true");
-  ["topstrip", "hd", "pkgs", "hero", "bar", "pkf", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = false; });
+  ["topstrip", "hd", "pkgs", "hero", "bar", "pkf", "count", "main", "ft", "pkv"].forEach(id => { const e = $(id); if (e) e.inert = false; });
   document.body.style.overflow = ""; if (opener && opener.focus) opener.focus();
 }
 $("cartbtn").onclick = () => openPanel("cart"); $("pclose").onclick = closePanel; $("ov").onclick = closePanel;
@@ -530,6 +628,13 @@ document.addEventListener("click", e => { if (e.target.closest("[data-build]")) 
 function reconcile() {
   const out = [], keep = [];
   getCart().forEach(l => {
+    if (String(l.id).startsWith("svc:")) {
+      const [, pid, ix] = l.id.split(":"), pp = byId.get(pid), sv0 = pp && pkServ(pp)[Number(ix)];
+      if (!sv0) return out.push(l.name + " is no longer available and was removed.");
+      const m0 = sv0.l.match(/^(.*) x (\d+)$/), unit = Math.round(m0 ? sv0.a / Number(m0[2]) : sv0.a);
+      if (l.price !== unit) out.push("The price of " + l.name + " is now " + money(unit) + ".");
+      return keep.push([{ id: l.id, name: l.name, price: unit, stock: null }, l.qty]);
+    }
     const p = byId.get(l.id);
     if (!p || !(p.price > 0) || (isPkg(p) && !pkgOk(p))) return out.push(l.name + " is no longer available and was removed.");
     if (p.stock !== null && p.stock <= 0) return out.push(p.name + " is out of stock and was removed.");
@@ -616,7 +721,7 @@ function done(id, total) {
 }
 
 /* ---------------- complete your setup: quantity + matching items (DVR, NVR, cable, connectors...) ---------------- */
-const LOCK = ["topstrip", "hd", "pkgs", "hero", "bar", "pkf", "count", "main", "ft"];
+const LOCK = ["topstrip", "hd", "pkgs", "hero", "bar", "pkf", "count", "main", "ft", "pkv"];
 const avail = r => r && r.price > 0 && (r.stock === null || r.stock > 0);
 const kindOf = p => { const t = ((p.category || "") + " " + (p.name || "")).toLowerCase(); return /\bnvr\b/.test(t) ? "nvr" : /\b(dvr|xvr)\b/.test(t) ? "dvr" : /camera|\bcam\b|ptz|dome|bullet|turret/.test(t) ? "camera" : "acc"; };
 let adOpen = false, adFrom = null, adMain = null, adSel = new Map(), adIds = new Map();
