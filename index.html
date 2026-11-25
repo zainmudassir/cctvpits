@@ -296,12 +296,12 @@ const addP = p => addToCart(isPkg(p) ? { ...p, includes: pkgText(p) } : p);
 /* ---------------- firebase (loaded only when needed) ---------------- */
 let fbp = null, authP = null, user = null;
 const fire = () => fbp || (fbp = Promise.all([import("/firebase-lite.js"), import(AU), import(FS)]).then(([l, a, f]) => ({ auth: l.auth, db: l.db, a, f })));
-const drawAcct = k => { const a = $("acct"); a.textContent = k === "guest" ? "Login" : k === "admin" ? "Admin" : "My account"; a.href = k === "guest" ? "/login.html?next=%2F" : k === "admin" ? "/admin.html" : "/dashboard.html"; };
+const drawAcct = k => { const a = $("acct"); a.textContent = k === "guest" ? "Login" : "My account"; a.href = k === "guest" ? "/login.html?next=%2F" : "/dashboard.html"; };
 try { drawAcct(localStorage.getItem("acct-hint") || "guest"); } catch (e) {}
 const authState = () => authP || (authP = fire().then(x => new Promise(res => {
   x.a.onAuthStateChanged(x.auth, async u => {
     user = u; let k = "guest";
-    if (u) { k = "user"; try { if ((await x.f.getDoc(x.f.doc(x.db, "admins", u.uid))).exists()) k = "admin"; } catch (e) {} }
+    if (u) k = "user";
     try { localStorage.setItem("acct-hint", k); } catch (e) {}
     drawAcct(k); res(u);
   });
