@@ -13,7 +13,7 @@ export async function onRequest({ params, request }) {
       if (sv(f.name)) {
         name = sv(f.name) + " | CCTV PITS";
         const price = nv(f.price), items = ((f.items || {}).arrayValue || {}).values ? " (package)" : "";
-        desc = (price > 0 ? "Rs. " + price.toLocaleString("en-US") + items + ". " : "") + (sv(f.description) || "Buy online from CCTV PITS. Call or WhatsApp 0305 3871991.");
+        desc = (price > 0 ? "Rs. " + price.toLocaleString("en-US") + items + ". " : "") + (sv(f.description) || "Buy online from CCTV PITS. Call or WhatsApp +92 305 3871991.");
         if (sv(f.image)) img = origin + "/img/" + id;
       }
     }

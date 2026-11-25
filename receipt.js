@@ -20,7 +20,7 @@ export function receiptHtml(o) {
     '<div class="g"><div><h3>Customer</h3><b>' + e(c.name) + '</b><br>' + e(c.phone) + '<br>' + e(c.address) + (c.city ? ", " + e(c.city) : "") + (c.note ? '<br><i>' + e(c.note) + '</i>' : "") + '</div>' +
     '<div><h3>Payment</h3>' + e(p.bankName) + '<br>' + e(p.accountTitle) + '<br>' + e(p.accountNumber) + '<br>Trx ID: <b>' + e(o.trxId) + '</b></div></div>' +
     '<table><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Price</th><th class="r">Amount</th></tr></thead><tbody>' + rows + '<tr class="tot"><td colspan="3" class="r">Total</td><td class="r">' + rs(o.total) + '</td></tr></tbody></table>' +
-    '<div class="ft">Orders are confirmed after payment is verified. Thank you for shopping with CCTV PITS.<br>https://cctvpits.store &middot; Call / WhatsApp 0305 3871991</div></body></html>';
+    '<div class="ft">Orders are confirmed after payment is verified. Thank you for shopping with CCTV PITS.<br>https://cctvpits.store &middot; Call / WhatsApp +92 305 3871991</div></body></html>';
 }
 export function printReceipt(o) {
   const f = document.createElement("iframe");
