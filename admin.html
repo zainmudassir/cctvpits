@@ -36,6 +36,8 @@ h3.st{font-size:14px;letter-spacing:.4px;text-transform:uppercase;margin:24px 0 
 .cr{display:grid;grid-template-columns:1fr 150px auto;gap:8px;margin-top:6px}
 @media(max-width:620px){.sl-c{grid-template-columns:1fr 84px}.sl-t{grid-column:1/-1;text-align:left}.cr{grid-template-columns:1fr 1fr auto}}
 #pkrows .inc{font-size:13px;color:var(--muted)}
+.pq-h,.pq{display:grid;grid-template-columns:minmax(0,1.6fr) 1fr 1fr 1fr;gap:8px;align-items:center;margin:4px 0}.pq-h{font-size:12px;font-weight:700;color:var(--muted)}.pq-g{font-weight:800;margin:12px 0 2px}.pq input{margin:0;padding:8px 10px}.pq select{margin-left:6px;padding:4px 6px;width:auto}.pq b{font-size:13px}
+@media(max-width:600px){.pq-h,.pq{grid-template-columns:1fr 1fr 1fr}.pq>span:first-child,.pq-h>span:first-child{grid-column:1/-1}.pq b{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -167,18 +169,21 @@ h3.st{font-size:14px;letter-spacing:.4px;text-transform:uppercase;margin:24px 0 
         <button class="sm" type="button" data-qs="ip|4">IP 4 ch</button><button class="sm" type="button" data-qs="ip|8">IP 8 ch</button><button class="sm" type="button" data-qs="ip|16">IP 16 ch</button><button class="sm" type="button" data-qs="ip|32">IP 32 ch</button>
         <button class="sm" type="button" data-qs="survey">Survey only</button><button class="sm" type="button" data-qs="install">Installation only</button>
       </div>
+      <label>Company (brand)</label>
+      <div class="chipset" id="pkbrands" data-g="brand"></div>
       <label>Camera type</label>
       <div class="chipset" data-g="type"><button class="sm" type="button" data-v="analog">Analog (DVR)</button><button class="sm" type="button" data-v="ip">IP (NVR)</button></div>
       <label>Channels (recorder size)</label>
       <div class="chipset" data-g="ch"><button class="sm" type="button" data-v="4">4</button><button class="sm" type="button" data-v="8">8</button><button class="sm" type="button" data-v="16">16</button><button class="sm" type="button" data-v="32">32</button></div>
       <label>Camera resolution</label>
       <div class="chipset" data-g="mp"><button class="sm" type="button" data-v="1">1 MP</button><button class="sm" type="button" data-v="2">2 MP</button><button class="sm" type="button" data-v="3">3 MP</button><button class="sm" type="button" data-v="4">4 MP</button><button class="sm" type="button" data-v="5">5 MP</button><button class="sm" type="button" data-v="6">6 MP</button><button class="sm" type="button" data-v="8">8 MP</button></div>
-      <label>Company (brand)</label>
-      <div class="chipset" id="pkbrands" data-g="brand"></div>
 
       <h3 class="st">2. Items checklist</h3>
       <p class="sub" style="margin:0 0 8px">Quantities are suggestions for the chosen channels. Change them if your site needs more or less. Lines left on "Choose product" are skipped. Products must be added in the Products tab first.</p>
       <div id="pkslots"></div>
+      <h4 class="st" style="margin:16px 0 4px">Ready parts: type price and pieces yourself</h4>
+      <p class="sub" style="margin:0 0 8px">Power supply, hard disk, connectors and wire. Price and pieces are empty. Fill only the lines you need, the rest are skipped.</p>
+      <div id="pkparts"></div>
       <details id="pkmore" style="margin-top:12px"><summary style="cursor:pointer;font-weight:700">Add any other product</summary>
         <input id="pkq" type="search" placeholder="Search products..." autocomplete="off" aria-label="Search products to add" style="margin-top:8px">
         <div id="pklist" class="pk-list"></div>
@@ -365,7 +370,7 @@ function slotHtml(s) {
   mt.sort((x, y) => (brandOk(y) - brandOk(x)) || x.price - y.price); ot.sort((x, y) => x.name.localeCompare(y.name));
   const opt = p => `<option value="${esc(p.id)}"${st.id === p.id ? " selected" : ""}>${esc(p.name)}${p.brand ? " · " + esc(p.brand) : ""} · ${rs(p.price)}</option>`;
   const p0 = pById(st.id);
-  return `<div class="slot" data-k="${s.k}"><div class="sl-h"><b>${esc(s.label)}</b><small>${esc(s.hint)}</small></div><div class="sl-c"><select data-sel aria-label="${esc(s.label)}"><option value="">${mt.length ? "Choose product" : "No matching product yet. Pick from all, or add it in Products"}</option>${mt.length ? `<optgroup label="Matching">${mt.map(opt).join("")}</optgroup>` : ""}${ot.length ? `<optgroup label="All other products">${ot.map(opt).join("")}</optgroup>` : ""}</select><input type="number" min="0" max="999" value="${s.blank && !st.qty ? "" : st.qty}" placeholder="Qty" data-q aria-label="Quantity for ${esc(s.label)}"><span class="sl-t" data-t>${p0 ? rs(p0.price * st.qty) : ""}</span></div></div>`;
+  return `<div class="slot" data-k="${s.k}"><div class="sl-h"><b>${esc(s.label)}</b><small>${esc(s.hint)}</small></div><div class="sl-c"><select data-sel aria-label="${esc(s.label)}"><option value="">${mt.length ? "Choose product" : "No matching product yet. Add it in Products, or use Add any other product below"}</option>${mt.length ? `<optgroup label="Matching">${mt.map(opt).join("")}</optgroup>` : ""}</select><input type="number" min="0" max="999" value="${s.blank && !st.qty ? "" : st.qty}" placeholder="Qty" data-q aria-label="Quantity for ${esc(s.label)}"><span class="sl-t" data-t>${p0 ? rs(p0.price * st.qty) : ""}</span></div></div>`;
 }
 function pkRenderSlots() {
   const S = slotsFor(), box = $("pkslots");
@@ -378,10 +383,30 @@ function pkMap() {
   pkSel.forEach((q, id) => m.set(id, (m.get(id) || 0) + q)); return m;
 }
 const pkItemsTotal = () => { let t = 0; pkMap().forEach((q, id) => { const p = pById(id); if (p) t += q * p.price; }); return t; };
+const PQ = [
+  ["Power supply", [["2 Amp", "Power supply 2 Amp"], ["5 Amp", "Power supply 5 Amp"], ["15 Amp", "Power supply 15 Amp"], ["25 Amp", "Power supply 25 Amp"], ["32 Amp", "Power supply 32 Amp"]]],
+  ["Hard disk", [["500 GB", "Hard disk 500 GB"], ["1 TB", "Hard disk 1 TB"], ["2 TB", "Hard disk 2 TB"], ["4 TB", "Hard disk 4 TB"], ["8 TB", "Hard disk 8 TB"]], ["HDD", "SSD", "M.2"]],
+  ["Connectors", [["BNC connector", "BNC connector"], ["DC connector", "DC connector"], ["BNC & DC connector set", "BNC & DC connector set"], ["RJ45 connector", "RJ45 connector"]]],
+  ["Wire / cable", [["Siamese cable 3+1 coil", "Siamese cable 3+1 coil"], ["Siamese cable 2+1 coil", "Siamese cable 2+1 coil"], ["RG59 coaxial coil", "RG59 coaxial coil"], ["CAT6 cable coil", "CAT6 cable coil"], ["CAT5e cable coil", "CAT5e cable coil"], ["Power wire coil", "Power wire coil"]]]
+];
+function pkPartsRender() {
+  $("pkparts").innerHTML = '<div class="pq-h"><span></span><span>Price (Rs.)</span><span>Pieces</span><span>Total</span></div>' + PQ.map(([g, rows, types]) => `<div class="pq-g">${esc(g)}</div>` + rows.map(([n, l]) => `<div class="pq" data-l="${esc(l)}"><span>${esc(n)}${types ? ` <select data-ty aria-label="Disk type">${types.map(t => `<option>${t}</option>`).join("")}</select>` : ""}</span><input type="number" min="0" step="1" data-pp placeholder="Price" aria-label="Price of ${esc(n)}"><input type="number" min="0" max="999" step="1" data-pn placeholder="Pieces" aria-label="Pieces of ${esc(n)}"><b data-pt></b></div>`).join("")).join("");
+}
+function pkParts() {
+  const a = [];
+  document.querySelectorAll("#pkparts .pq").forEach(r => {
+    const pr = Math.max(0, Number(r.querySelector("[data-pp]").value) || 0), q = Math.max(0, Math.floor(Number(r.querySelector("[data-pn]").value) || 0)), ty = r.querySelector("[data-ty]");
+    r.querySelector("[data-pt]").textContent = pr && q ? rs(pr * q) : "";
+    if (pr > 0 && q > 0) a.push([r.dataset.l + (ty ? " (" + ty.value + ")" : "") + " x " + q, pr * q]);
+  });
+  return a;
+}
+$("pkparts").addEventListener("input", pkRecalc); $("pkparts").addEventListener("change", pkRecalc);
 function pkServices() {
   const a = [], inst = Number($("pkinst").value) || 0, sv = Number($("pksurv").value) || 0;
   if (inst > 0) a.push(["Installation & labour", inst]);
   if (sv > 0) a.push(["Site survey", sv]); else if ($("pksfree").checked) a.push(["Site survey", 0]);
+  pkParts().forEach(x => a.push(x));
   pkCust.forEach(c => { const l = String(c.l || "").trim(); if (l) a.push([l, Math.max(0, Number(c.a) || 0)]); });
   return a;
 }
@@ -412,7 +437,7 @@ function pkDraw() {
   $("pklist").innerHTML = pkAll.filter(p => pkSel.has(p.id) || !t || (p.name + " " + p.brand + " " + p.category).toLowerCase().includes(t))
     .map(p => `<div class="pk-row${pkSel.has(p.id) ? " on" : ""}"><span>${esc(p.name)}<small>${esc(p.brand)} &middot; ${esc(p.category)} &middot; ${rs(p.price)}</small></span><input type="number" min="0" max="99" step="1" value="${pkSel.get(p.id) || 0}" data-id="${esc(p.id)}" aria-label="Quantity of ${esc(p.name)}"></div>`).join("") || '<p style="padding:12px">No products found. Add products first.</p>';
 }
-function pkInit() { pkRenderChips(); pkRenderSlots(); pkDraw(); pkRenderCust(); pkRecalc(); }
+function pkInit() { if (!$("pkparts").children.length) pkPartsRender(); pkRenderChips(); pkRenderSlots(); pkDraw(); pkRenderCust(); pkRecalc(); }
 document.querySelectorAll("#pkf .chipset[data-g]").forEach(g => g.addEventListener("click", e => {
   const b = e.target.closest("button[data-v]"); if (!b) return;
   const k = g.dataset.g; pkS[k] = pkS[k] === b.dataset.v ? "" : b.dataset.v; pkAutoName(); pkRenderChips(); pkRenderSlots(); pkRecalc();
@@ -444,7 +469,7 @@ $("pkimg").addEventListener("change", async e => {
 });
 function pkReset() {
   pkSel = new Map(); pkTouched = false; pkEditId = null; pkImg = ""; pkS = { type: "", ch: "", mp: "", brand: "" }; slotSt = {}; pkCust = []; pkNameTouched = false;
-  $("pkf").reset(); $("pksubmit").textContent = "Add package"; $("pkcancel").hidden = true; $("pkmore").open = false; pkInit();
+  $("pkf").reset(); pkPartsRender(); $("pksubmit").textContent = "Add package"; $("pkcancel").hidden = true; $("pkmore").open = false; pkInit();
 }
 $("pkcancel").addEventListener("click", () => { pkReset(); pkshow("", ""); });
 $("pkf").addEventListener("submit", async e => {
