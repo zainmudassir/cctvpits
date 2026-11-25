@@ -26,7 +26,15 @@ dialog#reldlg h3{margin-bottom:12px;font-size:17px}
 .pk-row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--line)}
 .pk-row:last-child{border-bottom:0}.pk-row span{font-weight:600}.pk-row small{display:block;font-weight:400;color:var(--muted)}
 .pk-row input{width:76px;flex:none;text-align:center}.pk-row.on{background:#f2f8ff}
-.qs{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
+.chipset{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 6px}
+.chipset .sm[aria-pressed=true]{background:#1a2331;color:#fff;border-color:#1a2331}
+h3.st{font-size:14px;letter-spacing:.4px;text-transform:uppercase;margin:24px 0 4px;padding-left:10px;border-left:4px solid var(--accent)}
+.slot{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:8px;background:#fff}
+.sl-h{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}.sl-h small{color:var(--muted)}
+.sl-c{display:grid;grid-template-columns:1fr 84px 110px;gap:10px;align-items:center;margin-top:6px}
+.sl-c input{text-align:center}.sl-t{text-align:right;font-weight:700;font-size:14px}
+.cr{display:grid;grid-template-columns:1fr 150px auto;gap:8px;margin-top:6px}
+@media(max-width:620px){.sl-c{grid-template-columns:1fr 84px}.sl-t{grid-column:1/-1;text-align:left}.cr{grid-template-columns:1fr 1fr auto}}
 #pkrows .inc{font-size:13px;color:var(--muted)}
 </style>
 </head>
@@ -149,26 +157,49 @@ dialog#reldlg h3{margin-bottom:12px;font-size:17px}
     <div id="plmsg" class="msg" role="alert"></div>
   </div>
 
-  <div class="box"><h2>Add package</h2>
-    <p class="sub" style="margin-top:0">A package is a bundle sold together, for example camera + cable + connectors. Pick the products, set how many of each, then set the package price.</p>
+  <div class="box" id="pkbox"><h2>Add package</h2>
+    <p class="sub" style="margin-top:0">Just tap your choices. The checklist fills itself with the usual quantities. Pick a product for each line, add charges, and save.</p>
     <form id="pkf" class="wide">
-      <div class="row">
-        <div><label for="pkname">Package name</label><input id="pkname" required placeholder="For example: 4 Camera Home Kit"></div>
-        <div><label for="pkprice">Package price (Rs.)</label><input id="pkprice" type="number" min="1" step="1" required></div>
-      </div>
-      <div class="row">
-        <div><label for="pktype">Camera type</label><select id="pktype"><option value="">Not specified</option><option value="analog">Analog camera</option><option value="ip">IP camera</option></select></div>
-        <div><label for="pkch">Channels (recorder size)</label><select id="pkch"><option value="">Not specified</option><option value="4">4 channel</option><option value="8">8 channel</option><option value="16">16 channel</option><option value="32">32 channel</option></select></div>
-      </div>
-      <label>Quick start <span style="font-weight:400;color:var(--muted)">(tap one to fill the name, camera type and channels, then pick the products)</span></label>
-      <div class="qs" id="pkqs">
+      <h3 class="st">1. What kind of setup?</h3>
+      <label>Quick start</label>
+      <div class="chipset" id="pkqs">
         <button class="sm" type="button" data-qs="analog|4">Analog 4 ch</button><button class="sm" type="button" data-qs="analog|8">Analog 8 ch</button><button class="sm" type="button" data-qs="analog|16">Analog 16 ch</button><button class="sm" type="button" data-qs="analog|32">Analog 32 ch</button>
         <button class="sm" type="button" data-qs="ip|4">IP 4 ch</button><button class="sm" type="button" data-qs="ip|8">IP 8 ch</button><button class="sm" type="button" data-qs="ip|16">IP 16 ch</button><button class="sm" type="button" data-qs="ip|32">IP 32 ch</button>
+        <button class="sm" type="button" data-qs="survey">Survey only</button><button class="sm" type="button" data-qs="install">Installation only</button>
       </div>
-      <p class="sub" id="pksum" style="margin:6px 0 0">No products picked yet.</p>
-      <label for="pkq">1. Pick products <span style="font-weight:400;color:var(--muted)">(type a quantity next to each product you want in the package)</span></label>
-      <input id="pkq" type="search" placeholder="Search products..." autocomplete="off" aria-label="Search products to add">
-      <div id="pklist" class="pk-list"></div>
+      <label>Camera type</label>
+      <div class="chipset" data-g="type"><button class="sm" type="button" data-v="analog">Analog (DVR)</button><button class="sm" type="button" data-v="ip">IP (NVR)</button></div>
+      <label>Channels (recorder size)</label>
+      <div class="chipset" data-g="ch"><button class="sm" type="button" data-v="4">4</button><button class="sm" type="button" data-v="8">8</button><button class="sm" type="button" data-v="16">16</button><button class="sm" type="button" data-v="32">32</button></div>
+      <label>Camera resolution</label>
+      <div class="chipset" data-g="mp"><button class="sm" type="button" data-v="1">1 MP</button><button class="sm" type="button" data-v="2">2 MP</button><button class="sm" type="button" data-v="3">3 MP</button><button class="sm" type="button" data-v="4">4 MP</button><button class="sm" type="button" data-v="5">5 MP</button><button class="sm" type="button" data-v="6">6 MP</button><button class="sm" type="button" data-v="8">8 MP</button></div>
+      <label>Company (brand)</label>
+      <div class="chipset" id="pkbrands" data-g="brand"></div>
+
+      <h3 class="st">2. Items checklist</h3>
+      <p class="sub" style="margin:0 0 8px">Quantities are suggestions for the chosen channels. Change them if your site needs more or less. Lines left on "Choose product" are skipped. Products must be added in the Products tab first.</p>
+      <div id="pkslots"></div>
+      <details id="pkmore" style="margin-top:12px"><summary style="cursor:pointer;font-weight:700">Add any other product</summary>
+        <input id="pkq" type="search" placeholder="Search products..." autocomplete="off" aria-label="Search products to add" style="margin-top:8px">
+        <div id="pklist" class="pk-list"></div>
+      </details>
+
+      <h3 class="st">3. Charges (optional)</h3>
+      <div class="row">
+        <div><label for="pkinst">Installation and labour charges (Rs.)</label><input id="pkinst" type="number" min="0" step="1" placeholder="Leave empty if not included"></div>
+        <div><label for="pksurv">Site survey charges (Rs.)</label><input id="pksurv" type="number" min="0" step="1" placeholder="Leave empty if not included"></div>
+      </div>
+      <label style="display:flex;align-items:center;font-weight:600"><input id="pksfree" type="checkbox"> Site survey is free with this package</label>
+      <label>Other charges or items not in the catalog <span style="font-weight:400;color:var(--muted)">(for example: Extra 50m cable, Mounting pipe)</span></label>
+      <div id="pkcust"></div>
+      <button class="sm" id="pkaddc" type="button" style="margin-top:6px">+ Add another charge</button>
+
+      <h3 class="st">4. Name, price and photo</h3>
+      <div class="row">
+        <div><label for="pkname">Package name</label><input id="pkname" required placeholder="Fills itself from your choices, you can change it"></div>
+        <div><label for="pkprice">Package price (Rs.)</label><input id="pkprice" type="number" min="1" step="1" required></div>
+      </div>
+      <p class="sub" id="pksum" style="margin:6px 0 0">Nothing picked yet.</p>
       <div class="row" style="margin-top:14px">
         <div><label for="pkimg">Photo (optional)</label><input id="pkimg" type="file" accept="image/*"></div>
         <div><label for="pkdesc">Short description (optional)</label><input id="pkdesc"></div>
@@ -294,55 +325,133 @@ function filterP() {
 }
 $("psearch").addEventListener("input", filterP);
 
-// ---------- packages (stored in the products collection: type "package", items ["productId|qty"]) ----------
-let pkAll = [], pkSel = new Map(), pkTouched = false, pkEditId = null, pkImg = "";
+// ---------- packages (stored in the products collection: type "package") ----------
+// Package fields: items ["productId|qty"], services ["label|amount"], pkType (analog|ip), channels, mp, brand.
+let pkAll = [], pkSel = new Map(), pkTouched = false, pkEditId = null, pkImg = "", pkS = { type: "", ch: "", mp: "", brand: "" }, slotSt = {}, pkCust = [], pkNameTouched = false;
 const pkshow = (t, c) => { $("pkmsg").textContent = t; $("pkmsg").className = "msg " + c; };
-const pkTotal = () => { let t = 0; pkSel.forEach((q, id) => { const p = pkAll.find(x => x.id === id); if (p) t += q * p.price; }); return t; };
-function pkSummary() {
-  let n = 0; pkSel.forEach(q => n += q);
-  const tot = pkTotal(), price = Number($("pkprice").value) || 0;
-  if (!n) { $("pksum").textContent = "No products picked yet."; return; }
-  $("pksum").textContent = n + " item" + (n === 1 ? "" : "s") + " picked. Items total: " + rs(tot) + (price && price < tot ? ". Customers save " + rs(tot - price) + " (shown as Sale)." : price > tot ? ". Package price is higher than the items total." : ".");
+const pById = id => pkAll.find(x => x.id === id);
+const K = {
+  cam: /camera|\bcam\b|dome|bullet|turret|\bptz\b|eyeball|cube/i, dvr: /\b(dvr|xvr|hdcvi|penta)\b/i, nvr: /\bnvr\b/i,
+  hdd: /\b(hdd|hard\s?(disk|drive)|surveillance (drive|disk)|skyhawk|purple)\b|\b\d(\.\d)?\s?tb\b/i, psu: /adapt[eo]r|power supply|\bpsu\b|smps|\b12\s?v\b/i,
+  coax: /siamese|rg\s?-?59|rg\s?-?6\b|coaxial|coax|cctv cable|3\s?\+\s?1|2\s?\+\s?1/i, lan: /cat\s?-?[56]e?|utp|ethernet|lan cable|network cable/i,
+  bnc: /\bbnc\b/i, dcj: /\bdc\b.*(jack|connector|plug)|dc plug|dc jack/i, rj45: /rj\s?-?45/i, sw: /switch/i, box: /junction|\bbox\b|bracket|casing/i,
+  ip: /\bip\b|poe|network|\bipc\b|ds-2cd|dh-ipc/i, an: /analog|turbo|hd-?tvi|\btvi\b|\bahd\b|\bcvi\b|hdcvi|ds-2ce|\bhac\b|\bdvr\b|\bxvr\b/i
+};
+const ptext = p => (p.name + " " + p.category + " " + p.brand);
+const brandOk = p => !pkS.brand || p.brand === pkS.brand;
+const typeOk = p => { const t = ptext(p), ip = K.ip.test(t), an = K.an.test(t); return !pkS.type || (pkS.type === "ip" ? ip || !an : an || !ip); };
+const mpOk = p => { if (!pkS.mp) return true; const x = ptext(p).match(/(\d+(?:\.\d+)?)\s?mp/i); return !x || Number(x[1]) === Number(pkS.mp); };
+const chOk = p => { const x = ptext(p).match(/(\d+)\s?-?\s?(ch|channel)/i); return !x || Number(x[1]) === Number(pkS.ch); };
+const notAcc = t => !(K.psu.test(t) || K.coax.test(t) || K.lan.test(t) || K.bnc.test(t) || K.dcj.test(t) || K.rj45.test(t) || K.hdd.test(t) || K.box.test(t));
+function slotsFor() {
+  const ch = Number(pkS.ch); if (!pkS.type || !ch) return [];
+  const a = pkS.type === "analog", mp = pkS.mp ? pkS.mp + "MP " : "";
+  const S = [{ k: "cam", label: "Cameras (" + mp + (a ? "analog" : "IP") + ")", hint: "One per channel. Dome, bullet, PTZ or wireless", q: ch, test: p => { const t = ptext(p); return K.cam.test(t) && !K.dvr.test(t) && !K.nvr.test(t) && notAcc(t) && typeOk(p) && mpOk(p) && brandOk(p); } },
+    { k: "rec", label: a ? "DVR / XVR recorder (" + ch + " channel)" : "NVR recorder (" + ch + " channel)", hint: a ? "Records analog cameras" : "Records IP cameras. PoE ports on the NVR save the switch", q: 1, test: p => (a ? K.dvr : K.nvr).test(ptext(p)) && chOk(p) && brandOk(p) },
+    { k: "hdd", label: "Hard disk (storage)", hint: "1TB to 4TB, surveillance type", q: 1, test: p => K.hdd.test(ptext(p)) }];
+  if (a) S.push({ k: "psu", label: "Power: adapters or multi-output power supply", hint: "One 12V adapter per camera, or one multi-output supply", q: ch, test: p => K.psu.test(ptext(p)) },
+    { k: "coax", label: "Camera cable (Siamese / coaxial roll)", hint: "Usually a 90m roll for 2 cameras. Change to suit the site", q: Math.ceil(ch / 2), test: p => K.coax.test(ptext(p)) },
+    { k: "bnc", label: "BNC connectors", hint: "2 per camera (one at each end)", q: 2 * ch, test: p => K.bnc.test(ptext(p)) },
+    { k: "dcj", label: "DC connectors", hint: "1 per camera", q: ch, test: p => K.dcj.test(ptext(p)) });
+  else S.push({ k: "sw", label: "PoE switch (only if the NVR has no PoE ports)", hint: "Leave on Choose product if not needed", q: 1, opt: 1, test: p => K.sw.test(ptext(p)) },
+    { k: "lan", label: "Network cable (CAT6 / CAT5e roll)", hint: "Usually a 305m box covers about 4 cameras. Change to suit the site", q: Math.ceil(ch / 4), test: p => K.lan.test(ptext(p)) },
+    { k: "rj45", label: "RJ45 connectors", hint: "2 per camera", q: 2 * ch, test: p => K.rj45.test(ptext(p)) });
+  S.push({ k: "box", label: "Junction boxes / brackets (optional)", hint: "Weatherproof box for each camera", q: ch, opt: 1, test: p => K.box.test(ptext(p)) });
+  return S;
+}
+function slotHtml(s) {
+  const st = slotSt[s.k], mt = [], ot = []; pkAll.forEach(p => (s.test(p) ? mt : ot).push(p));
+  mt.sort((x, y) => (brandOk(y) - brandOk(x)) || x.price - y.price); ot.sort((x, y) => x.name.localeCompare(y.name));
+  const opt = p => `<option value="${esc(p.id)}"${st.id === p.id ? " selected" : ""}>${esc(p.name)}${p.brand ? " · " + esc(p.brand) : ""} · ${rs(p.price)}</option>`;
+  const p0 = pById(st.id);
+  return `<div class="slot" data-k="${s.k}"><div class="sl-h"><b>${esc(s.label)}</b><small>${esc(s.hint)}</small></div><div class="sl-c"><select data-sel aria-label="${esc(s.label)}"><option value="">${mt.length ? "Choose product" : "No matching product yet. Pick from all, or add it in Products"}</option>${mt.length ? `<optgroup label="Matching">${mt.map(opt).join("")}</optgroup>` : ""}${ot.length ? `<optgroup label="All other products">${ot.map(opt).join("")}</optgroup>` : ""}</select><input type="number" min="0" max="999" value="${st.qty}" data-q aria-label="Quantity for ${esc(s.label)}"><span class="sl-t" data-t>${p0 ? rs(p0.price * st.qty) : ""}</span></div></div>`;
+}
+function pkRenderSlots() {
+  const S = slotsFor(), box = $("pkslots");
+  S.forEach(s => { const st = slotSt[s.k] || (slotSt[s.k] = { id: "", qty: s.opt ? 0 : s.q, touched: false }); if (!st.touched) st.qty = s.opt && !st.id ? 0 : s.q; });
+  box.innerHTML = S.length ? S.map(slotHtml).join("") : '<p class="sub">Choose a camera type and channels above, and the checklist appears here.</p>';
+}
+function pkMap() {
+  const keys = new Set(slotsFor().map(s => s.k)), m = new Map();
+  Object.keys(slotSt).forEach(k => { const s = slotSt[k]; if (keys.has(k) && s.id && s.qty > 0) m.set(s.id, (m.get(s.id) || 0) + s.qty); });
+  pkSel.forEach((q, id) => m.set(id, (m.get(id) || 0) + q)); return m;
+}
+const pkItemsTotal = () => { let t = 0; pkMap().forEach((q, id) => { const p = pById(id); if (p) t += q * p.price; }); return t; };
+function pkServices() {
+  const a = [], inst = Number($("pkinst").value) || 0, sv = Number($("pksurv").value) || 0;
+  if (inst > 0) a.push(["Installation & labour", inst]);
+  if (sv > 0) a.push(["Site survey", sv]); else if ($("pksfree").checked) a.push(["Site survey", 0]);
+  pkCust.forEach(c => { const l = String(c.l || "").trim(); if (l) a.push([l, Math.max(0, Number(c.a) || 0)]); });
+  return a;
+}
+function pkRecalc() {
+  const it = pkItemsTotal(), sv = pkServices().reduce((t, x) => t + x[1], 0), tot = it + sv, price = Number($("pkprice").value) || 0;
+  if (!pkTouched) $("pkprice").value = tot || "";
+  const p2 = Number($("pkprice").value) || 0;
+  $("pksum").textContent = tot ? "Items: " + rs(it) + (sv ? " + Charges: " + rs(sv) : "") + " = " + rs(tot) + (p2 && p2 < tot ? ". Customers save " + rs(tot - p2) + " (shown as Sale)." : p2 > tot ? ". Package price is higher than the total." : ".") : "Nothing picked yet.";
+}
+function pkAutoName() {
+  if (pkNameTouched) return;
+  const n = [pkS.brand, pkS.type === "ip" ? "IP Camera" : pkS.type === "analog" ? "Analog Camera" : "", pkS.mp ? pkS.mp + "MP" : "", pkS.ch ? pkS.ch + " Channel" : ""].filter(Boolean);
+  $("pkname").value = n.length ? n.join(" ") + " Package" : "";
+}
+function pkRenderChips() {
+  const bs = [...new Set([...pkAll.map(p => p.brand), ...((typeof companyList !== "undefined" ? companyList : []).map(c => c.name))].filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  $("pkbrands").innerHTML = bs.length ? bs.map(b => `<button class="sm" type="button" data-v="${esc(b)}">${esc(b)}</button>`).join("") : '<span class="sub">Add companies in the Brands &amp; categories tab first.</span>';
+  document.querySelectorAll("#pkf .chipset[data-g]").forEach(g => g.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(pkS[g.dataset.g] === b.dataset.v))));
+}
+function pkRenderCust() {
+  $("pkcust").innerHTML = pkCust.map((c, i) => `<div class="cr" data-i="${i}"><input data-l placeholder="Name" value="${esc(c.l)}" aria-label="Charge name"><input data-a type="number" min="0" placeholder="Rs." value="${esc(c.a)}" aria-label="Charge amount"><button class="sm del" type="button" data-rm aria-label="Remove">&times;</button></div>`).join("");
 }
 function pkDraw() {
   const t = ($("pkq").value || "").trim().toLowerCase();
   $("pklist").innerHTML = pkAll.filter(p => pkSel.has(p.id) || !t || (p.name + " " + p.brand + " " + p.category).toLowerCase().includes(t))
     .map(p => `<div class="pk-row${pkSel.has(p.id) ? " on" : ""}"><span>${esc(p.name)}<small>${esc(p.brand)} &middot; ${esc(p.category)} &middot; ${rs(p.price)}</small></span><input type="number" min="0" max="99" step="1" value="${pkSel.get(p.id) || 0}" data-id="${esc(p.id)}" aria-label="Quantity of ${esc(p.name)}"></div>`).join("") || '<p style="padding:12px">No products found. Add products first.</p>';
 }
-function pkInit() { pkDraw(); pkSummary(); }
+function pkInit() { pkRenderChips(); pkRenderSlots(); pkDraw(); pkRenderCust(); pkRecalc(); }
+document.querySelectorAll("#pkf .chipset[data-g]").forEach(g => g.addEventListener("click", e => {
+  const b = e.target.closest("button[data-v]"); if (!b) return;
+  const k = g.dataset.g; pkS[k] = pkS[k] === b.dataset.v ? "" : b.dataset.v; pkAutoName(); pkRenderChips(); pkRenderSlots(); pkRecalc();
+}));
+$("pkqs").addEventListener("click", e => {
+  const b = e.target.closest("[data-qs]"); if (!b) return; const v = b.dataset.qs;
+  if (v === "survey" || v === "install") { pkS.type = ""; pkS.ch = ""; pkNameTouched = true; $("pkname").value = v === "survey" ? "Site Survey Service" : "Installation Service"; pkRenderChips(); pkRenderSlots(); pkRecalc(); $(v === "survey" ? "pksurv" : "pkinst").focus(); return; }
+  [pkS.type, pkS.ch] = v.split("|"); pkNameTouched = false; pkAutoName(); pkRenderChips(); pkRenderSlots(); pkRecalc();
+});
+$("pkslots").addEventListener("change", e => { const s = e.target.closest("[data-sel]"); if (!s) return; const k = s.closest(".slot").dataset.k, st = slotSt[k]; st.id = s.value; if (st.id && !st.qty) st.qty = 1; s.closest(".slot").querySelector("[data-q]").value = st.qty; pkSlotT(s.closest(".slot")); pkRecalc(); });
+$("pkslots").addEventListener("input", e => { const q = e.target.closest("[data-q]"); if (!q) return; const st = slotSt[q.closest(".slot").dataset.k]; st.qty = Math.max(0, Math.min(999, Math.floor(Number(q.value) || 0))); st.touched = true; pkSlotT(q.closest(".slot")); pkRecalc(); });
+function pkSlotT(el) { const st = slotSt[el.dataset.k], p = pById(st.id); el.querySelector("[data-t]").textContent = p ? rs(p.price * st.qty) : ""; }
 $("pklist").addEventListener("input", e => {
   const i = e.target; if (!i.dataset.id) return;
   const q = Math.max(0, Math.min(99, Math.floor(Number(i.value) || 0)));
-  q ? pkSel.set(i.dataset.id, q) : pkSel.delete(i.dataset.id);
-  i.closest(".pk-row").classList.toggle("on", q > 0);
-  if (!pkTouched) $("pkprice").value = pkTotal() || "";
-  pkSummary();
+  q ? pkSel.set(i.dataset.id, q) : pkSel.delete(i.dataset.id); i.closest(".pk-row").classList.toggle("on", q > 0); pkRecalc();
 });
 $("pkq").addEventListener("input", pkDraw);
 $("pkq").addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });
-$("pkprice").addEventListener("input", () => { pkTouched = true; pkSummary(); });
+["pkinst", "pksurv"].forEach(id => $(id).addEventListener("input", pkRecalc)); $("pksfree").addEventListener("change", pkRecalc);
+$("pkname").addEventListener("input", () => { pkNameTouched = true; });
+$("pkprice").addEventListener("input", () => { pkTouched = true; pkRecalc(); });
+$("pkaddc").addEventListener("click", () => { pkCust.push({ l: "", a: "" }); pkRenderCust(); });
+$("pkcust").addEventListener("input", e => { const r = e.target.closest(".cr"); if (!r) return; const c = pkCust[r.dataset.i]; if (e.target.dataset.l !== undefined) c.l = e.target.value; else c.a = e.target.value; pkRecalc(); });
+$("pkcust").addEventListener("click", e => { const r = e.target.closest(".cr"); if (!r || !e.target.closest("[data-rm]")) return; pkCust.splice(Number(r.dataset.i), 1); pkRenderCust(); pkRecalc(); });
 $("pkimg").addEventListener("change", async e => {
   const f = e.target.files[0]; pkImg = "";
   if (f) try { pkImg = await shrink(f); } catch (err) { pkshow("That file is not a valid image.", "err"); }
 });
-$("pkqs").addEventListener("click", e => {
-  const b = e.target.closest("[data-qs]"); if (!b) return;
-  const [t, c] = b.dataset.qs.split("|"); $("pktype").value = t; $("pkch").value = c;
-  $("pkname").value = (t === "ip" ? "IP Camera" : "Analog Camera") + " Package - " + c + " Channel"; $("pkname").focus();
-});
 function pkReset() {
-  pkSel = new Map(); pkTouched = false; pkEditId = null; pkImg = "";
-  $("pkf").reset(); $("pksubmit").textContent = "Add package"; $("pkcancel").hidden = true; pkInit();
+  pkSel = new Map(); pkTouched = false; pkEditId = null; pkImg = ""; pkS = { type: "", ch: "", mp: "", brand: "" }; slotSt = {}; pkCust = []; pkNameTouched = false;
+  $("pkf").reset(); $("pksubmit").textContent = "Add package"; $("pkcancel").hidden = true; $("pkmore").open = false; pkInit();
 }
 $("pkcancel").addEventListener("click", () => { pkReset(); pkshow("", ""); });
 $("pkf").addEventListener("submit", async e => {
   e.preventDefault();
-  if (!pkSel.size) return pkshow("Pick at least one product for the package.", "err");
-  const price = Number($("pkprice").value), total = pkTotal();
+  const map = pkMap(), serv = pkServices();
+  if (!map.size && !serv.length) return pkshow("Pick at least one product, or add a charge (for example Site survey).", "err");
+  const price = Number($("pkprice").value), total = pkItemsTotal() + serv.reduce((t, x) => t + x[1], 0);
   if (!(price > 0)) return pkshow("Enter the package price.", "err");
-  const btn = $("pksubmit"); btn.disabled = true;
-  const data = { name: $("pkname").value.trim(), price, type: "package", brand: "", category: "Packages", pkType: $("pktype").value, channels: Number($("pkch").value) || 0, comparePrice: total > price ? total : 0, isNew: $("pknew").checked,
-    description: $("pkdesc").value.trim(), items: [...pkSel].map(([id, q]) => id + "|" + q) };
+  const cam = slotSt.cam && pById(slotSt.cam.id), btn = $("pksubmit"); btn.disabled = true;
+  const data = { name: $("pkname").value.trim(), price, type: "package", brand: pkS.brand || (cam ? cam.brand : ""), category: "Packages", pkType: pkS.type, channels: Number(pkS.ch) || 0, mp: Number(pkS.mp) || 0,
+    comparePrice: total > price ? total : 0, isNew: $("pknew").checked, description: $("pkdesc").value.trim(), items: [...map].map(([id, q]) => id + "|" + q), services: serv.map(([l, a]) => l + "|" + a) };
   try {
     if (pkImg) data.image = pkImg;
     if (pkEditId) await updateDoc(doc(db, "products", pkEditId), data);
@@ -351,13 +460,15 @@ $("pkf").addEventListener("submit", async e => {
   } catch (err) { pkshow("Could not save the package. Make sure the photo is small and your admin access is set up.", "err"); }
   btn.disabled = false;
 });
+const svParts = t => { const i = String(t).lastIndexOf("|"); return [String(t).slice(0, i), Number(String(t).slice(i + 1)) || 0]; };
 function renderPackages(pdocs) {
   $("pkcount").textContent = pdocs.length;
   $("pkrows").innerHTML = pdocs.map(d => { const p = d.data(), sale = Number(p.comparePrice) > Number(p.price);
-    const inc = (p.items || []).map(t => { const [id, q] = String(t).split("|"), r = pkAll.find(x => x.id === id); return `<li>${esc(q)} &times; ${r ? esc(r.name) : "<i>(deleted product)</i>"}</li>`; }).join("");
+    const inc = (p.items || []).map(t => { const [id, q] = String(t).split("|"), r = pById(id); return `<li>${esc(q)} &times; ${r ? esc(r.name) : "<i>(deleted product)</i>"}</li>`; }).join("") +
+      (p.services || []).map(t => { const [l, a] = svParts(t); return `<li>${esc(l)} &mdash; ${a ? rs(a) : "free"}</li>`; }).join("");
     return `<tr data-id="${d.id}" data-new="${!!p.isNew}">
       <td>${p.image ? `<img src="${esc(p.image)}" alt="">` : ""}</td>
-      <td>${esc(p.name)}<br>${p.pkType ? `<span class="pill confirmed">${p.pkType === "ip" ? "IP" : "Analog"}</span> ` : ""}${p.channels ? `<span class="pill confirmed">${p.channels} channel</span> ` : ""}${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span>' : ""}</td>
+      <td>${esc(p.name)}<br>${p.brand ? `<span class="pill">${esc(p.brand)}</span> ` : ""}${p.pkType ? `<span class="pill confirmed">${p.pkType === "ip" ? "IP" : "Analog"}</span> ` : ""}${p.channels ? `<span class="pill confirmed">${p.channels} ch</span> ` : ""}${p.mp ? `<span class="pill confirmed">${p.mp} MP</span> ` : ""}${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span>' : ""}</td>
       <td><ul class="inc" style="list-style:none;padding:0;margin:0">${inc}</ul></td>
       <td>${sale ? "<s>" + rs(p.comparePrice) + "</s><br>" : ""}${rs(p.price)}</td>
       <td style="min-width:200px"><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-act="edit">Edit</button><button class="sm" data-act="photo">Photo</button><button class="sm" data-act="new">${p.isNew ? "Unmark New" : "Mark New"}</button><button class="sm del" data-act="del">Delete</button></div></td></tr>`; }).join("") || '<tr><td colspan="5">No packages yet. Create your first one above.</td></tr>';
@@ -371,10 +482,13 @@ $("pkrows").addEventListener("click", async e => {
     else if (act === "new") await updateDoc(ref, { isNew: tr.dataset.new !== "true" });
     else if (act === "edit") {
       const p = (await getDoc(ref)).data() || {};
-      pkReset(); pkEditId = id; pkTouched = true;
-      $("pkname").value = p.name || ""; $("pktype").value = p.pkType || ""; $("pkch").value = p.channels ? String(p.channels) : ""; $("pkprice").value = p.price || ""; $("pkdesc").value = p.description || ""; $("pknew").checked = !!p.isNew;
-      (p.items || []).forEach(t => { const [pid, q] = String(t).split("|"); if (pkAll.some(x => x.id === pid)) pkSel.set(pid, Math.max(1, Number(q) || 1)); });
-      $("pksubmit").textContent = "Save changes"; $("pkcancel").hidden = false; pkInit(); pkshow("Editing this package. Leave the photo empty to keep the current one.", "ok");
+      pkReset(); pkEditId = id; pkTouched = true; pkNameTouched = true;
+      pkS = { type: p.pkType || "", ch: p.channels ? String(p.channels) : "", mp: p.mp ? String(p.mp) : "", brand: p.brand || "" };
+      $("pkname").value = p.name || ""; $("pkprice").value = p.price || ""; $("pkdesc").value = p.description || ""; $("pknew").checked = !!p.isNew;
+      (p.items || []).forEach(t => { const [pid, q] = String(t).split("|"); if (pById(pid)) pkSel.set(pid, Math.max(1, Number(q) || 1)); });
+      (p.services || []).forEach(t => { const [l, a] = svParts(t); if (l === "Installation & labour") $("pkinst").value = a || ""; else if (l === "Site survey") { if (a) $("pksurv").value = a; else $("pksfree").checked = true; } else pkCust.push({ l, a: String(a) }); });
+      $("pkmore").open = pkSel.size > 0; $("pksubmit").textContent = "Save changes"; $("pkcancel").hidden = false; pkInit();
+      pkshow("Editing this package. The items are under Add any other product. Leave the photo empty to keep the current one.", "ok");
       $("pkf").scrollIntoView({ behavior: "smooth", block: "start" }); return;
     }
     loadProducts();

@@ -198,6 +198,10 @@ body{font-family:'Manrope',system-ui,sans-serif}
 /* hero */
 .hero{max-width:1320px;margin:0 auto;width:100%;padding:24px 4vw 0;display:flex;flex-wrap:wrap;gap:20px}
 .hero .big{flex:2 1 520px;min-width:0;background:#dbeafe;border-radius:20px;padding:40px;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.hero .big{position:relative;overflow:hidden;isolation:isolate}
+.hero .big::before{content:"";position:absolute;inset:0;z-index:-1;background:url(/assets/images/hero.svg) no-repeat right 20px center/auto 84%;pointer-events:none}
+.hero .big>*{max-width:50%}
+@media(max-width:900px){.hero .big>*{max-width:none}.hero .big::before{background-position:center bottom -10px;background-size:auto 70%;opacity:.28}}
 .hero .big h1{font-size:clamp(28px,4vw,42px);line-height:1.1;letter-spacing:-1px;font-weight:800}
 .hero .big p{color:#334155;font-size:17px;max-width:520px}
 .hero .acts2{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
@@ -325,11 +329,13 @@ let tt; const toast = t => { const e = $("toast"); e.textContent = t; e.classLis
 const inCart = id => (getCart().find(x => x.id === id) || {}).qty || 0;
 /* ---- packages: a package is a product with type "package" and items ["productId|qty", ...] ---- */
 const isPkg = p => p && p.type === "package";
-const pkLabel = p => ((p.pkType === "analog" ? "Analog " : p.pkType === "ip" ? "IP " : "") + (p.channels ? p.channels + " Channel " : "") + "Package").trim();
-let pkT = "", pkC = "";
+const pkLabel = p => [p.brand, p.pkType === "analog" ? "Analog" : p.pkType === "ip" ? "IP" : "", p.mp ? p.mp + "MP" : "", p.channels ? p.channels + " Channel" : ""].filter(Boolean).join(" · ") || "Package";
+const pkServ = p => (p.services || []).map(t => { const i = String(t).lastIndexOf("|"); return { l: String(t).slice(0, i), a: Number(String(t).slice(i + 1)) || 0 }; }).filter(x => x.l);
+let pkT = "", pkC = "", pkM = "";
 const pkgItems = p => (p.items || []).map(t => { const [id, q] = String(t).split("|"), r = byId.get(id); return r ? { r, q: Math.max(1, Number(q) || 1) } : null; }).filter(Boolean);
-const pkgText = p => pkgItems(p).map(x => x.q + " x " + x.r.name).join(", ");
-const pkgOk = p => { const n = (p.items || []).length, it = pkgItems(p); return n > 0 && it.length === n && it.every(x => x.r.price > 0 && (x.r.stock === null || x.r.stock >= x.q)); };
+const incHtml = (p, max) => { const it = pkgItems(p), sv = pkServ(p), rows = it.map(x => x.q + ' &times; ' + esc(x.r.name)).concat(sv.map(x => esc(x.l) + (x.a ? "" : " (free)"))); return rows.length ? '<ul class="inc">' + rows.slice(0, max).map(r => '<li>' + r + '</li>').join("") + (rows.length > max ? '<li>and ' + (rows.length - max) + ' more</li>' : "") + '</ul>' : ""; };
+const pkgText = p => pkgItems(p).map(x => x.q + " x " + x.r.name).concat(pkServ(p).map(x => x.l + (x.a ? "" : " (free)"))).join(", ");
+const pkgOk = p => { const n = (p.items || []).length, it = pkgItems(p); return (n > 0 || pkServ(p).length > 0) && it.length === n && it.every(x => x.r.price > 0 && (x.r.stock === null || x.r.stock >= x.q)); };
 const addP = p => addToCart(isPkg(p) ? { ...p, includes: pkgText(p) } : p);
 
 /* ---------------- firebase (loaded only when needed) ---------------- */
@@ -352,7 +358,7 @@ const card = p => {
   const pk = isPkg(p), out = pk ? !pkgOk(p) : p.stock !== null && p.stock <= 0, low = !pk && p.stock !== null && p.stock > 0 && p.stock <= 5, off = p.comparePrice > p.price && p.price > 0 ? Math.round((1 - p.price / p.comparePrice) * 100) : 0;
   const action = p.price > 0 ? (out ? '<button class="btn" type="button" disabled>' + (pk ? "Unavailable" : "Out of stock") + '</button>' : '<button class="btn" type="button" data-add="' + esc(p.id) + '">' + (pk ? "Add package" : "Add to cart") + '</button>')
     : '<a class="btn ghost" href="' + waLink(p) + '" target="_blank" rel="noopener">Ask price on WhatsApp</a>';
-  const it = pk ? pkgItems(p) : [], inc = pk && it.length ? '<ul class="inc">' + it.slice(0, 6).map(x => '<li>' + x.q + ' &times; ' + esc(x.r.name) + '</li>').join("") + (it.length > 6 ? '<li>and ' + (it.length - 6) + ' more</li>' : "") + '</ul>' : "";
+  const inc = pk ? incHtml(p, 7) : "";
   return '<article class="card"><div class="media"><div class="prd-img" data-id="' + esc(p.id) + '"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' +
     (pk ? '<span class="badge b-pk">Package</span>' : p.isNew ? '<span class="badge b-new">New</span>' : "") + (off > 0 ? '<span class="badge b-off">-' + off + '%</span>' : "") + '<button class="shr" type="button" data-share="' + esc(p.id) + '" aria-label="Share ' + esc(p.name) + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button></div>' +
     '<div class="body">' + (pk ? '<span class="brand">' + esc(pkLabel(p)) + '</span>' : p.brand ? '<span class="brand">' + esc(p.brand) + '</span>' : "") + '<h3 class="name">' + esc(p.name) + '</h3>' + (p.description ? '<p class="desc">' + esc(p.description) + '</p>' : "") + inc +
@@ -363,17 +369,19 @@ let onlyId = "";
 function view() {
   if (onlyId) { const one = all.filter(p => p.id === onlyId); if (one.length) return one; onlyId = ""; }
   const term = q.value.trim().toLowerCase(), b = selB.value, s = selS.value;
-  const v = all.filter(p => (!b || p.brand === b) && (!cat || p.category === cat) && (cat !== "Packages" || ((!pkT || p.pkType === pkT) && (!pkC || String(p.channels) === pkC))) && (!term || (p.name + " " + p.brand + " " + p.category + " " + p.description).toLowerCase().includes(term)));
+  const v = all.filter(p => (!b || p.brand === b) && (!cat || p.category === cat) && (cat !== "Packages" || ((!pkT || p.pkType === pkT) && (!pkC || String(p.channels) === pkC) && (!pkM || String(p.mp) === pkM))) && (!term || (p.name + " " + p.brand + " " + p.category + " " + p.description).toLowerCase().includes(term)));
   if (s === "low") v.sort((x, y) => (x.price || 1e12) - (y.price || 1e12)); else if (s === "high") v.sort((x, y) => y.price - x.price); else if (s === "name") v.sort((x, y) => x.name.localeCompare(y.name));
   return v;
 }
 function drawPkf() {
   const el = $("pkf"); el.hidden = cat !== "Packages"; if (el.hidden) return;
+  const mps = [...new Set(all.filter(p => isPkg(p) && p.mp).map(p => p.mp))].sort((a, b) => a - b);
   const c = (a, v, t, on) => '<button class="chip" type="button" data-' + a + '="' + v + '" aria-pressed="' + on + '">' + t + '</button>';
   el.innerHTML = '<div class="g"><span class="l">Camera type</span>' + c("pt", "", "All", !pkT) + c("pt", "analog", "Analog", pkT === "analog") + c("pt", "ip", "IP", pkT === "ip") + '</div>' +
-    '<div class="g"><span class="l">Channels</span>' + c("pc", "", "All", !pkC) + [4, 8, 16, 32].map(n => c("pc", n, n + " channel", pkC === String(n))).join("") + '</div>';
+    '<div class="g"><span class="l">Channels</span>' + c("pc", "", "All", !pkC) + [4, 8, 16, 32].map(n => c("pc", n, n + " channel", pkC === String(n))).join("") + '</div>' +
+    (mps.length ? '<div class="g"><span class="l">Resolution</span>' + c("pm", "", "All", !pkM) + mps.map(n => c("pm", n, n + " MP", pkM === String(n))).join("") + '</div>' : "");
 }
-$("pkf").addEventListener("click", e => { const b = e.target.closest("[data-pt],[data-pc]"); if (!b) return; if ("pt" in b.dataset) pkT = b.dataset.pt; else pkC = b.dataset.pc; draw(true); });
+$("pkf").addEventListener("click", e => { const b = e.target.closest("[data-pt],[data-pc],[data-pm]"); if (!b) return; if ("pt" in b.dataset) pkT = b.dataset.pt; else if ("pc" in b.dataset) pkC = b.dataset.pc; else pkM = b.dataset.pm; draw(true); });
 function draw(reset) {
   if (!ready) return;
   drawPkf();
@@ -389,7 +397,7 @@ function drawPk() {
   $("pkrow").innerHTML = list.map(p => {
     const it = pkgItems(p), n = it.reduce((t, x) => t + x.q, 0), off = p.comparePrice > p.price ? Math.round((1 - p.price / p.comparePrice) * 100) : 0;
     return '<article class="pkc"><div class="prd-img" data-id="' + esc(p.id) + '"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' + (off > 0 ? '<span class="save">SAVE ' + off + '%</span>' : '<span class="badge b-pk">Package</span>') +
-      '<div class="pb"><span class="brand">' + esc(pkLabel(p)) + '</span><h3>' + esc(p.name) + '</h3><span class="cnt">' + n + ' item' + (n === 1 ? "" : "s") + ' included:</span><ul class="inc">' + it.slice(0, 6).map(x => '<li>' + x.q + ' &times; ' + esc(x.r.name) + '</li>').join("") + (it.length > 6 ? '<li>and ' + (it.length - 6) + ' more</li>' : "") + '</ul><div class="pp">' + money(p.price) + (off > 0 ? '<s>' + money(p.comparePrice) + '</s>' : "") + '</div><button class="btn" type="button" data-add="' + esc(p.id) + '">Add package</button></div></article>';
+      '<div class="pb"><span class="brand">' + esc(pkLabel(p)) + '</span><h3>' + esc(p.name) + '</h3><span class="cnt">' + (n ? n + ' item' + (n === 1 ? "" : "s") + (pkServ(p).length ? " + services" : "") : "Service") + ' included:</span>' + incHtml(p, 7) + '<div class="pp">' + money(p.price) + (off > 0 ? '<s>' + money(p.comparePrice) + '</s>' : "") + '</div><button class="btn" type="button" data-add="' + esc(p.id) + '">Add package</button></div></article>';
   }).join("");
   hydrateImages($("pkrow"), byId);
 }
