@@ -176,6 +176,22 @@ body{font-family:'Manrope',system-ui,sans-serif}
 #adn .adg{color:var(--tag)}
 .shr{position:absolute;right:10px;bottom:10px;width:38px;height:38px;border-radius:50%;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);z-index:2}.shr:hover{border-color:var(--ink)}
 .shared{display:inline-flex;gap:10px;align-items:center;flex-wrap:wrap}.shared a{color:var(--accent);font-weight:800}
+.pks{background:#fff;border-bottom:1px solid var(--line)}
+.pks[hidden]{display:none}
+.pkin{max-width:1320px;margin:0 auto;padding:22px 4vw 26px}
+.pkhd{display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.pkhd h2{font-size:24px;letter-spacing:-.5px;font-weight:800}.pkhd a{color:var(--accent);font-weight:800;font-size:14px}
+.pkrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+.pkc{background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;position:relative;transition:transform .2s,box-shadow .2s}
+.pkc:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(15,23,42,.1)}
+.pkc .prd-img{aspect-ratio:16/10}
+.pkc .pb{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.pkc h3{font-size:15px;line-height:1.3;font-weight:800;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.pkc .cnt{font-size:13px;color:var(--mute)}
+.pkc .pp{font-family:var(--head);font-weight:800;font-size:18px;margin-top:auto;padding-top:6px}.pkc .pp s{font:400 12px 'Manrope',sans-serif;color:var(--dim);margin-left:6px}
+.pkc .btn{padding:11px 10px;font-size:12px;background:var(--tag);border-color:var(--tag);color:#fff}.pkc .btn:hover{background:#a90f14;border-color:#a90f14}
+.pkc .save{position:absolute;right:10px;top:10px;background:var(--ink);color:#fff;font:800 11px/1 'Manrope',sans-serif;padding:6px 8px;border-radius:4px;z-index:2}
+@media(max-width:1100px){.pkrow{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px;scrollbar-width:thin}.pkc{flex:0 0 230px;scroll-snap-align:start}}
 /* hero */
 .hero{max-width:1320px;margin:0 auto;width:100%;padding:24px 4vw 0;display:flex;flex-wrap:wrap;gap:20px}
 .hero .big{flex:2 1 520px;min-width:0;background:#dbeafe;border-radius:20px;padding:40px;display:flex;flex-direction:column;justify-content:center;gap:12px}
@@ -239,6 +255,13 @@ body{font-family:'Manrope',system-ui,sans-serif}
     </div>
   </div>
 </header>
+
+<section class="pks" id="pkgs" hidden aria-label="Packages">
+  <div class="pkin">
+    <div class="pkhd"><div><span class="eyebrow">Best value</span><h2>Ready-made packages</h2></div><a href="#main" data-pkall>View all packages &rarr;</a></div>
+    <div class="pkrow" id="pkrow"></div>
+  </div>
+</section>
 
 <section class="hero" id="hero">
   <div class="big">
@@ -323,7 +346,7 @@ const card = p => {
   const pk = isPkg(p), out = pk ? !pkgOk(p) : p.stock !== null && p.stock <= 0, low = !pk && p.stock !== null && p.stock > 0 && p.stock <= 5, off = p.comparePrice > p.price && p.price > 0 ? Math.round((1 - p.price / p.comparePrice) * 100) : 0;
   const action = p.price > 0 ? (out ? '<button class="btn" type="button" disabled>' + (pk ? "Unavailable" : "Out of stock") + '</button>' : '<button class="btn" type="button" data-add="' + esc(p.id) + '">' + (pk ? "Add package" : "Add to cart") + '</button>')
     : '<a class="btn ghost" href="' + waLink(p) + '" target="_blank" rel="noopener">Ask price on WhatsApp</a>';
-  const it = pk ? pkgItems(p) : [], inc = pk && it.length ? '<ul class="inc">' + it.slice(0, 5).map(x => '<li>' + x.q + ' &times; ' + esc(x.r.name) + '</li>').join("") + (it.length > 5 ? '<li>and ' + (it.length - 5) + ' more</li>' : "") + '</ul>' : "";
+  const it = pk ? pkgItems(p) : [], inc = pk && it.length ? '<ul class="inc">' + it.slice(0, 6).map(x => '<li>' + x.q + ' &times; ' + esc(x.r.name) + '</li>').join("") + (it.length > 6 ? '<li>and ' + (it.length - 6) + ' more</li>' : "") + '</ul>' : "";
   return '<article class="card"><div class="media"><div class="prd-img" data-id="' + esc(p.id) + '"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' +
     (pk ? '<span class="badge b-pk">Package</span>' : p.isNew ? '<span class="badge b-new">New</span>' : "") + (off > 0 ? '<span class="badge b-off">-' + off + '%</span>' : "") + '<button class="shr" type="button" data-share="' + esc(p.id) + '" aria-label="Share ' + esc(p.name) + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button></div>' +
     '<div class="body">' + (pk ? '<span class="brand">Package</span>' : p.brand ? '<span class="brand">' + esc(p.brand) + '</span>' : "") + '<h3 class="name">' + esc(p.name) + '</h3>' + (p.description ? '<p class="desc">' + esc(p.description) + '</p>' : "") + inc +
@@ -346,6 +369,17 @@ function draw(reset) {
   grid.innerHTML = v.length ? v.slice(0, shown).map(card).join("") : '<p class="msg">No products match your search. Try a different word or clear the filters.</p>';
   more.hidden = v.length <= shown; hydrateImages(grid, byId);
 }
+function drawPk() {
+  const list = all.filter(p => isPkg(p) && p.price > 0 && pkgOk(p)).sort((a, b) => a.price - b.price).slice(0, 5), box = $("pkgs");
+  box.hidden = !list.length; if (!list.length) return;
+  $("pkrow").innerHTML = list.map(p => {
+    const it = pkgItems(p), n = it.reduce((t, x) => t + x.q, 0), off = p.comparePrice > p.price ? Math.round((1 - p.price / p.comparePrice) * 100) : 0;
+    return '<article class="pkc"><div class="prd-img" data-id="' + esc(p.id) + '"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' + (off > 0 ? '<span class="save">SAVE ' + off + '%</span>' : '<span class="badge b-pk">Package</span>') +
+      '<div class="pb"><span class="brand">Package</span><h3>' + esc(p.name) + '</h3><span class="cnt">' + n + ' item' + (n === 1 ? "" : "s") + ' included:</span><ul class="inc">' + it.slice(0, 6).map(x => '<li>' + x.q + ' &times; ' + esc(x.r.name) + '</li>').join("") + (it.length > 6 ? '<li>and ' + (it.length - 6) + ' more</li>' : "") + '</ul><div class="pp">' + money(p.price) + (off > 0 ? '<s>' + money(p.comparePrice) + '</s>' : "") + '</div><button class="btn" type="button" data-add="' + esc(p.id) + '">Add package</button></div></article>';
+  }).join("");
+  hydrateImages($("pkrow"), byId);
+}
+$("pkgs").addEventListener("click", e => { if (!e.target.closest("[data-pkall]")) return; e.preventDefault(); cat = "Packages"; q.value = ""; selB.value = ""; onlyId = ""; drawChips(); syncUrl(); draw(true); $("bar").scrollIntoView({ behavior: "smooth" }); });
 function drawChips() {
   const cats = uniq(all.filter(p => !selB.value || p.brand === selB.value).map(p => p.category));
   if (cat && !cats.includes(cat)) cat = "";
@@ -363,7 +397,7 @@ function syncUrl() {
   const u = new URLSearchParams(location.search);
   q.value = u.get("q") || ""; cat = u.get("category") || ""; onlyId = u.get("product") || "";
   const brands = uniq(all.map(p => p.brand)); selB.innerHTML = '<option value="">All brands</option>' + brands.map(b => '<option>' + esc(b) + '</option>').join(""); selB.value = brands.includes(u.get("brand")) ? u.get("brand") : "";
-  drawChips(); draw(true); if (onlyId) setTimeout(() => $("bar").scrollIntoView(), 60);
+  drawChips(); draw(true); drawPk(); if (onlyId) setTimeout(() => $("bar").scrollIntoView(), 60);
 })();
 let st; q.addEventListener("input", () => { clearTimeout(st); st = setTimeout(() => { onlyId = ""; syncUrl(); draw(true); }, 200); });
 selB.addEventListener("change", () => { drawChips(); syncUrl(); draw(true); });
@@ -371,7 +405,7 @@ selS.addEventListener("change", () => draw(true));
 $("chips").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if (!b) return; cat = b.dataset.cat; drawChips(); syncUrl(); draw(true); });
 more.querySelector("button").addEventListener("click", () => { shown += PER; draw(false); });
 countEl.addEventListener("click", e => { if (!e.target.closest("[data-showall]")) return; e.preventDefault(); onlyId = ""; try { history.replaceState(null, "", "/"); } catch (x) {} draw(true); });
-grid.addEventListener("click", e => {
+const gridClick = e => {
   const sb = e.target.closest("[data-share]");
   if (sb) {
     const p = byId.get(sb.dataset.share); if (!p) return;
@@ -385,7 +419,8 @@ grid.addEventListener("click", e => {
   if (!isPkg(p) && p.stock !== null && inCart(p.id) >= p.stock) return toast("Only " + p.stock + " in stock");
   if (isPkg(p) && !pkgOk(p)) return toast("Some items in this package are unavailable");
   addP(p); if (isPkg(p) || !openAddons(p, b)) toast(p.name + " added to cart");
-});
+};
+grid.addEventListener("click", gridClick); $("pkrow").addEventListener("click", gridClick);
 
 /* ---------------- cart badge ---------------- */
 const badge = () => { const n = cartCount(), b = $("cc"); b.textContent = n; b.classList.remove("bump"); void b.offsetWidth; if (n) b.classList.add("bump"); };
@@ -399,13 +434,13 @@ const panel = $("panel"), pbody = $("pbody"), pfoot = $("pfoot");
 function openPanel(m) {
   opener = document.activeElement; open = true;
   $("ov").classList.add("on"); panel.classList.add("on"); panel.setAttribute("aria-hidden", "false");
-  ["topstrip", "hd", "hero", "bar", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = true; });
+  ["topstrip", "hd", "pkgs", "hero", "bar", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = true; });
   document.body.style.overflow = "hidden";
   m === "checkout" ? startCheckout() : m === "build" ? renderBuilder() : renderCart(); $("pclose").focus();
 }
 function closePanel() {
   open = false; $("ov").classList.remove("on"); panel.classList.remove("on"); panel.setAttribute("aria-hidden", "true");
-  ["topstrip", "hd", "hero", "bar", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = false; });
+  ["topstrip", "hd", "pkgs", "hero", "bar", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = false; });
   document.body.style.overflow = ""; if (opener && opener.focus) opener.focus();
 }
 $("cartbtn").onclick = () => openPanel("cart"); $("pclose").onclick = closePanel; $("ov").onclick = closePanel;
@@ -556,7 +591,7 @@ function done(id, total) {
 }
 
 /* ---------------- complete your setup: quantity + matching items (DVR, NVR, cable, connectors...) ---------------- */
-const LOCK = ["topstrip", "hd", "hero", "bar", "count", "main", "ft"];
+const LOCK = ["topstrip", "hd", "pkgs", "hero", "bar", "count", "main", "ft"];
 const avail = r => r && r.price > 0 && (r.stock === null || r.stock > 0);
 const kindOf = p => { const t = ((p.category || "") + " " + (p.name || "")).toLowerCase(); return /\bnvr\b/.test(t) ? "nvr" : /\b(dvr|xvr)\b/.test(t) ? "dvr" : /camera|\bcam\b|ptz|dome|bullet|turret/.test(t) ? "camera" : "acc"; };
 let adOpen = false, adFrom = null, adMain = null, adSel = new Map(), adIds = new Map();
