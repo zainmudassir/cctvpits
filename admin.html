@@ -349,12 +349,13 @@ function slotsFor() {
   const S = [{ k: "cam", label: "Cameras (" + mp + (a ? "analog" : "IP") + ")", hint: "One per channel. Dome, bullet, PTZ or wireless", q: ch, test: p => { const t = ptext(p); return K.cam.test(t) && !K.dvr.test(t) && !K.nvr.test(t) && notAcc(t) && typeOk(p) && mpOk(p) && brandOk(p); } },
     { k: "rec", label: a ? "DVR / XVR recorder (" + ch + " channel)" : "NVR recorder (" + ch + " channel)", hint: a ? "Records analog cameras" : "Records IP cameras. PoE ports on the NVR save the switch", q: 1, test: p => (a ? K.dvr : K.nvr).test(ptext(p)) && chOk(p) && brandOk(p) },
     { k: "hdd", label: "Hard disk (storage)", hint: "1TB to 4TB, surveillance type", q: 1, test: p => K.hdd.test(ptext(p)) }];
-  if (a) S.push({ k: "psu", label: "Power: adapters or multi-output power supply", hint: "One 12V adapter per camera, or one multi-output supply", q: ch, test: p => K.psu.test(ptext(p)) },
-    { k: "coax", label: "Camera cable (Siamese / coaxial roll)", hint: "Usually a 90m roll for 2 cameras. Change to suit the site", q: Math.ceil(ch / 2), test: p => K.coax.test(ptext(p)) },
+  if (a) S.push({ k: "psu", label: "Power supply", hint: "Multi-output supply or 12V adapters. Type the quantity yourself", q: 1, blank: 1, test: p => K.psu.test(ptext(p)) },
+    { k: "coax", label: "Wire coil (Siamese / coaxial roll)", hint: "Type the number of coils yourself", q: 1, blank: 1, test: p => K.coax.test(ptext(p)) },
+    { k: "bcd", label: "BNC & DC connectors (set)", hint: "One BNC + DC set per camera", q: ch, test: p => { const t = ptext(p); return K.bnc.test(t) && /\bdc\b/i.test(t); } },
     { k: "bnc", label: "BNC connectors", hint: "2 per camera (one at each end)", q: 2 * ch, test: p => K.bnc.test(ptext(p)) },
     { k: "dcj", label: "DC connectors", hint: "1 per camera", q: ch, test: p => K.dcj.test(ptext(p)) });
   else S.push({ k: "sw", label: "PoE switch (only if the NVR has no PoE ports)", hint: "Leave on Choose product if not needed", q: 1, opt: 1, test: p => K.sw.test(ptext(p)) },
-    { k: "lan", label: "Network cable (CAT6 / CAT5e roll)", hint: "Usually a 305m box covers about 4 cameras. Change to suit the site", q: Math.ceil(ch / 4), test: p => K.lan.test(ptext(p)) },
+    { k: "lan", label: "Wire coil (CAT6 / CAT5e network cable)", hint: "Type the number of coils yourself", q: 1, blank: 1, test: p => K.lan.test(ptext(p)) },
     { k: "rj45", label: "RJ45 connectors", hint: "2 per camera", q: 2 * ch, test: p => K.rj45.test(ptext(p)) });
   S.push({ k: "box", label: "Junction boxes / brackets (optional)", hint: "Weatherproof box for each camera", q: ch, opt: 1, test: p => K.box.test(ptext(p)) });
   return S;
@@ -364,11 +365,11 @@ function slotHtml(s) {
   mt.sort((x, y) => (brandOk(y) - brandOk(x)) || x.price - y.price); ot.sort((x, y) => x.name.localeCompare(y.name));
   const opt = p => `<option value="${esc(p.id)}"${st.id === p.id ? " selected" : ""}>${esc(p.name)}${p.brand ? " · " + esc(p.brand) : ""} · ${rs(p.price)}</option>`;
   const p0 = pById(st.id);
-  return `<div class="slot" data-k="${s.k}"><div class="sl-h"><b>${esc(s.label)}</b><small>${esc(s.hint)}</small></div><div class="sl-c"><select data-sel aria-label="${esc(s.label)}"><option value="">${mt.length ? "Choose product" : "No matching product yet. Pick from all, or add it in Products"}</option>${mt.length ? `<optgroup label="Matching">${mt.map(opt).join("")}</optgroup>` : ""}${ot.length ? `<optgroup label="All other products">${ot.map(opt).join("")}</optgroup>` : ""}</select><input type="number" min="0" max="999" value="${st.qty}" data-q aria-label="Quantity for ${esc(s.label)}"><span class="sl-t" data-t>${p0 ? rs(p0.price * st.qty) : ""}</span></div></div>`;
+  return `<div class="slot" data-k="${s.k}"><div class="sl-h"><b>${esc(s.label)}</b><small>${esc(s.hint)}</small></div><div class="sl-c"><select data-sel aria-label="${esc(s.label)}"><option value="">${mt.length ? "Choose product" : "No matching product yet. Pick from all, or add it in Products"}</option>${mt.length ? `<optgroup label="Matching">${mt.map(opt).join("")}</optgroup>` : ""}${ot.length ? `<optgroup label="All other products">${ot.map(opt).join("")}</optgroup>` : ""}</select><input type="number" min="0" max="999" value="${s.blank && !st.qty ? "" : st.qty}" placeholder="Qty" data-q aria-label="Quantity for ${esc(s.label)}"><span class="sl-t" data-t>${p0 ? rs(p0.price * st.qty) : ""}</span></div></div>`;
 }
 function pkRenderSlots() {
   const S = slotsFor(), box = $("pkslots");
-  S.forEach(s => { const st = slotSt[s.k] || (slotSt[s.k] = { id: "", qty: s.opt ? 0 : s.q, touched: false }); if (!st.touched) st.qty = s.opt && !st.id ? 0 : s.q; });
+  S.forEach(s => { const st = slotSt[s.k] || (slotSt[s.k] = { id: "", qty: s.opt || s.blank ? 0 : s.q, touched: false }); if (!st.touched) st.qty = s.blank || (s.opt && !st.id) ? 0 : s.q; });
   box.innerHTML = S.length ? S.map(slotHtml).join("") : '<p class="sub">Choose a camera type and channels above, and the checklist appears here.</p>';
 }
 function pkMap() {
@@ -421,7 +422,7 @@ $("pkqs").addEventListener("click", e => {
   if (v === "survey" || v === "install") { pkS.type = ""; pkS.ch = ""; pkNameTouched = true; $("pkname").value = v === "survey" ? "Site Survey Service" : "Installation Service"; pkRenderChips(); pkRenderSlots(); pkRecalc(); $(v === "survey" ? "pksurv" : "pkinst").focus(); return; }
   [pkS.type, pkS.ch] = v.split("|"); pkNameTouched = false; pkAutoName(); pkRenderChips(); pkRenderSlots(); pkRecalc();
 });
-$("pkslots").addEventListener("change", e => { const s = e.target.closest("[data-sel]"); if (!s) return; const k = s.closest(".slot").dataset.k, st = slotSt[k]; st.id = s.value; if (st.id && !st.qty) st.qty = 1; s.closest(".slot").querySelector("[data-q]").value = st.qty; pkSlotT(s.closest(".slot")); pkRecalc(); });
+$("pkslots").addEventListener("change", e => { const s = e.target.closest("[data-sel]"); if (!s) return; const k = s.closest(".slot").dataset.k, st = slotSt[k]; st.id = s.value; const sd = slotsFor().find(x => x.k === k); if (st.id && !st.qty && !(sd && sd.blank)) st.qty = 1; s.closest(".slot").querySelector("[data-q]").value = st.qty || ""; pkSlotT(s.closest(".slot")); pkRecalc(); });
 $("pkslots").addEventListener("input", e => { const q = e.target.closest("[data-q]"); if (!q) return; const st = slotSt[q.closest(".slot").dataset.k]; st.qty = Math.max(0, Math.min(999, Math.floor(Number(q.value) || 0))); st.touched = true; pkSlotT(q.closest(".slot")); pkRecalc(); });
 function pkSlotT(el) { const st = slotSt[el.dataset.k], p = pById(st.id); el.querySelector("[data-t]").textContent = p ? rs(p.price * st.qty) : ""; }
 $("pklist").addEventListener("input", e => {
