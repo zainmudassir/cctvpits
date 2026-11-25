@@ -192,6 +192,9 @@ body{font-family:'Manrope',system-ui,sans-serif}
 .pkc .btn{padding:11px 10px;font-size:12px;background:var(--tag);border-color:var(--tag);color:#fff}.pkc .btn:hover{background:#a90f14;border-color:#a90f14}
 .pkc .save{position:absolute;right:10px;top:10px;background:var(--ink);color:#fff;font:800 11px/1 'Manrope',sans-serif;padding:6px 8px;border-radius:4px;z-index:2}
 @media(max-width:1100px){.pkrow{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px;scrollbar-width:thin}.pkc{flex:0 0 230px;scroll-snap-align:start}}
+.pkf{max-width:1320px;margin:0 auto;width:100%;padding:12px 4vw 0;display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}
+.pkf[hidden]{display:none}.pkf .g{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.pkf .l{font-weight:800;font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.pkf .chip{padding:7px 14px;font-size:13px}
 /* hero */
 .hero{max-width:1320px;margin:0 auto;width:100%;padding:24px 4vw 0;display:flex;flex-wrap:wrap;gap:20px}
 .hero .big{flex:2 1 520px;min-width:0;background:#dbeafe;border-radius:20px;padding:40px;display:flex;flex-direction:column;justify-content:center;gap:12px}
@@ -281,6 +284,7 @@ body{font-family:'Manrope',system-ui,sans-serif}
   <select id="brand" aria-label="Brand"><option value="">All brands</option></select>
   <select id="sort" aria-label="Sort by"><option value="new">Newest first</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="name">Name A to Z</option></select>
 </div>
+<div class="pkf" id="pkf" hidden></div>
 <p class="count" id="count" aria-live="polite">Loading products...</p>
 
 <main id="main">
@@ -321,6 +325,8 @@ let tt; const toast = t => { const e = $("toast"); e.textContent = t; e.classLis
 const inCart = id => (getCart().find(x => x.id === id) || {}).qty || 0;
 /* ---- packages: a package is a product with type "package" and items ["productId|qty", ...] ---- */
 const isPkg = p => p && p.type === "package";
+const pkLabel = p => ((p.pkType === "analog" ? "Analog " : p.pkType === "ip" ? "IP " : "") + (p.channels ? p.channels + " Channel " : "") + "Package").trim();
+let pkT = "", pkC = "";
 const pkgItems = p => (p.items || []).map(t => { const [id, q] = String(t).split("|"), r = byId.get(id); return r ? { r, q: Math.max(1, Number(q) || 1) } : null; }).filter(Boolean);
 const pkgText = p => pkgItems(p).map(x => x.q + " x " + x.r.name).join(", ");
 const pkgOk = p => { const n = (p.items || []).length, it = pkgItems(p); return n > 0 && it.length === n && it.every(x => x.r.price > 0 && (x.r.stock === null || x.r.stock >= x.q)); };
@@ -349,7 +355,7 @@ const card = p => {
   const it = pk ? pkgItems(p) : [], inc = pk && it.length ? '<ul class="inc">' + it.slice(0, 6).map(x => '<li>' + x.q + ' &times; ' + esc(x.r.name) + '</li>').join("") + (it.length > 6 ? '<li>and ' + (it.length - 6) + ' more</li>' : "") + '</ul>' : "";
   return '<article class="card"><div class="media"><div class="prd-img" data-id="' + esc(p.id) + '"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' +
     (pk ? '<span class="badge b-pk">Package</span>' : p.isNew ? '<span class="badge b-new">New</span>' : "") + (off > 0 ? '<span class="badge b-off">-' + off + '%</span>' : "") + '<button class="shr" type="button" data-share="' + esc(p.id) + '" aria-label="Share ' + esc(p.name) + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button></div>' +
-    '<div class="body">' + (pk ? '<span class="brand">Package</span>' : p.brand ? '<span class="brand">' + esc(p.brand) + '</span>' : "") + '<h3 class="name">' + esc(p.name) + '</h3>' + (p.description ? '<p class="desc">' + esc(p.description) + '</p>' : "") + inc +
+    '<div class="body">' + (pk ? '<span class="brand">' + esc(pkLabel(p)) + '</span>' : p.brand ? '<span class="brand">' + esc(p.brand) + '</span>' : "") + '<h3 class="name">' + esc(p.name) + '</h3>' + (p.description ? '<p class="desc">' + esc(p.description) + '</p>' : "") + inc +
     '<div class="price">' + (p.price > 0 ? money(p.price) + (off > 0 ? '<s>' + money(p.comparePrice) + '</s>' : "") : '<span style="font-size:15px">Call for price</span>') + '</div>' +
     '<div class="stock ' + (out ? "out" : low ? "low" : "in") + '">' + (out ? (pk ? "Some items unavailable" : "Out of stock") : low ? "Only " + p.stock + " left" : "In stock") + '</div>' + action + '</div></article>';
 };
@@ -357,12 +363,20 @@ let onlyId = "";
 function view() {
   if (onlyId) { const one = all.filter(p => p.id === onlyId); if (one.length) return one; onlyId = ""; }
   const term = q.value.trim().toLowerCase(), b = selB.value, s = selS.value;
-  const v = all.filter(p => (!b || p.brand === b) && (!cat || p.category === cat) && (!term || (p.name + " " + p.brand + " " + p.category + " " + p.description).toLowerCase().includes(term)));
+  const v = all.filter(p => (!b || p.brand === b) && (!cat || p.category === cat) && (cat !== "Packages" || ((!pkT || p.pkType === pkT) && (!pkC || String(p.channels) === pkC))) && (!term || (p.name + " " + p.brand + " " + p.category + " " + p.description).toLowerCase().includes(term)));
   if (s === "low") v.sort((x, y) => (x.price || 1e12) - (y.price || 1e12)); else if (s === "high") v.sort((x, y) => y.price - x.price); else if (s === "name") v.sort((x, y) => x.name.localeCompare(y.name));
   return v;
 }
+function drawPkf() {
+  const el = $("pkf"); el.hidden = cat !== "Packages"; if (el.hidden) return;
+  const c = (a, v, t, on) => '<button class="chip" type="button" data-' + a + '="' + v + '" aria-pressed="' + on + '">' + t + '</button>';
+  el.innerHTML = '<div class="g"><span class="l">Camera type</span>' + c("pt", "", "All", !pkT) + c("pt", "analog", "Analog", pkT === "analog") + c("pt", "ip", "IP", pkT === "ip") + '</div>' +
+    '<div class="g"><span class="l">Channels</span>' + c("pc", "", "All", !pkC) + [4, 8, 16, 32].map(n => c("pc", n, n + " channel", pkC === String(n))).join("") + '</div>';
+}
+$("pkf").addEventListener("click", e => { const b = e.target.closest("[data-pt],[data-pc]"); if (!b) return; if ("pt" in b.dataset) pkT = b.dataset.pt; else pkC = b.dataset.pc; draw(true); });
 function draw(reset) {
   if (!ready) return;
+  drawPkf();
   if (reset) shown = PER;
   const v = view();
   if (onlyId) countEl.innerHTML = '<span class="shared">Shared with you. <a href="/" data-showall>Show all products</a></span>'; else countEl.textContent = v.length + " product" + (v.length === 1 ? "" : "s");
@@ -375,7 +389,7 @@ function drawPk() {
   $("pkrow").innerHTML = list.map(p => {
     const it = pkgItems(p), n = it.reduce((t, x) => t + x.q, 0), off = p.comparePrice > p.price ? Math.round((1 - p.price / p.comparePrice) * 100) : 0;
     return '<article class="pkc"><div class="prd-img" data-id="' + esc(p.id) + '"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' + (off > 0 ? '<span class="save">SAVE ' + off + '%</span>' : '<span class="badge b-pk">Package</span>') +
-      '<div class="pb"><span class="brand">Package</span><h3>' + esc(p.name) + '</h3><span class="cnt">' + n + ' item' + (n === 1 ? "" : "s") + ' included:</span><ul class="inc">' + it.slice(0, 6).map(x => '<li>' + x.q + ' &times; ' + esc(x.r.name) + '</li>').join("") + (it.length > 6 ? '<li>and ' + (it.length - 6) + ' more</li>' : "") + '</ul><div class="pp">' + money(p.price) + (off > 0 ? '<s>' + money(p.comparePrice) + '</s>' : "") + '</div><button class="btn" type="button" data-add="' + esc(p.id) + '">Add package</button></div></article>';
+      '<div class="pb"><span class="brand">' + esc(pkLabel(p)) + '</span><h3>' + esc(p.name) + '</h3><span class="cnt">' + n + ' item' + (n === 1 ? "" : "s") + ' included:</span><ul class="inc">' + it.slice(0, 6).map(x => '<li>' + x.q + ' &times; ' + esc(x.r.name) + '</li>').join("") + (it.length > 6 ? '<li>and ' + (it.length - 6) + ' more</li>' : "") + '</ul><div class="pp">' + money(p.price) + (off > 0 ? '<s>' + money(p.comparePrice) + '</s>' : "") + '</div><button class="btn" type="button" data-add="' + esc(p.id) + '">Add package</button></div></article>';
   }).join("");
   hydrateImages($("pkrow"), byId);
 }
@@ -434,13 +448,13 @@ const panel = $("panel"), pbody = $("pbody"), pfoot = $("pfoot");
 function openPanel(m) {
   opener = document.activeElement; open = true;
   $("ov").classList.add("on"); panel.classList.add("on"); panel.setAttribute("aria-hidden", "false");
-  ["topstrip", "hd", "pkgs", "hero", "bar", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = true; });
+  ["topstrip", "hd", "pkgs", "hero", "bar", "pkf", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = true; });
   document.body.style.overflow = "hidden";
   m === "checkout" ? startCheckout() : m === "build" ? renderBuilder() : renderCart(); $("pclose").focus();
 }
 function closePanel() {
   open = false; $("ov").classList.remove("on"); panel.classList.remove("on"); panel.setAttribute("aria-hidden", "true");
-  ["topstrip", "hd", "pkgs", "hero", "bar", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = false; });
+  ["topstrip", "hd", "pkgs", "hero", "bar", "pkf", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = false; });
   document.body.style.overflow = ""; if (opener && opener.focus) opener.focus();
 }
 $("cartbtn").onclick = () => openPanel("cart"); $("pclose").onclick = closePanel; $("ov").onclick = closePanel;
@@ -591,7 +605,7 @@ function done(id, total) {
 }
 
 /* ---------------- complete your setup: quantity + matching items (DVR, NVR, cable, connectors...) ---------------- */
-const LOCK = ["topstrip", "hd", "pkgs", "hero", "bar", "count", "main", "ft"];
+const LOCK = ["topstrip", "hd", "pkgs", "hero", "bar", "pkf", "count", "main", "ft"];
 const avail = r => r && r.price > 0 && (r.stock === null || r.stock > 0);
 const kindOf = p => { const t = ((p.category || "") + " " + (p.name || "")).toLowerCase(); return /\bnvr\b/.test(t) ? "nvr" : /\b(dvr|xvr)\b/.test(t) ? "dvr" : /camera|\bcam\b|ptz|dome|bullet|turret/.test(t) ? "camera" : "acc"; };
 let adOpen = false, adFrom = null, adMain = null, adSel = new Map(), adIds = new Map();
