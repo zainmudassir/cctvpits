@@ -196,21 +196,20 @@ body{font-family:'Manrope',system-ui,sans-serif}
 .pkf[hidden]{display:none}.pkf .g{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.pkf .l{font-weight:800;font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
 .pkf .chip{padding:7px 14px;font-size:13px}
 /* hero */
-.hero{max-width:1320px;margin:0 auto;width:100%;padding:24px 4vw 0;display:flex;flex-wrap:wrap;gap:20px}
-.hero .big{flex:2 1 520px;min-width:0;background:#dbeafe;border-radius:20px;padding:40px;display:flex;flex-direction:column;justify-content:center;gap:12px}
-.hero .big{position:relative;overflow:hidden;isolation:isolate}
-.hero .big::before{content:"";position:absolute;inset:0;z-index:-1;background:url(/assets/images/hero.svg) no-repeat right 20px center/auto 84%;pointer-events:none}
-.hero .big>*{max-width:50%}
-@media(max-width:900px){.hero .big>*{max-width:none}.hero .big::before{background-position:center bottom -10px;background-size:auto 70%;opacity:.28}}
-.hero .big h1{font-size:clamp(28px,4vw,42px);line-height:1.1;letter-spacing:-1px;font-weight:800}
+.hero{max-width:1320px;margin:0 auto;width:100%;padding:24px 4vw 0;display:flex;flex-wrap:wrap;gap:20px;align-items:stretch}
+.hero .big{flex:3 1 620px;min-width:0;background:#dbeafe;border-radius:20px;padding:32px 36px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:center}
+.hero .txt{display:flex;flex-direction:column;gap:12px;min-width:0}
+.hero .art{width:100%;height:auto;max-height:340px;display:block}
+.hero .big h1{font-size:clamp(28px,3.6vw,42px);line-height:1.1;letter-spacing:-1px;font-weight:800}
 .hero .big p{color:#334155;font-size:17px;max-width:520px}
 .hero .acts2{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
 .hero .acts2 .btn{width:auto;padding:14px 24px}
 .hero .btn.sec{background:#fff;border-color:var(--ink)}
-.hero .side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:20px}
-.hero .tile{flex:1;background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px}
-.hero .tile b{font-size:19px;display:block}.hero .tile p{color:var(--mute);font-size:15px;margin:6px 0 12px}
-.hero .tile a{color:var(--accent);font-weight:800}
+.hero .side{flex:1 1 250px;max-width:330px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.hero .tile{flex:1;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:14px}
+.hero .tile img{width:70px;height:70px;flex:none}
+.hero .tile b{font-size:16px;display:block;line-height:1.25}.hero .tile p{color:var(--mute);font-size:13.5px;margin:3px 0 6px;line-height:1.4}
+.hero .tile a{color:var(--accent);font-weight:800;font-size:14px}
 .eyebrow{color:var(--tag);font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase}
 /* package card + builder */
 .inc{list-style:none;padding:0;margin:0;font-size:13px;color:var(--mute);display:grid;gap:2px}
@@ -222,7 +221,8 @@ body{font-family:'Manrope',system-ui,sans-serif}
 .br .qty{margin:0}.br .qty span{min-width:30px}
 .bq{width:100%;height:44px;border:1px solid var(--line);border-radius:999px;padding:0 18px;background:#f8fafc}
 .bhint{background:var(--card2);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--mute)}
-@media(max-width:520px){.hero .big{padding:26px}}
+@media(max-width:900px){.hero .big{grid-template-columns:1fr}.hero .art{max-height:220px;order:2}.hero .side{max-width:none;flex-basis:100%}}
+@media(max-width:520px){.hero .big{padding:22px}.hero .tile img{width:56px;height:56px}}
 
 /* add-ons dialog ("Need anything with this?") */
 #adov{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;visibility:hidden;transition:.25s;z-index:90}
@@ -272,14 +272,17 @@ body{font-family:'Manrope',system-ui,sans-serif}
 
 <section class="hero" id="hero">
   <div class="big">
-    <span class="eyebrow">CCTV cameras, DVR, NVR and accessories</span>
-    <h1>Protect what matters. Buy one item, many, or a full package.</h1>
-    <p>Choose a ready-made package, or build your own: camera + cable + connector + recorder, exactly what you need.</p>
-    <div class="acts2"><a class="btn" href="#main">Shop now</a><button class="btn sec" type="button" data-build>Build your own package</button></div>
+    <div class="txt">
+      <span class="eyebrow">CCTV cameras, DVR, NVR and accessories</span>
+      <h1>Protect what matters. Buy one item, many, or a full package.</h1>
+      <p>Choose a ready-made package, or build your own: camera + cable + connector + recorder, exactly what you need.</p>
+      <div class="acts2"><a class="btn" href="#main">Shop now</a><button class="btn sec" type="button" data-build>Build your own package</button></div>
+    </div>
+    <img class="art" src="/assets/images/hero.svg" alt="CCTV cameras and recorder, with installation and survey services" width="460" height="440">
   </div>
   <div class="side">
-    <div class="tile"><b>Need it installed?</b><p>Our team can survey, fit and set up your system.</p><a href="https://wa.me/923053871991?text=Hello%20CCTV%20PITS%2C%20I%20need%20installation%20or%20service." target="_blank" rel="noopener">Book a service &rarr;</a></div>
-    <div class="tile"><b>Not sure what to buy?</b><p>Message us and we will help you choose.</p><a href="https://wa.me/923053871991" target="_blank" rel="noopener">Chat on WhatsApp &rarr;</a></div>
+    <div class="tile"><img src="/assets/images/tile-install.svg" alt="" width="70" height="70"><div><b>Need it installed?</b><p>We survey, fit and set up your system.</p><a href="https://wa.me/923053871991?text=Hello%20CCTV%20PITS%2C%20I%20need%20installation%20or%20service." target="_blank" rel="noopener">Book a service &rarr;</a></div></div>
+    <div class="tile"><img src="/assets/images/tile-help.svg" alt="" width="70" height="70"><div><b>Not sure what to buy?</b><p>Message us, we will help you choose.</p><a href="https://wa.me/923053871991" target="_blank" rel="noopener">Chat on WhatsApp &rarr;</a></div></div>
   </div>
 </section>
 
