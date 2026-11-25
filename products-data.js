@@ -3,7 +3,7 @@
 // (photos are stored inside the documents and are large); each photo is fetched only when its card scrolls into view.
 export const WA = "923053871991"; // store WhatsApp number
 const BASE = "https://firestore.googleapis.com/v1/projects/cctv-pits/databases/(default)/documents/products", KEY = "AIzaSyBI8ye784CeFUEhpnZ-azZGGYn6xO0QH5w";
-const FIELDS = ["name", "price", "brand", "category", "stock", "comparePrice", "isNew", "description", "related", "createdAt"];
+const FIELDS = ["name", "price", "brand", "category", "stock", "comparePrice", "isNew", "description", "related", "createdAt", "type", "items"];
 const LS = "products:list", TTL = 5 * 60 * 1000;
 const sv = f => f && f.stringValue !== undefined ? f.stringValue : "";
 const nv = f => f ? (f.integerValue !== undefined ? Number(f.integerValue) : f.doubleValue !== undefined ? Number(f.doubleValue) : 0) : 0;
@@ -14,6 +14,7 @@ const parse = d => {
   return { id: d.name.split("/").pop(), name: sv(f.name).trim(), price: nv(f.price), brand: sv(f.brand).trim(), category: sv(f.category).trim(),
     stock: f.stock ? nv(f.stock) : null, comparePrice: nv(f.comparePrice), isNew: !!(f.isNew && f.isNew.booleanValue), description: sv(f.description).trim(),
     related: ((f.related || {}).arrayValue || {}).values ? f.related.arrayValue.values.map(x => x.stringValue).filter(Boolean) : [],
+    type: sv(f.type), items: ((f.items || {}).arrayValue || {}).values ? f.items.arrayValue.values.map(x => x.stringValue).filter(Boolean) : [],
     t: f.createdAt && f.createdAt.timestampValue ? Date.parse(f.createdAt.timestampValue) || 0 : 0 };
 };
 const clean = list => list.filter(p => p.name).sort((a, b) => b.t - a.t || a.name.localeCompare(b.name));
@@ -34,7 +35,7 @@ export async function loadProducts() {
     try {   // REST blocked or offline: fall back to the Firebase SDK (photos come with the documents here)
       const { db } = await import("/firebase-lite.js"), { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js");
       list = clean((await getDocs(collection(db, "products"))).docs.map(d => { const v = d.data(); return { id: d.id, name: String(v.name || "").trim(), price: Number(v.price) || 0, brand: String(v.brand || "").trim(),
-        category: String(v.category || "").trim(), stock: v.stock == null ? null : Number(v.stock), comparePrice: Number(v.comparePrice) || 0, isNew: !!v.isNew, description: String(v.description || "").trim(), related: Array.isArray(v.related) ? v.related.filter(x => typeof x === "string") : [],
+        category: String(v.category || "").trim(), stock: v.stock == null ? null : Number(v.stock), comparePrice: Number(v.comparePrice) || 0, isNew: !!v.isNew, description: String(v.description || "").trim(), related: Array.isArray(v.related) ? v.related.filter(x => typeof x === "string") : [], type: String(v.type || ""), items: Array.isArray(v.items) ? v.items.filter(x => typeof x === "string") : [],
         image: String(v.image || ""), t: v.createdAt && v.createdAt.toMillis ? v.createdAt.toMillis() : 0 }; }));
     } catch (e2) { return null; }
   }

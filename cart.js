@@ -4,7 +4,7 @@ export const getCart = () => { try { return JSON.parse(localStorage.getItem(KEY)
 const save = c => { try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} window.dispatchEvent(new Event("cartchange")); };
 export function addToCart(p) {
   const c = getCart(), i = c.find(x => x.id === p.id);
-  i ? i.qty++ : c.push({ id: p.id, name: p.name, price: Number(p.price), qty: 1 });
+  i ? i.qty++ : c.push({ id: p.id, name: p.name, price: Number(p.price), qty: 1, ...(p.includes ? { includes: String(p.includes) } : {}) });
   save(c);
 }
 export function setQty(id, q) {

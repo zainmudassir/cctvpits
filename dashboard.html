@@ -41,17 +41,22 @@ const $ = id => document.getElementById(id);
 const show = (t, c) => { $("msg").textContent = t; $("msg").className = "msg " + c; };
 $("out").onclick = e => { e.preventDefault(); signOut(auth); };
 import { rs, esc } from "./cart.js";
+import { printReceipt } from "./receipt.js";
+let myOrders = [];
 async function loadOrders(uid) {
   try {
     const snap = await getDocs(query(collection(db, "orders"), where("userId", "==", uid)));
     const list = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    myOrders = list;
     $("olist").innerHTML = list.map(o => `<div class="order">
       <div class="oh"><b>#${o.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(o.status)}">${esc(o.status)}</span>${o.installation ? '<span class="pill new">Installation requested</span>' : ""}<span>${o.createdAt ? o.createdAt.toDate().toLocaleDateString() : ""}</span></div>
       <div>${(o.items || []).map(i => esc(i.name) + " x " + i.qty).join(", ")}</div>
       <div><b>${rs(o.total)}</b> &middot; Paid to ${esc(o.payment?.bankName)} &middot; Trx ID: ${esc(o.trxId)}</div>
+      <div><button class="sm" type="button" data-rc="${o.id}">Print receipt</button></div>
     </div>`).join("") || "<p>No orders yet.</p>";
   } catch (e) { $("olist").textContent = "Could not load orders."; }
 }
+$("olist").addEventListener("click", e => { const b = e.target.closest("[data-rc]"); if (!b) return; const o = myOrders.find(x => x.id === b.dataset.rc); if (o) printReceipt({ ...o, date: o.createdAt }); });
 let user;
 onAuthStateChanged(auth, async u => {
   if (!u) return location.replace("login.html");

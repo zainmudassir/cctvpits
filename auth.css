@@ -50,3 +50,9 @@ button.primary:disabled{opacity:.6;cursor:wait}
   .panel::before,.panel::after{display:none}
   .panel h2{max-width:none}
 }
+
+/* white header with the company logo */
+.topbar{background:#fff;border-bottom:3px solid #d4161c}
+.brand{color:#0f172a}.brand img{height:50px}
+.topbar nav a{color:#0f172a}.topbar nav a:hover{color:#1d4ed8}
+.topbar nav a:last-child{background:#1d4ed8;color:#fff}.topbar nav a:last-child:hover{background:#1e40af;color:#fff}

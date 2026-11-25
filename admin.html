@@ -22,6 +22,11 @@ dialog#reldlg{border:1px solid var(--line);border-radius:8px;padding:20px;width:
 dialog#reldlg::backdrop{background:rgba(0,0,0,.6)}
 dialog#reldlg h3{margin-bottom:12px;font-size:17px}
 .rbtns{display:flex;gap:10px;margin-top:14px}
+.pk-list{max-height:300px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;background:#fff;margin-top:8px}
+.pk-row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--line)}
+.pk-row:last-child{border-bottom:0}.pk-row span{font-weight:600}.pk-row small{display:block;font-weight:400;color:var(--muted)}
+.pk-row input{width:76px;flex:none;text-align:center}.pk-row.on{background:#f2f8ff}
+#pkrows .inc{font-size:13px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -115,6 +120,17 @@ dialog#reldlg h3{margin-bottom:12px;font-size:17px}
     <div class="scroll" style="margin-top:18px"><table class="tbl"><thead><tr><th>Bank</th><th>Title</th><th>Number</th><th>Status</th><th></th></tr></thead><tbody id="alist"></tbody></table></div>
   </div>
 
+  <div class="box"><h2>Products (<span id="pcount">0</span>)</h2>
+    <input id="psearch" type="search" placeholder="Search products by name, company or category..." aria-label="Search products" style="margin-bottom:12px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <button class="sm" id="selall" type="button">Select all</button>
+      <button class="sm del" id="delsel" type="button" disabled>Delete selected (0)</button>
+      <span id="selmsg" class="sub" style="margin:0"></span>
+    </div>
+    <div class="scroll"><table class="tbl"><thead><tr><th><input type="checkbox" id="selhead" aria-label="Select all products"></th><th></th><th>Name</th><th>Company / Category</th><th>Price</th><th></th></tr></thead><tbody id="plist"></tbody></table></div>
+  </div>
+
+
   <div class="box"><h2>Import products</h2>
     <p class="sub" style="margin-top:0">Upload your catalog <b>.json</b> to add companies, categories and products at once. Anything that already exists is skipped, so it is safe to run twice.</p>
     <input id="impfile" type="file" accept=".json,application/json">
@@ -132,13 +148,32 @@ dialog#reldlg h3{margin-bottom:12px;font-size:17px}
     <div id="plmsg" class="msg" role="alert"></div>
   </div>
 
-  <div class="box"><h2>Products (<span id="pcount">0</span>)</h2>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
-      <button class="sm" id="selall" type="button">Select all</button>
-      <button class="sm del" id="delsel" type="button" disabled>Delete selected (0)</button>
-      <span id="selmsg" class="sub" style="margin:0"></span>
-    </div>
-    <div class="scroll"><table class="tbl"><thead><tr><th><input type="checkbox" id="selhead" aria-label="Select all products"></th><th></th><th>Name</th><th>Company / Category</th><th>Price</th><th></th></tr></thead><tbody id="plist"></tbody></table></div>
+  <div class="box"><h2>Add package</h2>
+    <p class="sub" style="margin-top:0">A package is a bundle sold together, for example camera + cable + connectors. Pick the products, set how many of each, then set the package price.</p>
+    <form id="pkf" class="wide">
+      <div class="row">
+        <div><label for="pkname">Package name</label><input id="pkname" required placeholder="For example: 4 Camera Home Kit"></div>
+        <div><label for="pkprice">Package price (Rs.)</label><input id="pkprice" type="number" min="1" step="1" required></div>
+      </div>
+      <p class="sub" id="pksum" style="margin:6px 0 0">No products picked yet.</p>
+      <label for="pkq">1. Pick products <span style="font-weight:400;color:var(--muted)">(type a quantity next to each product you want in the package)</span></label>
+      <input id="pkq" type="search" placeholder="Search products..." autocomplete="off" aria-label="Search products to add">
+      <div id="pklist" class="pk-list"></div>
+      <div class="row" style="margin-top:14px">
+        <div><label for="pkimg">Photo (optional)</label><input id="pkimg" type="file" accept="image/*"></div>
+        <div><label for="pkdesc">Short description (optional)</label><input id="pkdesc"></div>
+      </div>
+      <label style="display:flex;align-items:center;font-weight:600"><input id="pknew" type="checkbox"> Mark as New</label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
+        <button class="primary" id="pksubmit" type="submit" style="max-width:220px;margin-top:0">Add package</button>
+        <button class="sm" id="pkcancel" type="button" hidden>Cancel editing</button>
+      </div>
+      <div id="pkmsg" class="msg" role="alert"></div>
+    </form>
+  </div>
+
+  <div class="box"><h2>Packages (<span id="pkcount">0</span>)</h2>
+    <div class="scroll"><table class="tbl"><thead><tr><th></th><th>Package</th><th>Includes</th><th>Price</th><th></th></tr></thead><tbody id="pkrows"></tbody></table></div>
   </div>
 
 </main>
@@ -148,6 +183,7 @@ dialog#reldlg h3{margin-bottom:12px;font-size:17px}
 <script type="module">
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+import { printReceipt } from "./receipt.js";
 import { setDoc, deleteField, writeBatch, doc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc, query, orderBy, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
@@ -218,10 +254,11 @@ async function loadProducts() {
   // one-time tidy: banners now live in their own section, so remove old banner data from products
   snap.docs.filter(d => d.data().bannerImage !== undefined || d.data().showInBanner !== undefined)
     .forEach(d => updateDoc(d.ref, { bannerImage: deleteField(), showInBanner: deleteField() }).catch(() => {}));
-  $("pcount").textContent = snap.size;
-  relList = snap.docs.map(d => { const v = d.data(); return { id: d.id, name: String(v.name || ""), brand: String(v.brand || ""), category: String(v.category || ""), price: Number(v.price) || 0 }; }).sort((x, y) => x.name.localeCompare(y.name));
-  initAddRel(getRel());
-  $("plist").innerHTML = snap.docs.map(d => { const p = d.data(), sale = Number(p.comparePrice) > Number(p.price); return `
+  const pdocs = snap.docs.filter(d => d.data().type === "package"), sdocs = snap.docs.filter(d => d.data().type !== "package");
+  $("pcount").textContent = sdocs.length;
+  relList = sdocs.map(d => { const v = d.data(); return { id: d.id, name: String(v.name || ""), brand: String(v.brand || ""), category: String(v.category || ""), price: Number(v.price) || 0 }; }).sort((x, y) => x.name.localeCompare(y.name));
+  initAddRel(getRel()); pkAll = relList; pkInit(); renderPackages(pdocs);
+  $("plist").innerHTML = sdocs.map(d => { const p = d.data(), sale = Number(p.comparePrice) > Number(p.price); return `
     <tr data-id="${d.id}" data-new="${!!p.isNew}">
       <td><input type="checkbox" class="pk" aria-label="Select product"></td>
       <td>${p.image ? `<img src="${esc(p.image)}" alt="">` : ""}</td>
@@ -237,8 +274,97 @@ async function loadProducts() {
         <button class="sm" data-act="price">Edit price</button>
         <button class="sm del" data-act="del">Delete</button></div></td>
     </tr>`; }).join("") || '<tr><td colspan="6">No products yet. Add your first one above.</td></tr>';
-  updSel();
+  updSel(); filterP();
 }
+
+// ---------- search in the products list ----------
+function filterP() {
+  const t = ($("psearch").value || "").trim().toLowerCase();
+  document.querySelectorAll("#plist tr[data-id]").forEach(tr => { tr.hidden = !!t && !tr.textContent.toLowerCase().includes(t); });
+}
+$("psearch").addEventListener("input", filterP);
+
+// ---------- packages (stored in the products collection: type "package", items ["productId|qty"]) ----------
+let pkAll = [], pkSel = new Map(), pkTouched = false, pkEditId = null, pkImg = "";
+const pkshow = (t, c) => { $("pkmsg").textContent = t; $("pkmsg").className = "msg " + c; };
+const pkTotal = () => { let t = 0; pkSel.forEach((q, id) => { const p = pkAll.find(x => x.id === id); if (p) t += q * p.price; }); return t; };
+function pkSummary() {
+  let n = 0; pkSel.forEach(q => n += q);
+  const tot = pkTotal(), price = Number($("pkprice").value) || 0;
+  if (!n) { $("pksum").textContent = "No products picked yet."; return; }
+  $("pksum").textContent = n + " item" + (n === 1 ? "" : "s") + " picked. Items total: " + rs(tot) + (price && price < tot ? ". Customers save " + rs(tot - price) + " (shown as Sale)." : price > tot ? ". Package price is higher than the items total." : ".");
+}
+function pkDraw() {
+  const t = ($("pkq").value || "").trim().toLowerCase();
+  $("pklist").innerHTML = pkAll.filter(p => pkSel.has(p.id) || !t || (p.name + " " + p.brand + " " + p.category).toLowerCase().includes(t))
+    .map(p => `<div class="pk-row${pkSel.has(p.id) ? " on" : ""}"><span>${esc(p.name)}<small>${esc(p.brand)} &middot; ${esc(p.category)} &middot; ${rs(p.price)}</small></span><input type="number" min="0" max="99" step="1" value="${pkSel.get(p.id) || 0}" data-id="${esc(p.id)}" aria-label="Quantity of ${esc(p.name)}"></div>`).join("") || '<p style="padding:12px">No products found. Add products first.</p>';
+}
+function pkInit() { pkDraw(); pkSummary(); }
+$("pklist").addEventListener("input", e => {
+  const i = e.target; if (!i.dataset.id) return;
+  const q = Math.max(0, Math.min(99, Math.floor(Number(i.value) || 0)));
+  q ? pkSel.set(i.dataset.id, q) : pkSel.delete(i.dataset.id);
+  i.closest(".pk-row").classList.toggle("on", q > 0);
+  if (!pkTouched) $("pkprice").value = pkTotal() || "";
+  pkSummary();
+});
+$("pkq").addEventListener("input", pkDraw);
+$("pkq").addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });
+$("pkprice").addEventListener("input", () => { pkTouched = true; pkSummary(); });
+$("pkimg").addEventListener("change", async e => {
+  const f = e.target.files[0]; pkImg = "";
+  if (f) try { pkImg = await shrink(f); } catch (err) { pkshow("That file is not a valid image.", "err"); }
+});
+function pkReset() {
+  pkSel = new Map(); pkTouched = false; pkEditId = null; pkImg = "";
+  $("pkf").reset(); $("pksubmit").textContent = "Add package"; $("pkcancel").hidden = true; pkInit();
+}
+$("pkcancel").addEventListener("click", () => { pkReset(); pkshow("", ""); });
+$("pkf").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!pkSel.size) return pkshow("Pick at least one product for the package.", "err");
+  const price = Number($("pkprice").value), total = pkTotal();
+  if (!(price > 0)) return pkshow("Enter the package price.", "err");
+  const btn = $("pksubmit"); btn.disabled = true;
+  const data = { name: $("pkname").value.trim(), price, type: "package", brand: "", category: "Packages", comparePrice: total > price ? total : 0, isNew: $("pknew").checked,
+    description: $("pkdesc").value.trim(), items: [...pkSel].map(([id, q]) => id + "|" + q) };
+  try {
+    if (pkImg) data.image = pkImg;
+    if (pkEditId) await updateDoc(doc(db, "products", pkEditId), data);
+    else await addDoc(collection(db, "products"), { ...data, image: pkImg, createdAt: serverTimestamp(), createdBy: auth.currentUser.uid });
+    const edited = !!pkEditId; pkReset(); pkshow(edited ? "Package updated." : "Package added. It is now live on the store.", "ok"); loadProducts();
+  } catch (err) { pkshow("Could not save the package. Make sure the photo is small and your admin access is set up.", "err"); }
+  btn.disabled = false;
+});
+function renderPackages(pdocs) {
+  $("pkcount").textContent = pdocs.length;
+  $("pkrows").innerHTML = pdocs.map(d => { const p = d.data(), sale = Number(p.comparePrice) > Number(p.price);
+    const inc = (p.items || []).map(t => { const [id, q] = String(t).split("|"), r = pkAll.find(x => x.id === id); return `<li>${esc(q)} &times; ${r ? esc(r.name) : "<i>(deleted product)</i>"}</li>`; }).join("");
+    return `<tr data-id="${d.id}" data-new="${!!p.isNew}">
+      <td>${p.image ? `<img src="${esc(p.image)}" alt="">` : ""}</td>
+      <td>${esc(p.name)}<br>${p.isNew ? '<span class="pill pending">New</span> ' : ""}${sale ? '<span class="pill rejected">Sale</span>' : ""}</td>
+      <td><ul class="inc" style="list-style:none;padding:0;margin:0">${inc}</ul></td>
+      <td>${sale ? "<s>" + rs(p.comparePrice) + "</s><br>" : ""}${rs(p.price)}</td>
+      <td style="min-width:200px"><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="sm" data-act="edit">Edit</button><button class="sm" data-act="photo">Photo</button><button class="sm" data-act="new">${p.isNew ? "Unmark New" : "Mark New"}</button><button class="sm del" data-act="del">Delete</button></div></td></tr>`; }).join("") || '<tr><td colspan="5">No packages yet. Create your first one above.</td></tr>';
+}
+$("pkrows").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const tr = b.closest("tr"), id = tr.dataset.id, ref = doc(db, "products", id), act = b.dataset.act;
+  try {
+    if (act === "del") { if (!confirm("Delete this package? The products inside are not deleted.")) return; await deleteDoc(ref); }
+    else if (act === "photo") { rowId = id; rowimg.click(); return; }
+    else if (act === "new") await updateDoc(ref, { isNew: tr.dataset.new !== "true" });
+    else if (act === "edit") {
+      const p = (await getDoc(ref)).data() || {};
+      pkReset(); pkEditId = id; pkTouched = true;
+      $("pkname").value = p.name || ""; $("pkprice").value = p.price || ""; $("pkdesc").value = p.description || ""; $("pknew").checked = !!p.isNew;
+      (p.items || []).forEach(t => { const [pid, q] = String(t).split("|"); if (pkAll.some(x => x.id === pid)) pkSel.set(pid, Math.max(1, Number(q) || 1)); });
+      $("pksubmit").textContent = "Save changes"; $("pkcancel").hidden = false; pkInit(); pkshow("Editing this package. Leave the photo empty to keep the current one.", "ok");
+      $("pkf").scrollIntoView({ behavior: "smooth", block: "start" }); return;
+    }
+    loadProducts();
+  } catch (err) { alert("Action failed. Check your Firestore rules."); }
+});
 
 // ---------- select all / delete selected ----------
 const boxes = () => [...document.querySelectorAll("#plist input.pk")];
@@ -566,8 +692,10 @@ $("af").addEventListener("submit", async e => {
   } catch (err) { m.textContent = "Could not add account. Check your Firestore rules."; m.className = "msg err"; }
 });
 
+let orderMap = {};
 async function loadOrders() {
   const snap = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc")));
+  orderMap = {}; snap.docs.forEach(d => { orderMap[d.id] = { id: d.id, ...d.data() }; });
   $("ocount").textContent = snap.size;
   $("opend").textContent = snap.docs.filter(d => d.data().status === "pending").length;
   $("olist").innerHTML = snap.docs.map(d => { const o = d.data(), c = o.customer || {}, p = o.payment || {}; return `
@@ -575,15 +703,16 @@ async function loadOrders() {
       <div class="oh"><b>#${d.id.slice(0, 6).toUpperCase()}</b><span class="pill ${esc(o.status)}">${esc(o.status)}</span>${o.installation ? '<span class="pill new">Installation requested</span>' : ""}<span>${o.createdAt ? o.createdAt.toDate().toLocaleString() : ""}</span></div>
       <div><b>${esc(c.name)}</b> &middot; ${esc(c.phone)} &middot; ${esc(o.email)}</div>
       <div>${esc(c.address)}, ${esc(c.city)}${c.note ? " (" + esc(c.note) + ")" : ""}</div>
-      <div>${(o.items || []).map(i => esc(i.name) + " x " + i.qty).join(", ")}</div>
+      <div>${(o.items || []).map(i => esc(i.name) + " x " + i.qty + (i.includes ? " [" + esc(i.includes) + "]" : "")).join(", ")}</div>
       <div><b>${rs(o.total)}</b> &middot; Paid to ${esc(p.bankName)} ${esc(p.accountNumber)} &middot; Trx ID: <b>${esc(o.trxId)}</b></div>
       ${o.screenshot ? `<img class="thumb" src="${esc(o.screenshot)}" alt="Payment screenshot">` : ""}
-      <div><button class="sm" data-st="confirmed">Confirm payment</button> <button class="sm del" data-st="rejected">Reject</button> <button class="sm" data-st="delivered">Mark delivered</button></div>
+      <div><button class="sm" data-st="confirmed">Confirm payment</button> <button class="sm del" data-st="rejected">Reject</button> <button class="sm" data-st="delivered">Mark delivered</button> <button class="sm" data-rc="${d.id}">Print receipt</button></div>
     </div>`; }).join("") || "<p>No orders yet.</p>";
 }
 $("olist").addEventListener("click", async e => {
   const img = e.target.closest("img.thumb");
   if (img) { lb.querySelector("img").src = img.src; lb.hidden = false; return; }
+  const rc = e.target.closest("[data-rc]"); if (rc) { const o = orderMap[rc.dataset.rc]; if (o) printReceipt({ ...o, date: o.createdAt }); return; }
   const b = e.target.closest("button[data-st]"); if (!b) return;
   try { await updateDoc(doc(db, "orders", b.closest(".order").dataset.id), { status: b.dataset.st }); loadOrders(); }
   catch (err) { alert("Could not update order."); }
@@ -687,7 +816,7 @@ onAuthStateChanged(auth, async u => {
 <script>
 (function () {
   var main = document.getElementById("main"); if (!main) return;
-  var T = [["dash", "Dashboard", []], ["orders", "Orders", ["Orders"]], ["products", "Products", ["Add product", "Import products", "Product photos", "Products"]], ["catalog", "Brands & categories", ["Companies", "Categories"]], ["settings", "Settings", ["Payment settings"]]];
+  var T = [["dash", "Dashboard", []], ["orders", "Orders", ["Orders"]], ["products", "Products", ["Add product", "Import products", "Product photos", "Products"]], ["packages", "Packages", ["Add package", "Packages"]], ["catalog", "Brands & categories", ["Companies", "Categories"]], ["settings", "Settings", ["Payment settings"]]];
   var S = [["Orders", "ocount", "orders"], ["Pending orders", "opend", "orders"], ["Products", "pcount", "products"], ["Brands", "ccount", "catalog"]];
   var boxes = [].slice.call(main.querySelectorAll(":scope > .box")), wrap = document.createElement("div"), side = document.createElement("nav"), body = document.createElement("div"), panels = {};
   wrap.className = "adm"; side.className = "adm-side"; main.classList.add("adm-wrap");

@@ -9,9 +9,9 @@
 <link rel="icon" type="image/png" href="/assets/images/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b1424;--card:#0b1a30;--card2:#101f38;--line:rgba(255,255,255,.12);--ink:#fff;--mute:#c9d1dc;--dim:#8b97a8;--accent:#ed1d24;--accent2:#c8141a;--ok:#4ade80;--bad:#ff8a8a;--head:'Orbitron','Public Sans',sans-serif}
+:root{--bg:#f6f7f9;--card:#ffffff;--card2:#f1f5f9;--line:#e2e8f0;--ink:#0f172a;--mute:#475569;--dim:#64748b;--accent:#1d4ed8;--accent2:#1e40af;--tag:#d4161c;--nav:#0b1424;--ok:#15803d;--bad:#b91c1c;--head:'Manrope',system-ui,sans-serif}
 *{box-sizing:border-box;margin:0}
 html{scroll-padding-top:150px}
 body{font-family:'Public Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
@@ -131,8 +131,65 @@ form.co input[type=file]{padding:9px}
   .bar{grid-template-columns:1fr 1fr}.chips{grid-column:1/-1}.bar select{min-width:0;width:100%}
   .grid{grid-template-columns:repeat(2,1fr)}
 }
-@media(max-width:520px){.grid{gap:12px}.body{padding:14px 12px 16px}.name{font-size:15px}.price{font-size:15px}.btn{font-size:11px;padding:12px 8px}.acct{padding:10px 11px;font-size:11px}.r2{grid-template-columns:1fr}.logo img{height:30px}}
+@media(max-width:520px){.grid{gap:12px}.body{padding:14px 12px 16px}.name{font-size:15px}.price{font-size:15px}.btn{font-size:11px;padding:12px 8px}.acct{padding:10px 11px;font-size:11px}.r2{grid-template-columns:1fr}.logo img{height:56px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+
+/* ===== light theme (Concept B) ===== */
+body{font-family:'Manrope',system-ui,sans-serif}
+.hd{background:#fff;color:var(--ink);border-bottom:3px solid #ed1d24}.logo img{height:74px;width:auto}
+.search input{background:#f1f5f9;color:#0f172a;border:1px solid var(--line);border-radius:999px;padding-left:46px}
+.search input::placeholder{color:#64748b}
+.acct{border:2px solid var(--ink);border-radius:999px;padding:11px 16px}.acct:hover{background:var(--ink);color:#fff}
+.cartbtn{border-radius:999px}
+.cartbtn{color:#fff}.cartbtn b{font-family:'Manrope',sans-serif}
+.top{background:#0f172a;color:#e2e8f0;font-size:13px;padding:8px 4vw;display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 18px}
+.top a{color:#fff;font-weight:700}
+.chip{background:#fff}.chip:hover{border-color:var(--ink);color:var(--ink)}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip.build{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:800}.chip.build:hover{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.bar select{background:#fff;color:var(--ink);border-radius:8px}.bar select option{background:#fff;color:var(--ink)}
+.card{border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04)}.card:hover{border-color:#94a3b8;box-shadow:0 8px 24px rgba(15,23,42,.08)}
+.prd-img{background:#f1f5f9;color:#94a3b8}
+.badge{border-radius:4px}.b-new,.b-pk{left:10px;background:var(--tag)}.b-off{background:var(--ink)}
+.brand{color:var(--tag);font-weight:800;letter-spacing:.8px}
+.price{font-family:var(--head);font-weight:800}
+.price s{font-family:'Manrope',sans-serif}
+.btn{border-radius:999px;font-family:var(--head);font-weight:800}
+.btn.ghost,.btn.sec{color:var(--ink)}.btn.ghost:hover{border-color:var(--ink)}.btn.sec:hover:not(:disabled){border-color:var(--ink)}
+.more button{border-color:var(--ink);color:var(--ink);border-radius:999px}.more button:hover{background:var(--ink);color:#fff}
+.ft{background:#fff}
+#toast{background:var(--ink);color:#fff}
+#ov,#adov{background:rgba(15,23,42,.55)}
+#panel{background:#fff}.pf{background:#fff}
+.x:hover{border-color:var(--ink)}
+#adn{background:#fff}
+.tick{background:rgba(21,128,61,.12)}
+.ph h2,.done h3,.h3,.adg{font-family:var(--head)}.adg{color:var(--tag)}
+/* hero */
+.hero{max-width:1320px;margin:0 auto;width:100%;padding:24px 4vw 0;display:flex;flex-wrap:wrap;gap:20px}
+.hero .big{flex:2 1 520px;min-width:0;background:#dbeafe;border-radius:20px;padding:40px;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.hero .big h1{font-size:clamp(28px,4vw,42px);line-height:1.1;letter-spacing:-1px;font-weight:800}
+.hero .big p{color:#334155;font-size:17px;max-width:520px}
+.hero .acts2{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.hero .acts2 .btn{width:auto;padding:14px 24px}
+.hero .btn.sec{background:#fff;border-color:var(--ink)}
+.hero .side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:20px}
+.hero .tile{flex:1;background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px}
+.hero .tile b{font-size:19px;display:block}.hero .tile p{color:var(--mute);font-size:15px;margin:6px 0 12px}
+.hero .tile a{color:var(--accent);font-weight:800}
+.eyebrow{color:var(--tag);font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase}
+/* package card + builder */
+.inc{list-style:none;padding:0;margin:0;font-size:13px;color:var(--mute);display:grid;gap:2px}
+.inc li:before{content:"+ ";color:var(--tag);font-weight:800}
+.bl{margin-top:12px}
+.bg{font:800 12px/1 var(--head);letter-spacing:.5px;text-transform:uppercase;color:var(--tag);margin:18px 0 4px}
+.br{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.br b{font-size:14px;line-height:1.3}.br small{color:var(--dim)}
+.br .qty{margin:0}.br .qty span{min-width:30px}
+.bq{width:100%;height:44px;border:1px solid var(--line);border-radius:999px;padding:0 18px;background:#f8fafc}
+.bhint{background:var(--card2);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--mute)}
+@media(max-width:520px){.hero .big{padding:26px}}
 
 /* add-ons dialog ("Need anything with this?") */
 #adov{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;visibility:hidden;transition:.25s;z-index:90}
@@ -154,9 +211,10 @@ form.co input[type=file]{padding:9px}
 </style>
 </head>
 <body>
+<div class="top" id="topstrip"><span>Pay by bank transfer &middot; Orders are confirmed after payment is verified</span><a href="https://wa.me/923053871991" target="_blank" rel="noopener">WhatsApp +92 305 3871991</a></div>
 <header class="hd" id="hd">
   <div class="hd-in">
-    <a class="logo" href="/" aria-label="CCTV PITS home"><img src="/assets/images/logo.png" alt="CCTV PITS" width="120" height="36"></a>
+    <a class="logo" href="/" aria-label="CCTV PITS home"><img src="/assets/images/logo.png" alt="CCTV PITS" width="105" height="74"></a>
     <form class="search" role="search" id="sf" onsubmit="return false">
       <label class="sr" for="q">Search products</label>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -171,6 +229,19 @@ form.co input[type=file]{padding:9px}
     </div>
   </div>
 </header>
+
+<section class="hero" id="hero">
+  <div class="big">
+    <span class="eyebrow">CCTV cameras, DVR, NVR and accessories</span>
+    <h1>Protect what matters. Buy one item, many, or a full package.</h1>
+    <p>Choose a ready-made package, or build your own: camera + cable + connector + recorder, exactly what you need.</p>
+    <div class="acts2"><a class="btn" href="#main">Shop now</a><button class="btn sec" type="button" data-build>Build your own package</button></div>
+  </div>
+  <div class="side">
+    <div class="tile"><b>Need it installed?</b><p>Our team can survey, fit and set up your system.</p><a href="https://wa.me/923053871991?text=Hello%20CCTV%20PITS%2C%20I%20need%20installation%20or%20service." target="_blank" rel="noopener">Book a service &rarr;</a></div>
+    <div class="tile"><b>Not sure what to buy?</b><p>Message us and we will help you choose.</p><a href="https://wa.me/923053871991" target="_blank" rel="noopener">Chat on WhatsApp &rarr;</a></div>
+  </div>
+</section>
 
 <div class="bar" id="bar">
   <div class="chips" id="chips" aria-label="Categories"></div>
@@ -202,6 +273,7 @@ form.co input[type=file]{padding:9px}
 
 <script type="module">
 import { loadProducts, hydrateImages, esc, money, waLink, WA } from "/products-data.js";
+import { printReceipt } from "/receipt.js";
 import { getCart, addToCart, setQty, clearCart, cartCount, cartTotal, shrink } from "/cart.js";
 
 const $ = id => document.getElementById(id), PER = 24;
@@ -213,6 +285,12 @@ const grid = $("grid"), more = $("more"), countEl = $("count"), q = $("q"), selB
 const uniq = a => [...new Set(a.filter(Boolean))].sort((x, y) => x.localeCompare(y));
 let tt; const toast = t => { const e = $("toast"); e.textContent = t; e.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => e.classList.remove("on"), 2200); };
 const inCart = id => (getCart().find(x => x.id === id) || {}).qty || 0;
+/* ---- packages: a package is a product with type "package" and items ["productId|qty", ...] ---- */
+const isPkg = p => p && p.type === "package";
+const pkgItems = p => (p.items || []).map(t => { const [id, q] = String(t).split("|"), r = byId.get(id); return r ? { r, q: Math.max(1, Number(q) || 1) } : null; }).filter(Boolean);
+const pkgText = p => pkgItems(p).map(x => x.q + " x " + x.r.name).join(", ");
+const pkgOk = p => { const n = (p.items || []).length, it = pkgItems(p); return n > 0 && it.length === n && it.every(x => x.r.price > 0 && (x.r.stock === null || x.r.stock >= x.q)); };
+const addP = p => addToCart(isPkg(p) ? { ...p, includes: pkgText(p) } : p);
 
 /* ---------------- firebase (loaded only when needed) ---------------- */
 let fbp = null, authP = null, user = null;
@@ -231,14 +309,15 @@ const authState = () => authP || (authP = fire().then(x => new Promise(res => {
 
 /* ---------------- product grid ---------------- */
 const card = p => {
-  const out = p.stock !== null && p.stock <= 0, low = p.stock !== null && p.stock > 0 && p.stock <= 5, off = p.comparePrice > p.price && p.price > 0 ? Math.round((1 - p.price / p.comparePrice) * 100) : 0;
-  const action = p.price > 0 ? (out ? '<button class="btn" type="button" disabled>Out of stock</button>' : '<button class="btn" type="button" data-add="' + esc(p.id) + '">Add to cart</button>')
+  const pk = isPkg(p), out = pk ? !pkgOk(p) : p.stock !== null && p.stock <= 0, low = !pk && p.stock !== null && p.stock > 0 && p.stock <= 5, off = p.comparePrice > p.price && p.price > 0 ? Math.round((1 - p.price / p.comparePrice) * 100) : 0;
+  const action = p.price > 0 ? (out ? '<button class="btn" type="button" disabled>' + (pk ? "Unavailable" : "Out of stock") + '</button>' : '<button class="btn" type="button" data-add="' + esc(p.id) + '">' + (pk ? "Add package" : "Add to cart") + '</button>')
     : '<a class="btn ghost" href="' + waLink(p) + '" target="_blank" rel="noopener">Ask price on WhatsApp</a>';
+  const it = pk ? pkgItems(p) : [], inc = pk && it.length ? '<ul class="inc">' + it.slice(0, 5).map(x => '<li>' + x.q + ' &times; ' + esc(x.r.name) + '</li>').join("") + (it.length > 5 ? '<li>and ' + (it.length - 5) + ' more</li>' : "") + '</ul>' : "";
   return '<article class="card"><div class="media"><div class="prd-img" data-id="' + esc(p.id) + '"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' +
-    (p.isNew ? '<span class="badge b-new">New</span>' : "") + (off > 0 ? '<span class="badge b-off">-' + off + '%</span>' : "") + '</div>' +
-    '<div class="body">' + (p.brand ? '<span class="brand">' + esc(p.brand) + '</span>' : "") + '<h3 class="name">' + esc(p.name) + '</h3>' + (p.description ? '<p class="desc">' + esc(p.description) + '</p>' : "") +
+    (pk ? '<span class="badge b-pk">Package</span>' : p.isNew ? '<span class="badge b-new">New</span>' : "") + (off > 0 ? '<span class="badge b-off">-' + off + '%</span>' : "") + '</div>' +
+    '<div class="body">' + (pk ? '<span class="brand">Package</span>' : p.brand ? '<span class="brand">' + esc(p.brand) + '</span>' : "") + '<h3 class="name">' + esc(p.name) + '</h3>' + (p.description ? '<p class="desc">' + esc(p.description) + '</p>' : "") + inc +
     '<div class="price">' + (p.price > 0 ? money(p.price) + (off > 0 ? '<s>' + money(p.comparePrice) + '</s>' : "") : '<span style="font-size:15px">Call for price</span>') + '</div>' +
-    '<div class="stock ' + (out ? "out" : low ? "low" : "in") + '">' + (out ? "Out of stock" : low ? "Only " + p.stock + " left" : "In stock") + '</div>' + action + '</div></article>';
+    '<div class="stock ' + (out ? "out" : low ? "low" : "in") + '">' + (out ? (pk ? "Some items unavailable" : "Out of stock") : low ? "Only " + p.stock + " left" : "In stock") + '</div>' + action + '</div></article>';
 };
 function view() {
   const term = q.value.trim().toLowerCase(), b = selB.value, s = selS.value;
@@ -257,7 +336,7 @@ function draw(reset) {
 function drawChips() {
   const cats = uniq(all.filter(p => !selB.value || p.brand === selB.value).map(p => p.category));
   if (cat && !cats.includes(cat)) cat = "";
-  $("chips").innerHTML = ["", ...cats].map(c => '<button class="chip" type="button" data-cat="' + esc(c) + '" aria-pressed="' + (c === cat) + '">' + (c ? esc(c) : "All") + '</button>').join("");
+  $("chips").innerHTML = '<button class="chip build" type="button" data-build>+ Build your own package</button>' + ["", ...cats].map(c => '<button class="chip" type="button" data-cat="' + esc(c) + '" aria-pressed="' + (c === cat) + '">' + (c ? esc(c) : "All") + '</button>').join("");
 }
 function syncUrl() {
   const p = new URLSearchParams(); if (q.value.trim()) p.set("q", q.value.trim()); if (selB.value) p.set("brand", selB.value); if (cat) p.set("category", cat);
@@ -281,8 +360,9 @@ more.querySelector("button").addEventListener("click", () => { shown += PER; dra
 grid.addEventListener("click", e => {
   const b = e.target.closest("[data-add]"); if (!b) return;
   const p = byId.get(b.dataset.add); if (!p) return;
-  if (p.stock !== null && inCart(p.id) >= p.stock) return toast("Only " + p.stock + " in stock");
-  addToCart(p); if (!openAddons(p, b)) toast(p.name + " added to cart");
+  if (!isPkg(p) && p.stock !== null && inCart(p.id) >= p.stock) return toast("Only " + p.stock + " in stock");
+  if (isPkg(p) && !pkgOk(p)) return toast("Some items in this package are unavailable");
+  addP(p); if (!openAddons(p, b)) toast(p.name + " added to cart");
 });
 
 /* ---------------- cart badge ---------------- */
@@ -297,13 +377,13 @@ const panel = $("panel"), pbody = $("pbody"), pfoot = $("pfoot");
 function openPanel(m) {
   opener = document.activeElement; open = true;
   $("ov").classList.add("on"); panel.classList.add("on"); panel.setAttribute("aria-hidden", "false");
-  ["hd", "bar", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = true; });
+  ["topstrip", "hd", "hero", "bar", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = true; });
   document.body.style.overflow = "hidden";
-  m === "checkout" ? startCheckout() : renderCart(); $("pclose").focus();
+  m === "checkout" ? startCheckout() : m === "build" ? renderBuilder() : renderCart(); $("pclose").focus();
 }
 function closePanel() {
   open = false; $("ov").classList.remove("on"); panel.classList.remove("on"); panel.setAttribute("aria-hidden", "true");
-  ["hd", "bar", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = false; });
+  ["topstrip", "hd", "hero", "bar", "count", "main", "ft"].forEach(id => { const e = $(id); if (e) e.inert = false; });
   document.body.style.overflow = ""; if (opener && opener.focus) opener.focus();
 }
 $("cartbtn").onclick = () => openPanel("cart"); $("pclose").onclick = closePanel; $("ov").onclick = closePanel;
@@ -318,13 +398,14 @@ function renderCart() {
   if (!lines.length) { pbody.innerHTML = '<div class="empty"><p>Your cart is empty.</p><div class="stack"><button class="btn" type="button" data-close>Continue shopping</button></div></div>'; return footer(""); }
   pbody.innerHTML = (notes.length ? '<div class="note">' + notes.map(esc).join("<br>") + '</div>' : "") + lines.map(l => {
     const p = byId.get(l.id), cap = p && p.stock !== null ? p.stock : Infinity;
-    return '<div class="line" data-id="' + esc(l.id) + '"><div><div class="n">' + esc(l.name) + '</div><div class="u">' + money(l.price) + ' each</div>' +
+    return '<div class="line" data-id="' + esc(l.id) + '"><div><div class="n">' + esc(l.name) + '</div><div class="u">' + money(l.price) + ' each</div>' + (l.includes ? '<div class="u">Includes: ' + esc(l.includes) + '</div>' : "") +
       '<div class="qty"><button type="button" data-q="-1" aria-label="Decrease quantity">&minus;</button><span aria-live="polite">' + l.qty + '</span><button type="button" data-q="1" aria-label="Increase quantity"' + (l.qty >= cap ? " disabled" : "") + '>+</button></div></div>' +
       '<div class="t">' + money(l.price * l.qty) + '</div><button class="rm" type="button" data-rm>Remove</button></div>';
   }).join("");
   footer('<div class="tot"><span>Subtotal</span><b>' + money(cartTotal()) + '</b></div><button class="btn" type="button" data-checkout>Checkout</button>');
 }
 panel.addEventListener("click", e => {
+  if (e.target.closest("[data-receipt]")) return lastRec && printReceipt(lastRec);
   if (e.target.closest("[data-close]")) return closePanel();
   if (e.target.closest("[data-checkout]")) return startCheckout();
   if (e.target.closest("[data-back]")) { notes = []; return renderCart(); }
@@ -334,18 +415,47 @@ panel.addEventListener("click", e => {
   const d = e.target.closest("[data-q]"); if (d) { notes = []; setQty(id, cur + Number(d.dataset.q)); }
 });
 
+/* ---- build your own package ---- */
+const bsel = new Map();
+const bcap = p => p.stock === null ? 99 : Math.max(0, p.stock - inCart(p.id));
+function renderBuilder() {
+  mode = "build"; setTitle("Build your own package");
+  pbody.innerHTML = '<p class="bhint">Pick the items you need (camera, cable, connectors, recorder...) and how many of each. Everything goes to your cart together.</p><div class="bl"><input class="bq" id="bq" type="search" placeholder="Search products..." aria-label="Search products" autocomplete="off"><div id="blist"></div></div>';
+  drawBuilder(); drawBFoot();
+}
+function drawBuilder() {
+  const el = $("blist"); if (!el) return;
+  const t = ($("bq").value || "").trim().toLowerCase(), g = {};
+  all.filter(p => !isPkg(p) && p.price > 0 && (p.stock === null || p.stock > 0) && (bsel.has(p.id) || !t || (p.name + " " + p.brand + " " + p.category).toLowerCase().includes(t)))
+    .forEach(p => { const k = p.category || "More"; (g[k] = g[k] || []).push(p); });
+  el.innerHTML = Object.keys(g).sort().map(k => '<div class="bg">' + esc(k) + '</div>' + g[k].map(p => '<div class="br" data-id="' + esc(p.id) + '"><div><b>' + esc(p.name) + '</b><br><small>' + esc(p.brand) + ' &middot; ' + money(p.price) + '</small></div>' +
+    '<div class="qty"><button type="button" data-b="-1" aria-label="Less ' + esc(p.name) + '"' + ((bsel.get(p.id) || 0) ? "" : " disabled") + '>&minus;</button><span>' + (bsel.get(p.id) || 0) + '</span><button type="button" data-b="1" aria-label="More ' + esc(p.name) + '"' + ((bsel.get(p.id) || 0) >= bcap(p) ? " disabled" : "") + '>+</button></div></div>').join("")).join("") || '<p class="empty">No products match.</p>';
+}
+function drawBFoot() {
+  let n = 0, tot = 0; bsel.forEach((q, id) => { const p = byId.get(id); if (p) { n += q; tot += q * p.price; } });
+  footer('<div class="tot"><span>' + n + ' item' + (n === 1 ? "" : "s") + '</span><b>' + money(tot) + '</b></div><button class="btn" type="button" data-badd' + (n ? "" : " disabled") + '>Add to cart</button>');
+}
+pbody.addEventListener("input", e => { if (e.target.id === "bq") drawBuilder(); });
+panel.addEventListener("click", e => {
+  if (mode !== "build") return;
+  const b = e.target.closest("[data-b]");
+  if (b) { const id = b.closest(".br").dataset.id, p = byId.get(id), n = Math.min(bcap(p), Math.max(0, (bsel.get(id) || 0) + Number(b.dataset.b))); n ? bsel.set(id, n) : bsel.delete(id); drawBuilder(); return drawBFoot(); }
+  if (e.target.closest("[data-badd]")) { let n = 0; bsel.forEach((q, id) => { const p = byId.get(id); if (p) for (let i = 0; i < q; i++) { addToCart(p); n++; } }); bsel.clear(); toast(n + " item" + (n === 1 ? "" : "s") + " added to your cart"); renderCart(); }
+});
+document.addEventListener("click", e => { if (e.target.closest("[data-build]")) { if (!ready) return toast("Products are still loading"); openPanel("build"); } });
+
 /* ---- checkout ---- */
 function reconcile() {
   const out = [], keep = [];
   getCart().forEach(l => {
     const p = byId.get(l.id);
-    if (!p || !(p.price > 0)) return out.push(l.name + " is no longer available and was removed.");
+    if (!p || !(p.price > 0) || (isPkg(p) && !pkgOk(p))) return out.push(l.name + " is no longer available and was removed.");
     if (p.stock !== null && p.stock <= 0) return out.push(p.name + " is out of stock and was removed.");
     let n = l.qty; if (p.stock !== null && n > p.stock) { n = p.stock; out.push("Only " + p.stock + " of " + p.name + " left. Quantity reduced."); }
     if (l.price !== p.price) out.push("The price of " + p.name + " is now " + money(p.price) + ".");
     keep.push([p, n]);
   });
-  if (out.length) { clearCart(); keep.forEach(([p, n]) => { addToCart(p); setQty(p.id, n); }); }
+  if (out.length) { clearCart(); keep.forEach(([p, n]) => { addP(p); setQty(p.id, n); }); }
   return out;
 }
 async function startCheckout() {
@@ -403,25 +513,28 @@ panel.addEventListener("click", async e => {
     const f = $("cs").files[0], shot = f ? await shrink(f, 900, 0.7) : "", x = await fire(), ls = getCart();
     const ref = await x.f.addDoc(x.f.collection(x.db, "orders"), {
       userId: u.uid, email: u.email || "", customer: { name, phone, address: addr, city, note: $("cnote").value.trim() },
-      items: ls.map(l => ({ id: l.id, name: l.name, price: l.price, qty: l.qty })), total: cartTotal(),
+      items: ls.map(l => ({ id: l.id, name: l.name, price: l.price, qty: l.qty, ...(l.includes ? { includes: l.includes } : {}) })), total: cartTotal(),
       payment: { bankName: acc.bankName || "", accountTitle: acc.accountTitle || "", accountNumber: acc.accountNumber || "" },
       trxId: trx, screenshot: shot, installation: false, status: "pending", createdAt: x.f.serverTimestamp()
     });
-    const total = cartTotal(); clearCart(); notes = []; done(ref.id, total);
+    const total = cartTotal();
+    lastRec = { id: ref.id, date: new Date(), status: "pending", customer: { name, phone, address: addr, city, note: $("cnote").value.trim() }, items: ls.map(l => ({ id: l.id, name: l.name, price: l.price, qty: l.qty, includes: l.includes || "" })), total, payment: { bankName: acc.bankName || "", accountTitle: acc.accountTitle || "", accountNumber: acc.accountNumber || "" }, trxId: trx };
+    clearCart(); notes = []; done(ref.id, total);
   } catch (ex) {
     console.error(ex); btn.disabled = false; btn.textContent = "Place order";
     err(ex && ex.code === "permission-denied" ? "Your session expired. Log in again and retry." : "Could not place your order. Check your connection and try again.");
   }
 });
+let lastRec = null;
 function done(id, total) {
   mode = "done"; setTitle("Order placed"); const no = id.slice(0, 6).toUpperCase();
   pbody.innerHTML = '<div class="done"><span class="tick" aria-hidden="true">&#10003;</span><h3>Thank you!</h3><p>Your order <b>#' + no + '</b> for ' + money(total) + ' is received.</p><p>We will confirm it once your payment is verified. You can track it in your account.</p>' +
-    '<div class="stack"><a class="btn" href="https://wa.me/' + WA + '?text=' + encodeURIComponent("Hello CCTV PITS, I placed order #" + no + ".") + '" target="_blank" rel="noopener">Message us on WhatsApp</a><a class="btn sec" href="/dashboard.html">View my orders</a><button class="btn sec" type="button" data-close>Continue shopping</button></div></div>';
+    '<div class="stack"><a class="btn" href="https://wa.me/' + WA + '?text=' + encodeURIComponent("Hello CCTV PITS, I placed order #" + no + ".") + '" target="_blank" rel="noopener">Message us on WhatsApp</a><button class="btn" type="button" data-receipt>Print / save receipt</button><a class="btn sec" href="/dashboard.html">View my orders</a><button class="btn sec" type="button" data-close>Continue shopping</button></div></div>';
   footer("");
 }
 
 /* ---------------- add-ons: "Only this item" or add related products (DVR, cable...) ---------------- */
-const LOCK = ["hd", "bar", "count", "main", "ft"];
+const LOCK = ["topstrip", "hd", "hero", "bar", "count", "main", "ft"];
 const avail = r => r && r.price > 0 && (r.stock === null || r.stock > 0);
 let adOpen = false, adFrom = null, adRel = [];
 function openAddons(p, from) {
