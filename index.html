@@ -167,6 +167,11 @@ body{font-family:'Manrope',system-ui,sans-serif}
 .tick{background:rgba(21,128,61,.12)}
 .ph h2,.done h3,.h3,.adg{font-family:var(--head)}.adg{color:var(--tag)}
 .card .btn:not(.ghost):not(:disabled){background:var(--tag);border-color:var(--tag);color:#fff}.card .btn:not(.ghost):not(:disabled):hover{background:#a90f14;border-color:#a90f14}
+.ar{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.ar .prd-img{width:52px;aspect-ratio:1;border-radius:8px}.ar .prd-img svg{width:24px;height:24px}.ar b{font-size:14px;line-height:1.3}.ar small{color:var(--dim)}.ar .pr{font-weight:800;font-size:14px;margin-left:4px}
+.ar .qty{margin:0}.ar.mainrow{background:var(--card2);border-radius:12px;padding:10px;margin-top:12px;border-bottom:0}
+#adfoot .sum{margin-bottom:0}
+#adn .adg{color:var(--tag)}
 /* hero */
 .hero{max-width:1320px;margin:0 auto;width:100%;padding:24px 4vw 0;display:flex;flex-wrap:wrap;gap:20px}
 .hero .big{flex:2 1 520px;min-width:0;background:#dbeafe;border-radius:20px;padding:40px;display:flex;flex-direction:column;justify-content:center;gap:12px}
@@ -262,8 +267,9 @@ body{font-family:'Manrope',system-ui,sans-serif}
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="adov"></div>
 <div id="adn" role="dialog" aria-modal="true" aria-labelledby="adt" aria-hidden="true">
-  <div class="ph"><h2 id="adt">Need anything with this?</h2><button class="x" id="adx" type="button" aria-label="Close">&times;</button></div>
+  <div class="ph"><h2 id="adt">Complete your setup</h2><button class="x" id="adx" type="button" aria-label="Close">&times;</button></div>
   <div id="adb"></div>
+  <div class="pf" id="adfoot"></div>
 </div>
 <div id="ov"></div>
 <aside id="panel" role="dialog" aria-modal="true" aria-labelledby="ptitle" aria-hidden="true">
@@ -363,7 +369,7 @@ grid.addEventListener("click", e => {
   const p = byId.get(b.dataset.add); if (!p) return;
   if (!isPkg(p) && p.stock !== null && inCart(p.id) >= p.stock) return toast("Only " + p.stock + " in stock");
   if (isPkg(p) && !pkgOk(p)) return toast("Some items in this package are unavailable");
-  addP(p); if (!openAddons(p, b)) toast(p.name + " added to cart");
+  addP(p); if (isPkg(p) || !openAddons(p, b)) toast(p.name + " added to cart");
 });
 
 /* ---------------- cart badge ---------------- */
@@ -534,23 +540,42 @@ function done(id, total) {
   footer("");
 }
 
-/* ---------------- add-ons: "Only this item" or add related products (DVR, cable...) ---------------- */
+/* ---------------- complete your setup: quantity + matching items (DVR, NVR, cable, connectors...) ---------------- */
 const LOCK = ["topstrip", "hd", "hero", "bar", "count", "main", "ft"];
 const avail = r => r && r.price > 0 && (r.stock === null || r.stock > 0);
-let adOpen = false, adFrom = null, adRel = [];
+const kindOf = p => { const t = ((p.category || "") + " " + (p.name || "")).toLowerCase(); return /\bnvr\b/.test(t) ? "nvr" : /\b(dvr|xvr)\b/.test(t) ? "dvr" : /camera|\bcam\b|ptz|dome|bullet|turret/.test(t) ? "camera" : "acc"; };
+let adOpen = false, adFrom = null, adMain = null, adSel = new Map(), adIds = new Map();
+const adCap = r => r.stock === null ? 99 : Math.max(0, r.stock - inCart(r.id));
+function suggestFor(p) {
+  const rel = new Set(p.related || []), k = kindOf(p), pool = all.filter(r => !isPkg(r) && r.id !== p.id && avail(r));
+  const rank = r => (rel.has(r.id) ? 0 : 1) * 10 + (r.brand === p.brand ? 0 : 1);
+  const by = (fn, n) => pool.filter(r => fn(kindOf(r))).sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name)).slice(0, n || 12);
+  const g = k === "camera" ? [["Recorders (DVR / NVR)", by(x => x === "dvr" || x === "nvr")], ["Cables, connectors, power and storage", by(x => x === "acc")]]
+    : k === "acc" ? [["Cameras", by(x => x === "camera", 8)], ["Recorders (DVR / NVR)", by(x => x === "dvr" || x === "nvr", 8)], ["More accessories", by(x => x === "acc")]]
+    : [["Cameras", by(x => x === "camera")], ["Cables, connectors, power and storage", by(x => x === "acc")]];
+  const shown = new Set(g.flatMap(x => x[1].map(r => r.id))), extra = pool.filter(r => rel.has(r.id) && !shown.has(r.id));
+  if (extra.length) g.unshift(["Suggested with this item", extra]);
+  return g.filter(x => x[1].length);
+}
+const adRow = r => '<div class="ar" data-id="' + esc(r.id) + '"><div class="prd-img" data-id="' + esc(r.id) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' +
+  '<div><b>' + esc(r.name) + '</b><br><small>' + esc(r.brand) + '</small> <span class="pr">' + money(r.price) + '</span></div>' +
+  '<div class="qty"><button type="button" data-as="-1" aria-label="Less ' + esc(r.name) + '" disabled>&minus;</button><span>0</span><button type="button" data-as="1" aria-label="More ' + esc(r.name) + '"' + (adCap(r) ? "" : " disabled") + '>+</button></div></div>';
 function openAddons(p, from) {
-  const rel = (p.related || []).map(id => byId.get(id)).filter(r => avail(r) && r.id !== p.id && !inCart(r.id)).slice(0, 12);
-  if (!rel.length) return false;
-  adRel = rel; adFrom = from || null; adOpen = true;
-  const groups = {}; rel.forEach(r => { const g = r.category || "More"; (groups[g] = groups[g] || []).push(r); });
-  $("adb").innerHTML = '<p class="adm"><b>' + esc(p.name) + '</b> is in your cart. Add what you need to complete your setup, or continue with just this item.</p>' +
-    Object.keys(groups).map(g => '<div class="adg">' + esc(g) + '</div>' + groups[g].map(r =>
-      '<label class="ado"><input type="checkbox" value="' + esc(r.id) + '"><div class="prd-img" data-id="' + esc(r.id) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div>' +
-      '<div><b>' + esc(r.name) + '</b><small>' + esc(r.brand) + '</small></div><span class="pr">' + money(r.price) + '</span></label>').join("")).join("") +
-    '<div class="adf"><button class="btn sec" type="button" data-adskip>Only this item</button><button class="btn" type="button" data-adadd disabled>Add selected</button></div>';
-  $("adov").classList.add("on"); $("adn").classList.add("on"); $("adn").setAttribute("aria-hidden", "false");
+  adMain = p; adFrom = from || null; adOpen = true; adSel = new Map();
+  const groups = suggestFor(p), cap = p.stock === null ? 99 : p.stock;
+  $("adb").innerHTML = '<p class="adm"><b>' + esc(p.name) + '</b> is in your cart. Change the quantity, or pick matching items to make a complete setup. Prices and the total update as you choose.</p>' +
+    '<div class="ar mainrow"><div class="prd-img" data-id="' + esc(p.id) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h13v8H3z"/><path d="m16 11 5-3v8l-5-3"/></svg></div><div><b>' + esc(p.name) + '</b><br><small>This item</small> <span class="pr">' + money(p.price) + '</span></div>' +
+    '<div class="qty"><button type="button" data-am="-1" aria-label="Less of this item">&minus;</button><span id="amq">' + inCart(p.id) + '</span><button type="button" data-am="1" aria-label="More of this item"' + (inCart(p.id) >= cap ? " disabled" : "") + '>+</button></div></div>' +
+    (groups.length ? groups.map(([t, list]) => '<div class="adg">' + esc(t) + '</div>' + list.map(adRow).join("")).join("") : '<p class="adm" style="margin-top:14px">No matching items available right now.</p>');
+  adTotals(); $("adov").classList.add("on"); $("adn").classList.add("on"); $("adn").setAttribute("aria-hidden", "false");
   LOCK.forEach(id => { const e = $(id); if (e) e.inert = true; }); document.body.style.overflow = "hidden";
   hydrateImages($("adb"), byId); $("adx").focus(); return true;
+}
+function adTotals() {
+  let n = 0, sum = 0; adSel.forEach((q, id) => { const r = byId.get(id); if (r) { n += q; sum += q * r.price; } });
+  const main = adMain ? inCart(adMain.id) * adMain.price : 0;
+  $("adfoot").innerHTML = '<div class="sum"><div><span>This item (' + (adMain ? inCart(adMain.id) : 0) + ')</span><span>' + money(main) + '</span></div><div><span>Selected add-ons (' + n + ')</span><span>' + money(sum) + '</span></div><div class="g"><span>Setup total</span><span>' + money(main + sum) + '</span></div></div>' +
+    '<div class="adf" style="margin-top:10px"><button class="btn sec" type="button" data-adskip>Done</button><button class="btn" type="button" data-adadd' + (n ? "" : " disabled") + '>Add selected (' + n + ')</button></div>';
 }
 function closeAddons() {
   if (!adOpen) return; adOpen = false;
@@ -558,13 +583,23 @@ function closeAddons() {
   LOCK.forEach(id => { const e = $(id); if (e) e.inert = false; }); document.body.style.overflow = "";
   if (adFrom && adFrom.focus) adFrom.focus();
 }
-const adPicked = () => [...$("adb").querySelectorAll("input:checked")].map(i => byId.get(i.value)).filter(Boolean);
-$("adb").addEventListener("change", () => { const n = adPicked().length, b = $("adb").querySelector("[data-adadd]"); b.disabled = !n; b.textContent = n ? "Add selected (" + n + ")" : "Add selected"; });
-$("adb").addEventListener("click", e => {
+$("adn").addEventListener("click", e => {
+  const m = e.target.closest("[data-am]");
+  if (m && adMain) {
+    const cap = adMain.stock === null ? 99 : adMain.stock, n = Math.min(cap, Math.max(1, inCart(adMain.id) + Number(m.dataset.am))); setQty(adMain.id, n);
+    $("amq").textContent = n; const row = m.closest(".ar"); row.querySelector('[data-am="-1"]').disabled = n <= 1; row.querySelector('[data-am="1"]').disabled = n >= cap; return adTotals();
+  }
+  const b = e.target.closest("[data-as]");
+  if (b) {
+    const row = b.closest(".ar"), id = row.dataset.id, r = byId.get(id), n = Math.min(adCap(r), Math.max(0, (adSel.get(id) || 0) + Number(b.dataset.as)));
+    n ? adSel.set(id, n) : adSel.delete(id);
+    row.querySelector(".qty span").textContent = n; row.querySelector('[data-as="-1"]').disabled = n <= 0; row.querySelector('[data-as="1"]').disabled = n >= adCap(r); return adTotals();
+  }
   if (e.target.closest("[data-adskip]")) { toast("Added to cart"); return closeAddons(); }
-  if (!e.target.closest("[data-adadd]")) return;
-  const picked = adPicked().filter(r => avail(r) && (r.stock === null || inCart(r.id) < r.stock));
-  picked.forEach(r => addToCart(r)); closeAddons(); toast(picked.length + " add-on" + (picked.length === 1 ? "" : "s") + " added to cart");
+  if (e.target.closest("[data-adadd]")) {
+    let n = 0; adSel.forEach((q, id) => { const r = byId.get(id); if (r) for (let i = 0; i < q; i++) { addToCart(r); n++; } });
+    closeAddons(); toast(n + " add-on" + (n === 1 ? "" : "s") + " added to cart");
+  }
 });
 $("adx").onclick = () => { toast("Added to cart"); closeAddons(); }; $("adov").onclick = () => { toast("Added to cart"); closeAddons(); };
 addEventListener("keydown", e => { if (e.key === "Escape" && adOpen) { toast("Added to cart"); closeAddons(); } });
