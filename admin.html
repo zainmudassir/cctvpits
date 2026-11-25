@@ -162,14 +162,8 @@ h3.st{font-size:14px;letter-spacing:.4px;text-transform:uppercase;margin:24px 0 
   <div class="box" id="pkbox"><h2>Add package</h2>
     <p class="sub" style="margin-top:0">Just tap your choices. The checklist fills itself with the usual quantities. Pick a product for each line, add charges, and save.</p>
     <form id="pkf" class="wide">
-      <h3 class="st">1. What kind of setup?</h3>
-      <label>Quick start</label>
-      <div class="chipset" id="pkqs">
-        <button class="sm" type="button" data-qs="analog|4">Analog 4 ch</button><button class="sm" type="button" data-qs="analog|8">Analog 8 ch</button><button class="sm" type="button" data-qs="analog|16">Analog 16 ch</button><button class="sm" type="button" data-qs="analog|32">Analog 32 ch</button>
-        <button class="sm" type="button" data-qs="ip|4">IP 4 ch</button><button class="sm" type="button" data-qs="ip|8">IP 8 ch</button><button class="sm" type="button" data-qs="ip|16">IP 16 ch</button><button class="sm" type="button" data-qs="ip|32">IP 32 ch</button>
-        <button class="sm" type="button" data-qs="survey">Survey only</button><button class="sm" type="button" data-qs="install">Installation only</button>
-      </div>
-      <label>Company (brand)</label>
+      <h3 class="st">1. Company, type, channels and resolution</h3>
+      <label>Company (brand), pick first</label>
       <div class="chipset" id="pkbrands" data-g="brand"></div>
       <label>Camera type</label>
       <div class="chipset" data-g="type"><button class="sm" type="button" data-v="analog">Analog (DVR)</button><button class="sm" type="button" data-v="ip">IP (NVR)</button></div>
@@ -177,6 +171,13 @@ h3.st{font-size:14px;letter-spacing:.4px;text-transform:uppercase;margin:24px 0 
       <div class="chipset" data-g="ch"><button class="sm" type="button" data-v="4">4</button><button class="sm" type="button" data-v="8">8</button><button class="sm" type="button" data-v="16">16</button><button class="sm" type="button" data-v="32">32</button></div>
       <label>Camera resolution</label>
       <div class="chipset" data-g="mp"><button class="sm" type="button" data-v="1">1 MP</button><button class="sm" type="button" data-v="2">2 MP</button><button class="sm" type="button" data-v="3">3 MP</button><button class="sm" type="button" data-v="4">4 MP</button><button class="sm" type="button" data-v="5">5 MP</button><button class="sm" type="button" data-v="6">6 MP</button><button class="sm" type="button" data-v="8">8 MP</button></div>
+
+      <label>Or use a quick start</label>
+      <div class="chipset" id="pkqs">
+        <button class="sm" type="button" data-qs="analog|4">Analog 4 ch</button><button class="sm" type="button" data-qs="analog|8">Analog 8 ch</button><button class="sm" type="button" data-qs="analog|16">Analog 16 ch</button><button class="sm" type="button" data-qs="analog|32">Analog 32 ch</button>
+        <button class="sm" type="button" data-qs="ip|4">IP 4 ch</button><button class="sm" type="button" data-qs="ip|8">IP 8 ch</button><button class="sm" type="button" data-qs="ip|16">IP 16 ch</button><button class="sm" type="button" data-qs="ip|32">IP 32 ch</button>
+        <button class="sm" type="button" data-qs="survey">Survey only</button><button class="sm" type="button" data-qs="install">Installation only</button>
+      </div>
 
       <h3 class="st">2. Items checklist</h3>
       <p class="sub" style="margin:0 0 8px">Quantities are suggestions for the chosen channels. Change them if your site needs more or less. Lines left on "Choose product" are skipped. Products must be added in the Products tab first.</p>
@@ -337,7 +338,7 @@ const pkshow = (t, c) => { $("pkmsg").textContent = t; $("pkmsg").className = "m
 const pById = id => pkAll.find(x => x.id === id);
 const K = {
   cam: /camera|\bcam\b|dome|bullet|turret|\bptz\b|eyeball|cube/i, dvr: /\b(dvr|xvr|hdcvi|penta)\b/i, nvr: /\bnvr\b/i,
-  hdd: /\b(hdd|hard\s?(disk|drive)|surveillance (drive|disk)|skyhawk|purple)\b|\b\d(\.\d)?\s?tb\b/i, psu: /adapt[eo]r|power supply|\bpsu\b|smps|\b12\s?v\b/i,
+  hdd: /\b(hdd|ssd|m\.?2|nvme|hard\s?(disk|drive)|surveillance (drive|disk)|skyhawk|purple)\b|\b\d(\.\d)?\s?tb\b/i, psu: /adapt[eo]r|power supply|\bpsu\b|smps|\b12\s?v\b/i,
   coax: /siamese|rg\s?-?59|rg\s?-?6\b|coaxial|coax|cctv cable|3\s?\+\s?1|2\s?\+\s?1/i, lan: /cat\s?-?[56]e?|utp|ethernet|lan cable|network cable/i,
   bnc: /\bbnc\b/i, dcj: /\bdc\b.*(jack|connector|plug)|dc plug|dc jack/i, rj45: /rj\s?-?45/i, sw: /switch/i, box: /junction|\bbox\b|bracket|casing/i,
   ip: /\bip\b|poe|network|\bipc\b|ds-2cd|dh-ipc/i, an: /analog|turbo|hd-?tvi|\btvi\b|\bahd\b|\bcvi\b|hdcvi|ds-2ce|\bhac\b|\bdvr\b|\bxvr\b/i
@@ -353,7 +354,7 @@ function slotsFor() {
   const a = pkS.type === "analog", mp = pkS.mp ? pkS.mp + "MP " : "";
   const S = [{ k: "cam", label: "Cameras (" + mp + (a ? "analog" : "IP") + ")", hint: "One per channel. Dome, bullet, PTZ or wireless", q: ch, test: p => { const t = ptext(p); return K.cam.test(t) && !K.dvr.test(t) && !K.nvr.test(t) && notAcc(t) && typeOk(p) && mpOk(p) && brandOk(p); } },
     { k: "rec", label: a ? "DVR / XVR recorder (" + ch + " channel)" : "NVR recorder (" + ch + " channel)", hint: a ? "Records analog cameras" : "Records IP cameras. PoE ports on the NVR save the switch", q: 1, test: p => (a ? K.dvr : K.nvr).test(ptext(p)) && chOk(p) && brandOk(p) },
-    { k: "hdd", label: "Hard disk (storage)", hint: "1TB to 4TB, surveillance type", q: 1, test: p => K.hdd.test(ptext(p)) }];
+    { k: "hdd", label: "Hard disk / SSD (storage)", hint: "500GB to 8TB. HDD, SSD or M.2", q: 1, test: p => K.hdd.test(ptext(p)) }];
   if (a) S.push({ k: "psu", label: "Power supply", hint: "Multi-output supply or 12V adapters. Type the quantity yourself", q: 1, blank: 1, test: p => K.psu.test(ptext(p)) },
     { k: "coax", label: "Wire coil (Siamese / coaxial roll)", hint: "Type the number of coils yourself", q: 1, blank: 1, test: p => K.coax.test(ptext(p)) },
     { k: "bcd", label: "BNC & DC connectors (set)", hint: "One BNC + DC set per camera", q: ch, test: p => { const t = ptext(p); return K.bnc.test(t) && /\bdc\b/i.test(t); } },
@@ -362,7 +363,9 @@ function slotsFor() {
   else S.push({ k: "sw", label: "PoE switch (only if the NVR has no PoE ports)", hint: "Leave on Choose product if not needed", q: 1, opt: 1, test: p => K.sw.test(ptext(p)) },
     { k: "lan", label: "Wire coil (CAT6 / CAT5e network cable)", hint: "Type the number of coils yourself", q: 1, blank: 1, test: p => K.lan.test(ptext(p)) },
     { k: "rj45", label: "RJ45 connectors", hint: "2 per camera", q: 2 * ch, test: p => K.rj45.test(ptext(p)) });
+  const ORD = ["cam", "rec", "coax", "lan", "hdd", "bcd", "bnc", "dcj", "rj45", "psu", "sw", "box"];
   S.push({ k: "box", label: "Junction boxes / brackets (optional)", hint: "Weatherproof box for each camera", q: ch, opt: 1, test: p => K.box.test(ptext(p)) });
+  S.sort((x, y) => ORD.indexOf(x.k) - ORD.indexOf(y.k));
   return S;
 }
 function slotHtml(s) {
@@ -384,11 +387,10 @@ function pkMap() {
 }
 const pkItemsTotal = () => { let t = 0; pkMap().forEach((q, id) => { const p = pById(id); if (p) t += q * p.price; }); return t; };
 const PQ = [
-  ["Power supply", [["2 Amp", "Power supply 2 Amp"], ["5 Amp", "Power supply 5 Amp"], ["15 Amp", "Power supply 15 Amp"], ["25 Amp", "Power supply 25 Amp"], ["32 Amp", "Power supply 32 Amp"]]],
+  ["Wire / cable", [["Siamese cable 3+1 coil", "Siamese cable 3+1 coil"], ["Siamese cable 2+1 coil", "Siamese cable 2+1 coil"], ["RG59 coaxial coil", "RG59 coaxial coil"], ["CAT6 cable coil", "CAT6 cable coil"], ["CAT5e cable coil", "CAT5e cable coil"], ["Power wire coil", "Power wire coil"]]],
   ["Hard disk", [["500 GB", "Hard disk 500 GB"], ["1 TB", "Hard disk 1 TB"], ["2 TB", "Hard disk 2 TB"], ["4 TB", "Hard disk 4 TB"], ["8 TB", "Hard disk 8 TB"]], ["HDD", "SSD", "M.2"]],
   ["Connectors", [["BNC connector", "BNC connector"], ["DC connector", "DC connector"], ["BNC & DC connector set", "BNC & DC connector set"], ["RJ45 connector", "RJ45 connector"]]],
-  ["Wire / cable", [["Siamese cable 3+1 coil", "Siamese cable 3+1 coil"], ["Siamese cable 2+1 coil", "Siamese cable 2+1 coil"], ["RG59 coaxial coil", "RG59 coaxial coil"], ["CAT6 cable coil", "CAT6 cable coil"], ["CAT5e cable coil", "CAT5e cable coil"], ["Power wire coil", "Power wire coil"]]]
-];
+  ["Power supply", [["2 Amp", "Power supply 2 Amp"], ["5 Amp", "Power supply 5 Amp"], ["15 Amp", "Power supply 15 Amp"], ["25 Amp", "Power supply 25 Amp"], ["32 Amp", "Power supply 32 Amp"]]]];
 function pkPartsRender() {
   $("pkparts").innerHTML = '<div class="pq-h"><span></span><span>Price (Rs.)</span><span>Pieces</span><span>Total</span></div>' + PQ.map(([g, rows, types]) => `<div class="pq-g">${esc(g)}</div>` + rows.map(([n, l]) => `<div class="pq" data-l="${esc(l)}"><span>${esc(n)}${types ? ` <select data-ty aria-label="Disk type">${types.map(t => `<option>${t}</option>`).join("")}</select>` : ""}</span><input type="number" min="0" step="1" data-pp placeholder="Price" aria-label="Price of ${esc(n)}"><input type="number" min="0" max="999" step="1" data-pn placeholder="Pieces" aria-label="Pieces of ${esc(n)}"><b data-pt></b></div>`).join("")).join("");
 }
